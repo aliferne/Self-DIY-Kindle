@@ -48,6 +48,11 @@
 
 /* USER CODE END Variables */
 osThreadId defaultTaskHandle;
+osThreadId InputTaskHandle;
+osThreadId MusicTaskHandle;
+osThreadId NetTaskHandle;
+osThreadId ProcessTaskHandle;
+osThreadId UITaskHandle;
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -55,6 +60,11 @@ osThreadId defaultTaskHandle;
 /* USER CODE END FunctionPrototypes */
 
 void StartDefaultTask(void const * argument);
+extern void StartInputTask(void const * argument);
+extern void StartMusicTask(void const * argument);
+extern void StartNetTask(void const * argument);
+extern void StartProcessTask(void const * argument);
+extern void StartUITask(void const * argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -102,8 +112,28 @@ void MX_FREERTOS_Init(void) {
 
   /* Create the thread(s) */
   /* definition and creation of defaultTask */
-  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 128);
+  osThreadDef(defaultTask, StartDefaultTask, osPriorityIdle, 0, 128);
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
+
+  /* definition and creation of InputTask */
+  osThreadDef(InputTask, StartInputTask, osPriorityBelowNormal, 0, 128);
+  InputTaskHandle = osThreadCreate(osThread(InputTask), NULL);
+
+  /* definition and creation of MusicTask */
+  osThreadDef(MusicTask, StartMusicTask, osPriorityNormal, 0, 128);
+  MusicTaskHandle = osThreadCreate(osThread(MusicTask), NULL);
+
+  /* definition and creation of NetTask */
+  osThreadDef(NetTask, StartNetTask, osPriorityIdle, 0, 128);
+  NetTaskHandle = osThreadCreate(osThread(NetTask), NULL);
+
+  /* definition and creation of ProcessTask */
+  osThreadDef(ProcessTask, StartProcessTask, osPriorityBelowNormal, 0, 128);
+  ProcessTaskHandle = osThreadCreate(osThread(ProcessTask), NULL);
+
+  /* definition and creation of UITask */
+  osThreadDef(UITask, StartUITask, osPriorityNormal, 0, 128);
+  UITaskHandle = osThreadCreate(osThread(UITask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */

@@ -2,8 +2,9 @@
 CAD.formats=[]
 CAD.pinconfig=Dual
 CAD.provider=Component Search Engine
-FREERTOS.IPParameters=Tasks01
-FREERTOS.Tasks01=defaultTask,0,128,StartDefaultTask,Default,NULL,Dynamic,NULL,NULL
+FREERTOS.FootprintOK=true
+FREERTOS.IPParameters=Tasks01,FootprintOK
+FREERTOS.Tasks01=defaultTask,-3,128,StartDefaultTask,Default,NULL,Dynamic,NULL,NULL;InputTask,-1,128,StartInputTask,As external,NULL,Dynamic,NULL,NULL;MusicTask,0,128,StartMusicTask,As external,NULL,Dynamic,NULL,NULL;NetTask,-3,128,StartNetTask,As external,NULL,Dynamic,NULL,NULL;ProcessTask,-1,128,StartProcessTask,As external,NULL,Dynamic,NULL,NULL;UITask,0,128,StartUITask,As external,NULL,Dynamic,NULL,NULL
 File.Version=6
 GPIO.groupedBy=Group By Peripherals
 KeepUserPlacement=false

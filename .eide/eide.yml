@@ -90,6 +90,25 @@ virtualFolder:
           files:
             - path: Middlewares/miniz/miniz.c
           folders: []
+    - name: BSP
+      files: []
+      folders: []
+    - name: Services
+      files:
+        - path: services/display_srv.c
+        - path: services/ebook_srv.c
+        - path: services/music_srv.c
+        - path: services/net_srv.c
+        - path: services/time_srv.c
+      folders: []
+    - name: App_Tasks
+      files:
+        - path: applications/input_task.c
+        - path: applications/music_task.c
+        - path: applications/net_task.c
+        - path: applications/process_task.c
+        - path: applications/ui_task.c
+      folders: []
 dependenceList: []
 outDir: build
 miscInfo:
