@@ -40,6 +40,8 @@ static void bsp_init_buttons()
     back_btn.init(&back_btn, &init_conf);
     home_btn.init(&home_btn, &init_conf);
     confirm_btn.init(&confirm_btn, &init_conf);
+
+    /* TODO: button with irq */
 }
 
 static void bsp_init_leds()
