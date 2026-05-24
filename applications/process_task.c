@@ -1,9 +1,9 @@
 #include "process_task.h"
 
-void StartProcessTask(void const * argument)
+#include "cmsis_os.h"
+void StartProcessTask(void const *argument)
 {
-    for (;;)
-    {
+    for (;;) {
         osDelay(1);
     }
 }

@@ -1,9 +1,9 @@
 #include "music_task.h"
 
-void StartMusicTask(void const * argument)
+#include "cmsis_os.h"
+void StartMusicTask(void const *argument)
 {
-    for (;;)
-    {
+    for (;;) {
         osDelay(1);
     }
 }

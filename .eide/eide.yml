@@ -91,7 +91,13 @@ virtualFolder:
             - path: Middlewares/miniz/miniz.c
           folders: []
     - name: BSP
-      files: []
+      files:
+        - path: bsp/bsp_config.c
+        - path: bsp/bsp_gpio.c
+        - path: bsp/bsp_i2c.c
+        - path: bsp/bsp_i2s.c
+        - path: bsp/bsp_rtc.c
+        - path: bsp/bsp_spi.c
       folders: []
     - name: Services
       files:
@@ -131,8 +137,6 @@ targets:
         - Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS
         - Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F
         - Middlewares/Third_Party/FatFs/src
-        - .cmsis/include
-        - MDK-ARM/RTE/_Self-DIY-Kindle
         - Middlewares/miniz
         - bsp
         - services

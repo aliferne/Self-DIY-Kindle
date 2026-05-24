@@ -1,9 +1,9 @@
 #include "net_task.h"
 
-void StartNetTask(void const * argument)
+#include "cmsis_os.h"
+void StartNetTask(void const *argument)
 {
-    for (;;)
-    {
+    for (;;) {
         osDelay(1);
     }
 }

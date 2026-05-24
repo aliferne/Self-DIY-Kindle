@@ -1,9 +1,9 @@
 #include "ui_task.h"
 
-void StartUITask(void const * argument)
+#include "cmsis_os.h"
+void StartUITask(void const *argument)
 {
-    for (;;)
-    {
+    for (;;) {
         osDelay(1);
     }
 }

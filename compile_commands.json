@@ -1,0 +1,42 @@
+[
+  {
+    "arguments": [
+      "/home/ferne/Embedded/arm/arm-gnu-toolchain-15.2.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-gcc",
+      "-c",
+      "-mcpu=cortex-m4",
+      "-mthumb",
+      "-mfpu=fpv4-sp-d16",
+      "-mfloat-abi=hard",
+      "-DUSE_HAL_DRIVER",
+      "-DSTM32F407xx",
+      "-ICore/Inc",
+      "-IDrivers/STM32F4xx_HAL_Driver/Inc",
+      "-IDrivers/STM32F4xx_HAL_Driver/Inc/Legacy",
+      "-IDrivers/CMSIS/Device/ST/STM32F4xx/Include",
+      "-IDrivers/CMSIS/Include",
+      "-IFATFS/Target",
+      "-IFATFS/App",
+      "-IMiddlewares/Third_Party/FreeRTOS/Source/include",
+      "-IMiddlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS",
+      "-IMiddlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F",
+      "-IMiddlewares/Third_Party/FatFs/src",
+      "-Ibsp",
+      "-Iservices",
+      "-IMiddlewares/miniz",
+      "-Iapplications",
+      "-Og",
+      "-Wall",
+      "-fdata-sections",
+      "-ffunction-sections",
+      "-g",
+      "-gdwarf-2",
+      "-Wa,-a,-ad,-alms=build/makefile/main.lst",
+      "-o",
+      "build/makefile/main.o",
+      "Core/Src/main.c"
+    ],
+    "directory": "/home/ferne/code/self-proj/Self-DIY-Kindle",
+    "file": "/home/ferne/code/self-proj/Self-DIY-Kindle/Core/Src/main.c",
+    "output": "/home/ferne/code/self-proj/Self-DIY-Kindle/build/makefile/main.o"
+  }
+]
