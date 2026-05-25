@@ -12,12 +12,11 @@
  *
  * ```c
  * GPIO_Model_t usr_led;
- * gpio_register(&usr_led, USER_LED_PORT, USER_LED_PIN);
  * GPIOx_Config_t init_conf = {0};
  * init_conf.mode           = GPIO_MODE_OUTPUT_PP;
  * init_conf.pull           = GPIO_NOPULL;
- * usr_led.init(&usr_led, &init_conf);
- * usr_led.write_pin(&usr_led, GPIO_PIN_SET);
+ * gpio_init(&usr_led, &init_conf);
+ * gpio_write_pin(&usr_led, GPIO_PIN_SET);
  * ```
  */
 
@@ -34,14 +33,13 @@ static IRQn_Type get_gpio_irqn(Pinx_Type_t pin);
 void gpio_register(
     GPIO_Model_t *gpio_model, GPIOx_Type_t gpiox, Pinx_Type_t pinx)
 {
-    gpio_model->GPIOx            = gpiox;
-    gpio_model->Pinx             = pinx;
-    gpio_model->init             = gpio_init;
-    gpio_model->deinit           = gpio_deinit;
-    gpio_model->read_pin         = gpio_read_pin;
-    gpio_model->write_pin        = gpio_write_pin;
-    gpio_model->toggle_pin       = gpio_toggle_pin;
-    gpio_model->attach_interrupt = gpio_attach_interrupt;
+    gpio_model->GPIOx           = gpiox;
+    gpio_model->Pinx            = pinx;
+    gpio_model->__use_interrupt = 0;
+    /*
+    since all gpio models shares the same functions,
+    there's no need to assign functions for each model.
+    */
 }
 
 /*
@@ -76,6 +74,10 @@ void gpio_deinit(GPIO_Model_t *gpio_model)
  */
 void gpio_write_pin(GPIO_Model_t *gpio_model, GPIO_Pin_State_e stat)
 {
+    /* EXTI means that GPIO is in input mode */
+    if (gpio_model->__use_interrupt == 1)
+        return;
+
     HAL_GPIO_WritePin(gpio_model->GPIOx, gpio_model->Pinx, stat);
 }
 
@@ -92,6 +94,10 @@ GPIO_Pin_State_e gpio_read_pin(GPIO_Model_t *gpio_model)
  */
 void gpio_toggle_pin(GPIO_Model_t *gpio_model)
 {
+    /* EXTI means that GPIO is in input mode */
+    if (gpio_model->__use_interrupt == 1)
+        return;
+    
     HAL_GPIO_TogglePin(gpio_model->GPIOx, gpio_model->Pinx);
 }
 
@@ -100,14 +106,13 @@ void gpio_toggle_pin(GPIO_Model_t *gpio_model)
  */
 void gpio_attach_interrupt(GPIO_Model_t *gpio_model, GPIOx_IRQ_Config_t *irq_conf)
 {
-    GPIOx_Config_t *config = &gpio_model->config;
-
-    GPIO_InitTypeDef gpio_init = {
-        .Pin       = gpio_model->Pinx,
-        .Mode      = irq_conf->trigger_edge,
-        .Pull      = config->pull,
-        .Speed     = config->speed,
-        .Alternate = config->alternate,
+    const GPIOx_Config_t *config = &gpio_model->config;
+    GPIO_InitTypeDef gpio_init   = {
+          .Pin       = gpio_model->Pinx,
+          .Mode      = irq_conf->trigger_edge,
+          .Pull      = config->pull,
+          .Speed     = config->speed,
+          .Alternate = config->alternate,
     };
 
     HAL_GPIO_Init(gpio_model->GPIOx, &gpio_init);
@@ -121,6 +126,27 @@ void gpio_attach_interrupt(GPIO_Model_t *gpio_model, GPIOx_IRQ_Config_t *irq_con
     IRQn_Type irqn = get_gpio_irqn(gpio_model->Pinx);
     HAL_NVIC_SetPriority(irqn, irq_conf->preempt_priority, irq_conf->sub_priority);
     HAL_NVIC_EnableIRQ(irqn);
+    gpio_model->__use_interrupt = 1;
+}
+
+void gpio_detach_interrupt(GPIO_Model_t *gpio_model)
+{
+    int pin_num                 = gpio_get_pin_num(gpio_model->Pinx);
+    gpio_exti_callback[pin_num] = NULL;
+
+    IRQn_Type irqn = get_gpio_irqn(gpio_model->Pinx);
+    HAL_NVIC_DisableIRQ(irqn);
+    gpio_model->__use_interrupt = 1;
+
+    const GPIOx_Config_t *config = &gpio_model->config;
+    GPIO_InitTypeDef gpio_init   = {
+          .Pin       = gpio_model->Pinx,
+          .Mode      = config->mode,
+          .Pull      = config->pull,
+          .Speed     = config->speed,
+          .Alternate = config->alternate,
+    };
+    HAL_GPIO_Init(gpio_model->GPIOx, &gpio_init);
 }
 
 /*
@@ -144,45 +170,15 @@ static IRQn_Type get_gpio_irqn(Pinx_Type_t pin)
 
 /*
  * automatically get pin num when program is running
+ *
+ * warning: may only support gcc
  */
 int gpio_get_pin_num(Pinx_Type_t pin)
 {
-    switch (pin) {
-        case GPIO_PIN_0:
-            return 0;
-        case GPIO_PIN_1:
-            return 1;
-        case GPIO_PIN_2:
-            return 2;
-        case GPIO_PIN_3:
-            return 3;
-        case GPIO_PIN_4:
-            return 4;
-        case GPIO_PIN_5:
-            return 5;
-        case GPIO_PIN_6:
-            return 6;
-        case GPIO_PIN_7:
-            return 7;
-        case GPIO_PIN_8:
-            return 8;
-        case GPIO_PIN_9:
-            return 9;
-        case GPIO_PIN_10:
-            return 10;
-        case GPIO_PIN_11:
-            return 11;
-        case GPIO_PIN_12:
-            return 12;
-        case GPIO_PIN_13:
-            return 13;
-        case GPIO_PIN_14:
-            return 14;
-        case GPIO_PIN_15:
-            return 15;
-        default:
-            return MAX_GPIO_PIN_NUM;
-    }
+    if (pin == 0)
+        return -1;
+    /* should ensure that numbers in binary has only one 1-bit, otherwise 0 is returned */
+    return __builtin_ctz(pin);
 }
 
 /*

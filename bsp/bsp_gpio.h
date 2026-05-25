@@ -27,7 +27,7 @@ typedef struct {
     shouldn't assign value, 
     automatically calculate when using `gpio_model.attach_interrupt`
     */
-    IRQn_Type irqn;
+    IRQn_Type __irqn;
     /*
     e.g. GPIO_MODE_IT_FALLING
     */
@@ -51,22 +51,19 @@ typedef struct gpio_model {
     /* stores the configuration for this GPIO */
     GPIOx_Config_t config;
     GPIOx_IRQ_Config_t irq_config;
-
-    void (*init)(struct gpio_model *self, GPIOx_Config_t *init_conf);
-    void (*deinit)(struct gpio_model *self);
-    void (*write_pin)(struct gpio_model *self, GPIO_Pin_State_e stat);
-    GPIO_Pin_State_e (*read_pin)(struct gpio_model *self);
-    void (*toggle_pin)(struct gpio_model *self);
-    void (*attach_interrupt)(struct gpio_model *self, GPIOx_IRQ_Config_t *irq_conf);
+    
+    /* automatically assigned when call `attach/detach_interrupt` */
+    uint8_t __use_interrupt: 1;
 } GPIO_Model_t;
 
 extern gpio_irq_callback_t gpio_exti_callback[MAX_GPIO_CALLBACK];
 
-void gpio_register(GPIO_Model_t *gpio_model, GPIOx_Type_t gpiox, Pinx_Type_t pinx);
+void gpio_register(GPIO_Model_t *gpio_model, GPIOx_Type_t GPIOx, Pinx_Type_t Pinx);
 void gpio_init(GPIO_Model_t *gpio_model, GPIOx_Config_t *init_conf);
 void gpio_deinit(GPIO_Model_t *gpio_model);
 void gpio_write_pin(GPIO_Model_t *gpio_model, GPIO_Pin_State_e stat);
 GPIO_Pin_State_e gpio_read_pin(GPIO_Model_t *gpio_model);
 void gpio_toggle_pin(GPIO_Model_t *gpio_model);
 void gpio_attach_interrupt(GPIO_Model_t *gpio_model, GPIOx_IRQ_Config_t *irq_conf);
+void gpio_detach_interrupt(GPIO_Model_t *gpio_model);
 int gpio_get_pin_num(Pinx_Type_t pin);

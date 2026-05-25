@@ -1,4 +1,6 @@
 #include "bsp_config.h"
+#include "bsp_gpio.h"
+#include "stm32f4xx_hal_gpio.h"
 
 /* ============= GPIO Configurations =============== */
 GPIO_Model_t usr_led;
@@ -33,15 +35,18 @@ static void bsp_init_buttons()
 
     GPIOx_Config_t init_conf = {0};
     init_conf.mode           = GPIO_MODE_INPUT;
-    init_conf.pull           = GPIO_NOPULL;
+    /* press button => 1 -> 0 */
+    init_conf.pull           = GPIO_PULLUP;
 
-    pgup_btn.init(&pgup_btn, &init_conf);
-    pgdown_btn.init(&pgdown_btn, &init_conf);
-    back_btn.init(&back_btn, &init_conf);
-    home_btn.init(&home_btn, &init_conf);
-    confirm_btn.init(&confirm_btn, &init_conf);
+    gpio_init(&pgup_btn, &init_conf);
+    gpio_init(&pgdown_btn, &init_conf);
+    gpio_init(&back_btn, &init_conf);
+    gpio_init(&home_btn, &init_conf);
+    gpio_init(&confirm_btn, &init_conf);
 
-    /* TODO: button with irq */
+    GPIOx_IRQ_Config_t irq_conf = {0};
+    irq_conf.trigger_edge = GPIO_MODE_IT_FALLING;
+    
 }
 
 static void bsp_init_leds()
