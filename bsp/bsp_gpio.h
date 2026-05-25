@@ -146,5 +146,5 @@ void gpio_set_irq_flag(GPIO_Model_t *m);
 /** 应用层调用，清除 irq_flag */
 void gpio_clear_irq_flag(GPIO_Model_t *m);
 
-/** 从引脚掩码中提取引脚编号 (0-15), 依赖 GCC __builtin_ctz */
+/** 从引脚掩码中提取引脚编号 (0-15), 可以有多种实现方式，包括强依赖 GCC 的 `__builtin_ctz` */
 int gpio_get_pin_num(GPIO_Pin_t pin);

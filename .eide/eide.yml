@@ -102,6 +102,7 @@ virtualFolder:
         - path: services/music_srv.c
         - path: services/net_srv.c
         - path: services/time_srv.c
+        - path: services/input_srv.c
       folders: []
     - name: App_Tasks
       files:
