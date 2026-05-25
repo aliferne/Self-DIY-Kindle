@@ -160,8 +160,8 @@ static IRQn_Type get_exti_irqn(uint16_t pin)
 
 GPIO_Err_t gpio_register(GPIO_Model_t *m, GPIO_Port_t port, GPIO_Pin_t pin)
 {
-    m->port     = port;
-    m->pin      = pin;
+    m->src.port = port;
+    m->src.pin  = pin;
     m->use_irq  = 0;
     m->irq_flag = 0;
 
@@ -174,12 +174,12 @@ GPIO_Err_t gpio_init(GPIO_Model_t *m, const GPIO_Config_t *cfg)
     if (cfg->mode > GPIO_Mode_IT_Rising)
         return GPIO_Err_Incorrect_Mode;
 
-    GPIO_TypeDef *gpiox = (GPIO_TypeDef *)m->port;
+    GPIO_TypeDef *gpiox = (GPIO_TypeDef *)m->src.port;
 
     clock_init(gpiox);
 
     GPIO_InitTypeDef init = {
-        .Pin       = m->pin,
+        .Pin       = m->src.pin,
         .Mode      = mode_to_hal(cfg->mode),
         .Pull      = pull_to_hal(cfg->pull),
         .Speed     = speed_to_hal(cfg->speed),
@@ -193,7 +193,7 @@ GPIO_Err_t gpio_init(GPIO_Model_t *m, const GPIO_Config_t *cfg)
 
 GPIO_Err_t gpio_deinit(GPIO_Model_t *m)
 {
-    HAL_GPIO_DeInit((GPIO_TypeDef *)m->port, m->pin);
+    HAL_GPIO_DeInit((GPIO_TypeDef *)m->src.port, m->src.pin);
     return GPIO_Err_OK;
 }
 
@@ -202,14 +202,14 @@ GPIO_Err_t gpio_write(GPIO_Model_t *m, GPIO_Level_t level)
     if (m->use_irq)
         return GPIO_Err_Call_Write_When_Using_IRQ;
 
-    HAL_GPIO_WritePin((GPIO_TypeDef *)m->port, m->pin, level_to_hal(level));
+    HAL_GPIO_WritePin((GPIO_TypeDef *)m->src.port, m->src.pin, level_to_hal(level));
 
     return GPIO_Err_OK;
 }
 
 GPIO_Level_t gpio_read(GPIO_Model_t *m)
 {
-    return level_from_hal(HAL_GPIO_ReadPin((GPIO_TypeDef *)m->port, m->pin));
+    return level_from_hal(HAL_GPIO_ReadPin((GPIO_TypeDef *)m->src.port, m->src.pin));
 }
 
 GPIO_Err_t gpio_toggle(GPIO_Model_t *m)
@@ -217,17 +217,17 @@ GPIO_Err_t gpio_toggle(GPIO_Model_t *m)
     if (m->use_irq)
         return GPIO_Err_Call_Write_When_Using_IRQ;
 
-    HAL_GPIO_TogglePin((GPIO_TypeDef *)m->port, m->pin);
+    HAL_GPIO_TogglePin((GPIO_TypeDef *)m->src.port, m->src.pin);
 
     return GPIO_Err_OK;
 }
 
 GPIO_Err_t gpio_attach_irq(GPIO_Model_t *m, const GPIO_IRQ_Config_t *irq_cfg)
 {
-    GPIO_TypeDef *gpiox = (GPIO_TypeDef *)m->port;
+    GPIO_TypeDef *gpiox = (GPIO_TypeDef *)m->src.port;
 
     GPIO_InitTypeDef init = {
-        .Pin       = m->pin,
+        .Pin       = m->src.pin,
         .Mode      = mode_to_hal(irq_cfg->trigger_edge),
         .Pull      = pull_to_hal(m->config.pull),
         .Speed     = speed_to_hal(m->config.speed),
@@ -240,7 +240,7 @@ GPIO_Err_t gpio_attach_irq(GPIO_Model_t *m, const GPIO_IRQ_Config_t *irq_cfg)
     m->irq_flag   = 0;
 
     /* 将 model 注册到中断表，供 ISR 查找 */
-    int pin_num = gpio_get_pin_num(m->pin);
+    int pin_num = gpio_get_pin_num(m->src.pin);
     if (pin_num >= 0 && pin_num < GPIO_MAX_PIN) {
         if (gpio_irq_models[pin_num] != NULL) {
             return GPIO_Err_IRQ_Table_Was_Registered;
@@ -250,7 +250,7 @@ GPIO_Err_t gpio_attach_irq(GPIO_Model_t *m, const GPIO_IRQ_Config_t *irq_cfg)
         return GPIO_Err_Pin_Num_Out_Of_Index;
     }
 
-    IRQn_Type irqn = get_exti_irqn(m->pin);
+    IRQn_Type irqn = get_exti_irqn(m->src.pin);
     HAL_NVIC_SetPriority(irqn, irq_cfg->preempt_priority, irq_cfg->sub_priority);
     HAL_NVIC_EnableIRQ(irqn);
 
@@ -261,28 +261,28 @@ GPIO_Err_t gpio_attach_irq(GPIO_Model_t *m, const GPIO_IRQ_Config_t *irq_cfg)
 
 GPIO_Err_t gpio_detach_irq(GPIO_Model_t *m)
 {
-    int pin_num = gpio_get_pin_num(m->pin);
+    int pin_num = gpio_get_pin_num(m->src.pin);
     if (pin_num >= 0 && pin_num < GPIO_MAX_PIN) {
         gpio_irq_models[pin_num] = NULL;
     } else {
         return GPIO_Err_Pin_Num_Out_Of_Index;
     }
 
-    IRQn_Type irqn = get_exti_irqn(m->pin);
+    IRQn_Type irqn = get_exti_irqn(m->src.pin);
     HAL_NVIC_DisableIRQ(irqn);
 
     m->use_irq  = 0;
     m->irq_flag = 0;
 
     GPIO_InitTypeDef init = {
-        .Pin       = m->pin,
+        .Pin       = m->src.pin,
         .Mode      = mode_to_hal(m->config.mode),
         .Pull      = pull_to_hal(m->config.pull),
         .Speed     = speed_to_hal(m->config.speed),
         .Alternate = m->config.alternate,
     };
 
-    HAL_GPIO_Init((GPIO_TypeDef *)m->port, &init);
+    HAL_GPIO_Init((GPIO_TypeDef *)m->src.port, &init);
 
     return GPIO_Err_OK;
 }

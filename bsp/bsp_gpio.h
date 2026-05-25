@@ -106,9 +106,16 @@ typedef struct {
     uint32_t sub_priority;
 } GPIO_IRQ_Config_t;
 
+/*
+ * hardware source of gpio
+ */
 typedef struct {
     GPIO_Port_t port;
     GPIO_Pin_t pin;
+} GPIO_HWSource_t;
+
+typedef struct {
+    GPIO_HWSource_t src;
     GPIO_Config_t config;
     GPIO_IRQ_Config_t irq_config;
     uint8_t use_irq : 1;
