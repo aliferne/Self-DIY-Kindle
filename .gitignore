@@ -17,5 +17,8 @@
 .clangd
 .cache
 
+# llm related
+.deepseek
+
 # datasheets
 /datasheets

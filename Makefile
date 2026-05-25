@@ -76,7 +76,10 @@ Middlewares/Third_Party/FreeRTOS/Source/tasks.c \
 Middlewares/Third_Party/FreeRTOS/Source/timers.c \
 Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS/cmsis_os.c \
 Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.c \
-Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c
+Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c \
+bsp/bsp_config.c \
+bsp/bsp_irq_hal.c \
+chip/stm32f4/gpio_chip.c
 
 # ASM sources
 ASM_SOURCES =  \
@@ -151,7 +154,8 @@ C_INCLUDES =  \
 -Ibsp \
 -Iservices \
 -IMiddlewares/miniz \
--Iapplications  
+-Iapplications \
+-Ichip/stm32f4  
 
 
 # compile gcc flags

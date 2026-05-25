@@ -20,6 +20,8 @@
       "-IMiddlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS",
       "-IMiddlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F",
       "-IMiddlewares/Third_Party/FatFs/src",
+      "-I.",
+      "-Ichip",
       "-Ibsp",
       "-Iservices",
       "-IMiddlewares/miniz",

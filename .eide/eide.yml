@@ -93,11 +93,7 @@ virtualFolder:
     - name: BSP
       files:
         - path: bsp/bsp_config.c
-        - path: bsp/bsp_gpio.c
-        - path: bsp/bsp_i2c.c
-        - path: bsp/bsp_i2s.c
         - path: bsp/bsp_rtc.c
-        - path: bsp/bsp_spi.c
       folders: []
     - name: Services
       files:
@@ -115,6 +111,20 @@ virtualFolder:
         - path: applications/process_task.c
         - path: applications/ui_task.c
       folders: []
+    - name: Chip
+      files: []
+      folders:
+        - name: STM32
+          files: []
+          folders:
+            - name: F4
+              files:
+                - path: chip/stm32f4/gpio_chip.c
+                - path: chip/stm32f4/i2c_chip.c
+                - path: chip/stm32f4/i2s_chip.c
+                - path: chip/stm32f4/irq_chip_hal.c
+                - path: chip/stm32f4/spi_chip.c
+              folders: []
 dependenceList: []
 outDir: build
 miscInfo:
@@ -141,6 +151,7 @@ targets:
         - bsp
         - services
         - applications
+        - .
       libList: []
     excludeList:
       - <virtual_root>/Application/MDK-ARM/startup_stm32f407xx.s
