@@ -122,9 +122,12 @@ virtualFolder:
                 - path: chip/stm32f4/gpio_chip.c
                 - path: chip/stm32f4/i2c_chip.c
                 - path: chip/stm32f4/i2s_chip.c
-                - path: chip/stm32f4/irq_chip_hal.c
                 - path: chip/stm32f4/spi_chip.c
-              folders: []
+              folders:
+                - name: irq
+                  files:
+                    - path: chip/stm32f4/irq/irq_gpio_exti.c
+                  folders: []
 dependenceList: []
 outDir: build
 miscInfo:
@@ -152,6 +155,7 @@ targets:
         - services
         - applications
         - .
+        - chip/stm32f4
       libList: []
     excludeList:
       - <virtual_root>/Application/MDK-ARM/startup_stm32f407xx.s

@@ -2,9 +2,16 @@
 
 #include "stm32f4xx_hal.h"
 #include "stm32f4xx_hal_gpio.h"
+
 /*
  * Pin source mapping for STM32F4xx series.
  */
+
+/* ============================================================
+ * 引脚定义格式：
+ *   #define <功能名>_PORT   <GPIO 端口>
+ *   #define <功能名>_PIN    <GPIO 引脚>
+ * ============================================================ */
 
 #define PAGEUP_BTN_PORT   GPIOE
 #define PAGEUP_BTN_PIN    GPIO_PIN_7

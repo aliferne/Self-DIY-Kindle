@@ -1,6 +1,6 @@
 #include "bsp_config.h"
 #include "bsp_gpio.h"
-#include "chip/stm32f4/pin_src.h"
+#include "pin_src.h"
 
 GPIO_Model_t usr_led;
 GPIO_Model_t pgup_btn;

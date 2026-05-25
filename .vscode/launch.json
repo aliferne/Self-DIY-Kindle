@@ -11,6 +11,10 @@
             "request": "launch",
             "type": "cortex-debug",
             "servertype": "openocd",
+            "liveWatch": {
+                "enabled": true,
+                "samplesPerSecond": 1
+            },
             "configFiles": [
                 "interface/cmsis-dap.cfg",
                 "target/stm32f4x.cfg"

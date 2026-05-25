@@ -92,6 +92,8 @@ int main(void)
   MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
     bsp_init_hardware();
+
+    gpio_write(&usr_led, GPIO_Level_High);
   /* USER CODE END 2 */
 
   /* Call init function for freertos objects (in cmsis_os2.c) */
