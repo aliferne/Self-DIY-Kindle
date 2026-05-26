@@ -1,9 +1,11 @@
 #include "process_task.h"
+#include "bsp_sys.h"
 
-#include "cmsis_os.h"
+void oled_init();
+
 void StartProcessTask(void const *argument)
 {
     for (;;) {
-        osDelay(1);
+        Delay(50);
     }
 }

@@ -33,9 +33,15 @@
  * ============================================================ */
 
 typedef enum {
-    I2C_Err_OK       = 0,
-    I2C_Err_NACK     = 1,
-    I2C_Err_BusError = 2,
+    I2C_Write = 0,
+    I2C_Read  = 1,
+} I2C_RW_t;
+
+typedef enum {
+    I2C_Err_OK           = 0,
+    I2C_Err_NACK         = 1,
+    I2C_Err_BusError     = 2,
+    I2C_Err_Invalid_Mode = 3,
 } I2C_Err_t;
 
 /* ============================================================
@@ -44,9 +50,10 @@ typedef enum {
 
 /* ---------- 软件 I2C 配置 ---------- */
 typedef struct {
-    uint16_t    scl_delay_us;     /**< SCL 半周期延时 (μs), 100kHz→5 */
-    GPIO_Pull_t sda_pull;         /**< SDA 上拉配置 */
-    GPIO_Pull_t scl_pull;         /**< SCL 上拉配置 */
+    uint16_t scl_delay_us; /**< SCL 半周期延时 (μs), 100kHz→5 */
+    GPIO_Speed_t speed;    /**< SCL 和 SDA 的速度配置 */
+    GPIO_Pull_t sda_pull;  /**< SDA 上拉配置 */
+    GPIO_Pull_t scl_pull;  /**< SCL 上拉配置 */
 } I2C_SW_Config_t;
 
 /* ---------- 软件 I2C 模型（引脚） ---------- */
@@ -54,6 +61,11 @@ typedef struct {
     GPIO_Model_t sda;
     GPIO_Model_t scl;
 } I2C_SW_Model_t;
+/*
+目前看来软件 I2C 的硬件模型可以和硬件 I2C 一致，本质都是引脚
+但是配置的功能势必是不同的，硬件 I2C 要求必须使用 AF 功能
+后面如果做硬件 I2C 的话再思考如何扩展
+ */
 
 /*
  * I2C_Config_t — union 形式，后续可扩展 hw 配置
@@ -67,17 +79,46 @@ typedef union {
  */
 typedef struct {
     union {
-        I2C_SW_Model_t sw;        /**< 软件 I2C: 两个 GPIO 引脚 */
+        I2C_SW_Model_t sw; /**< 软件 I2C: 两个 GPIO 引脚 */
         /* TODO: hw_i2c 外设 */
     } src;
-    I2C_Config_t      config;     /**< 配置快照 */
-    volatile uint8_t  busy : 1;
+    I2C_Config_t config; /**< 配置快照 */
+    volatile uint8_t busy : 1;
 } I2C_Model_t;
+
+/* ============================================================
+ * 外部函数（由芯片层实现）
+ * ============================================================ */
+
+I2C_Err_t i2c_register(I2C_Model_t *m, GPIO_Speed_t speed,
+                       GPIO_Port_t sda_port, GPIO_Pin_t sda_pin,
+                       GPIO_Port_t scl_port, GPIO_Pin_t scl_pin);
+
+I2C_Err_t i2c_init(I2C_Model_t *m, const I2C_Config_t *cfg);
+I2C_Err_t i2c_deinit(I2C_Model_t *m);
+
+I2C_Err_t i2c_write(I2C_Model_t *m, uint8_t dev_addr,
+                    const uint8_t *data, uint16_t len);
+
+I2C_Err_t i2c_read(I2C_Model_t *m, uint8_t dev_addr,
+                   uint8_t *buf, uint16_t len);
+
+/*
+ * 混合模式：write + REPEATED START → read
+ *
+ * 时序：
+ *   S  [dev_addr + W]  ACK  [tx_data...]  ACK  Sr  [dev_addr + R]  ACK  [rx_data...]  NACK  P
+ *
+ * 典型场景：先写寄存器地址，后读数据。
+ */
+I2C_Err_t i2c_write_read(I2C_Model_t *m, uint8_t dev_addr,
+                         const uint8_t *tx_data, uint16_t tx_len,
+                         uint8_t *rx_buf, uint16_t rx_len);
 
 /* ============================================================
  * static inline 芯片级原语
  *
- * 直接操作 GPIO，不依赖任何 HAL 寄存器，芯片无关。
+ * 直接操作 GPIO.
  * ============================================================ */
 
 static inline void i2c_sw_sda_high(I2C_Model_t *m)
@@ -152,7 +193,7 @@ static inline uint8_t i2c_sw_send_byte(I2C_Model_t *m, uint8_t byte)
     uint8_t nack = i2c_sw_get_sda(m);
     i2c_sw_scl_low(m);
 
-    return nack;  /* 0 = ACK (SDA low), 1 = NACK (SDA high) */
+    return nack; /* 0 = ACK (SDA low), 1 = NACK (SDA high) */
 }
 
 /*
@@ -163,9 +204,9 @@ static inline uint8_t i2c_sw_send_byte(I2C_Model_t *m, uint8_t byte)
 static inline uint8_t i2c_sw_recv_byte(I2C_Model_t *m, uint8_t ack)
 {
     uint32_t delay = m->config.sw.scl_delay_us;
-    uint8_t  byte = 0;
+    uint8_t byte   = 0;
 
-    i2c_sw_sda_high(m);  /* 释放 SDA，由从机驱动 */
+    i2c_sw_sda_high(m); /* 释放 SDA，由从机驱动 */
 
     for (int i = 7; i >= 0; i--) {
         DelayUs(delay);
@@ -180,45 +221,24 @@ static inline uint8_t i2c_sw_recv_byte(I2C_Model_t *m, uint8_t ack)
 
     /* 第 9 个时钟：主机发送 ACK/NACK */
     if (ack)
-        i2c_sw_sda_low(m);   /* ACK  */
+        i2c_sw_sda_low(m); /* ACK  */
     else
-        i2c_sw_sda_high(m);  /* NACK */
+        i2c_sw_sda_high(m); /* NACK */
 
     DelayUs(delay);
     i2c_sw_scl_high(m);
     DelayUs(delay);
     i2c_sw_scl_low(m);
 
-    i2c_sw_sda_high(m);  /* 释放 SDA */
+    i2c_sw_sda_high(m); /* 释放 SDA */
 
     return byte;
 }
 
-/* ============================================================
- * public API 声明（由芯片层实现）
- * ============================================================ */
-
-I2C_Err_t i2c_register(I2C_Model_t *m,
-                        GPIO_Port_t sda_port, GPIO_Pin_t sda_pin,
-                        GPIO_Port_t scl_port, GPIO_Pin_t scl_pin);
-
-I2C_Err_t i2c_init(I2C_Model_t *m, const I2C_Config_t *cfg);
-I2C_Err_t i2c_deinit(I2C_Model_t *m);
-
-I2C_Err_t i2c_transmit(I2C_Model_t *m, uint8_t dev_addr,
-                        const uint8_t *data, uint16_t len);
-
-I2C_Err_t i2c_receive(I2C_Model_t *m, uint8_t dev_addr,
-                       uint8_t *buf, uint16_t len);
-
 /*
- * 混合模式：write + REPEATED START → read
- *
- * 时序：
- *   S  [dev_addr + W]  ACK  [tx_data...]  ACK  Sr  [dev_addr + R]  ACK  [rx_data...]  NACK  P
- *
- * 典型场景：先写寄存器地址，后读数据。
+ * 发送地址+读写位，返回 NACK 状态
  */
-I2C_Err_t i2c_write_read(I2C_Model_t *m, uint8_t dev_addr,
-                          const uint8_t *tx_data, uint16_t tx_len,
-                          uint8_t *rx_buf, uint16_t rx_len);
+static inline uint8_t send_addr(I2C_Model_t *m, uint8_t dev_addr, I2C_RW_t rw)
+{
+    return i2c_sw_send_byte(m, (uint8_t)(dev_addr << 1) | (uint8_t)rw);
+}

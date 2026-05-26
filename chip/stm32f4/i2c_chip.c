@@ -11,20 +11,23 @@
  * ============================================================
  */
 
+#include "bsp_gpio.h"
 #include "bsp_i2c.h"
 
 /* ============================================================
  * API 实现
  * ============================================================ */
 
-I2C_Err_t i2c_register(I2C_Model_t *m,
-                        GPIO_Port_t sda_port, GPIO_Pin_t sda_pin,
-                        GPIO_Port_t scl_port, GPIO_Pin_t scl_pin)
+I2C_Err_t i2c_register(I2C_Model_t *m, GPIO_Speed_t speed,
+                       GPIO_Port_t sda_port, GPIO_Pin_t sda_pin,
+                       GPIO_Port_t scl_port, GPIO_Pin_t scl_pin)
 {
     gpio_register(&m->src.sw.sda, sda_port, sda_pin);
     gpio_register(&m->src.sw.scl, scl_port, scl_pin);
 
+    m->config.sw.speed = speed;
     m->busy = 0;
+
     return I2C_Err_OK;
 }
 
@@ -39,9 +42,15 @@ I2C_Err_t i2c_init(I2C_Model_t *m, const I2C_Config_t *cfg)
     GPIO_Config_t pin_cfg = {
         .mode      = GPIO_Mode_Output_OD,
         .pull      = cfg->sw.sda_pull,
-        .speed     = GPIO_Speed_Low,
+        .speed     = cfg->sw.speed,
         .alternate = 0,
     };
+
+    /* 要么内部上拉，要么外部上拉，不允许内部下拉 */
+    if (cfg->sw.sda_pull == GPIO_Pull_Down)
+        return I2C_Err_Invalid_Mode;
+    if (cfg->sw.scl_pull == GPIO_Pull_Down)
+        return I2C_Err_Invalid_Mode;
 
     gpio_init(&m->src.sw.sda, &pin_cfg);
 
@@ -66,21 +75,13 @@ I2C_Err_t i2c_deinit(I2C_Model_t *m)
     return I2C_Err_OK;
 }
 
-/*
- * 内部辅助：发送地址+方向位，返回 NACK 状态
- */
-static uint8_t send_addr(I2C_Model_t *m, uint8_t dev_addr, uint8_t rw)
-{
-    return i2c_sw_send_byte(m, (uint8_t)(dev_addr << 1) | rw);
-}
-
-I2C_Err_t i2c_transmit(I2C_Model_t *m, uint8_t dev_addr,
-                        const uint8_t *data, uint16_t len)
+I2C_Err_t i2c_write(I2C_Model_t *m, uint8_t dev_addr,
+                       const uint8_t *data, uint16_t len)
 {
     m->busy = 1;
 
     i2c_sw_start(m);
-    if (send_addr(m, dev_addr, 0)) {
+    if (send_addr(m, dev_addr, I2C_Write)) {
         i2c_sw_stop(m);
         m->busy = 0;
         return I2C_Err_NACK;
@@ -99,8 +100,8 @@ I2C_Err_t i2c_transmit(I2C_Model_t *m, uint8_t dev_addr,
     return I2C_Err_OK;
 }
 
-I2C_Err_t i2c_receive(I2C_Model_t *m, uint8_t dev_addr,
-                       uint8_t *buf, uint16_t len)
+I2C_Err_t i2c_read(I2C_Model_t *m, uint8_t dev_addr,
+                      uint8_t *buf, uint16_t len)
 {
     if (len == 0)
         return I2C_Err_OK;
@@ -108,7 +109,7 @@ I2C_Err_t i2c_receive(I2C_Model_t *m, uint8_t dev_addr,
     m->busy = 1;
 
     i2c_sw_start(m);
-    if (send_addr(m, dev_addr, 1)) {
+    if (send_addr(m, dev_addr, I2C_Read)) {
         i2c_sw_stop(m);
         m->busy = 0;
         return I2C_Err_NACK;
@@ -117,7 +118,7 @@ I2C_Err_t i2c_receive(I2C_Model_t *m, uint8_t dev_addr,
     for (uint16_t i = 0; i < len; i++) {
         /* 最后一个字节发 NACK，之前的发 ACK */
         uint8_t ack = (i < len - 1) ? 1 : 0;
-        buf[i] = i2c_sw_recv_byte(m, ack);
+        buf[i]      = i2c_sw_recv_byte(m, ack);
     }
 
     i2c_sw_stop(m);
@@ -126,8 +127,8 @@ I2C_Err_t i2c_receive(I2C_Model_t *m, uint8_t dev_addr,
 }
 
 I2C_Err_t i2c_write_read(I2C_Model_t *m, uint8_t dev_addr,
-                          const uint8_t *tx_data, uint16_t tx_len,
-                          uint8_t *rx_buf, uint16_t rx_len)
+                         const uint8_t *tx_data, uint16_t tx_len,
+                         uint8_t *rx_buf, uint16_t rx_len)
 {
     if (rx_len == 0)
         return I2C_Err_OK;
@@ -136,7 +137,7 @@ I2C_Err_t i2c_write_read(I2C_Model_t *m, uint8_t dev_addr,
 
     /* --- 写阶段 --- */
     i2c_sw_start(m);
-    if (send_addr(m, dev_addr, 0)) {
+    if (send_addr(m, dev_addr, I2C_Write)) {
         i2c_sw_stop(m);
         m->busy = 0;
         return I2C_Err_NACK;
@@ -151,10 +152,10 @@ I2C_Err_t i2c_write_read(I2C_Model_t *m, uint8_t dev_addr,
     }
 
     /* --- REPEATED START（不发送 STOP） --- */
-    i2c_sw_start(m);  /* 重复 START */
+    i2c_sw_start(m); /* 重复 START */
 
     /* --- 读阶段 --- */
-    if (send_addr(m, dev_addr, 1)) {
+    if (send_addr(m, dev_addr, I2C_Read)) {
         i2c_sw_stop(m);
         m->busy = 0;
         return I2C_Err_NACK;
@@ -162,7 +163,7 @@ I2C_Err_t i2c_write_read(I2C_Model_t *m, uint8_t dev_addr,
 
     for (uint16_t i = 0; i < rx_len; i++) {
         uint8_t ack = (i < rx_len - 1) ? 1 : 0;
-        rx_buf[i] = i2c_sw_recv_byte(m, ack);
+        rx_buf[i]   = i2c_sw_recv_byte(m, ack);
     }
 
     i2c_sw_stop(m);
