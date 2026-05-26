@@ -25,5 +25,22 @@
 
 # 参考资料
 
-[原理图和 PCB](https://oshwhub.com/li-chuang-kai-fa-ban/li-chuang-liang-shan-pai-tian-kong-xing-kai-fa-ban)
+## 博客
 
+[事件驱动模型](https://blog.csdn.net/sinat_36817189/article/details/106205029)
+[天空星开发板原理图和 PCB](https://oshwhub.com/li-chuang-kai-fa-ban/li-chuang-liang-shan-pai-tian-kong-xing-kai-fa-ban)
+[软件 I2C 原理](https://www.cnblogs.com/yxysuanfa/p/19106787)
+[软件 SPI 原理](https://zhuanlan.zhihu.com/p/654500844)
+[0.96 寸 OLED I2C 屏幕驱动](https://wiki.lckfb.com/zh-hans/tkx/tkx-stm32f407vxt6/module/screen/0-96-iic-single-screen.html)
+[I2S 原理讲解](https://zhuanlan.zhihu.com/p/678943329)
+[STM32 I2S 代码示例](https://doc.embedfire.com/mcu/stm32/f429tiaozhanzhe/std/zh/latest/book/I2S.html)
+[ESP32-with-arduino 驱动 PCM5102 模块代码示例](https://jishuzhan.net/article/1863030601469136897)
+[TI PCM5102 数据手册](https://www.ti.com/product/PCM5102)
+
+## 书籍
+
+王利 —— 《嵌入式C语言自我修养：从芯片、编译器到操作系统》 [ Chapter 8 ~ 9 ]
+
+## 代码
+
+STM32 HAL 库、标准库、Linux 部分驱动源代码
