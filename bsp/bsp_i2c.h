@@ -97,23 +97,25 @@ I2C_Err_t i2c_register(I2C_Model_t *m, GPIO_Speed_t speed,
 I2C_Err_t i2c_init(I2C_Model_t *m, const I2C_Config_t *cfg);
 I2C_Err_t i2c_deinit(I2C_Model_t *m);
 
-I2C_Err_t i2c_write(I2C_Model_t *m, uint8_t dev_addr,
-                    const uint8_t *data, uint16_t len);
+I2C_Err_t i2c_hw_write(I2C_Model_t *m, uint8_t dev_addr,
+                       const uint8_t *data, uint16_t len);
 
-I2C_Err_t i2c_read(I2C_Model_t *m, uint8_t dev_addr,
-                   uint8_t *buf, uint16_t len);
+I2C_Err_t i2c_hw_read(I2C_Model_t *m, uint8_t dev_addr,
+                      uint8_t *buf, uint16_t len);
 
-/*
- * 混合模式：write + REPEATED START → read
- *
- * 时序：
- *   S  [dev_addr + W]  ACK  [tx_data...]  ACK  Sr  [dev_addr + R]  ACK  [rx_data...]  NACK  P
- *
- * 典型场景：先写寄存器地址，后读数据。
- */
-I2C_Err_t i2c_write_read(I2C_Model_t *m, uint8_t dev_addr,
-                         const uint8_t *tx_data, uint16_t tx_len,
-                         uint8_t *rx_buf, uint16_t rx_len);
+/* ============================================================
+ * 外部函数，软件 I2C 可在 BSP 层直接实现
+ * ============================================================ */
+
+I2C_Err_t i2c_sw_write(I2C_Model_t *m, uint8_t dev_addr,
+                       const uint8_t *data, uint16_t len);
+
+I2C_Err_t i2c_sw_read(I2C_Model_t *m, uint8_t dev_addr,
+                      uint8_t *buf, uint16_t len);
+
+I2C_Err_t i2c_sw_write_read(I2C_Model_t *m, uint8_t dev_addr,
+                            const uint8_t *tx_data, uint16_t tx_len,
+                            uint8_t *rx_buf, uint16_t rx_len);
 
 /* ============================================================
  * static inline 芯片级原语
@@ -241,4 +243,112 @@ static inline uint8_t i2c_sw_recv_byte(I2C_Model_t *m, uint8_t ack)
 static inline uint8_t send_addr(I2C_Model_t *m, uint8_t dev_addr, I2C_RW_t rw)
 {
     return i2c_sw_send_byte(m, (uint8_t)(dev_addr << 1) | (uint8_t)rw);
+}
+
+/* ============================================================
+ * 外部函数，软件 I2C 可在 BSP 层直接实现
+ * ============================================================ */
+
+I2C_Err_t i2c_sw_write(I2C_Model_t *m, uint8_t dev_addr,
+                       const uint8_t *data, uint16_t len)
+{
+    m->busy = 1;
+
+    i2c_sw_start(m);
+    if (send_addr(m, dev_addr, I2C_Write)) {
+        i2c_sw_stop(m);
+        m->busy = 0;
+        return I2C_Err_NACK;
+    }
+
+    for (uint16_t i = 0; i < len; i++) {
+        if (i2c_sw_send_byte(m, data[i])) {
+            i2c_sw_stop(m);
+            m->busy = 0;
+            return I2C_Err_NACK;
+        }
+    }
+
+    i2c_sw_stop(m);
+    m->busy = 0;
+    return I2C_Err_OK;
+}
+
+I2C_Err_t i2c_sw_read(I2C_Model_t *m, uint8_t dev_addr,
+                      uint8_t *buf, uint16_t len)
+{
+    if (len == 0)
+        return I2C_Err_OK;
+
+    m->busy = 1;
+
+    i2c_sw_start(m);
+    if (send_addr(m, dev_addr, I2C_Read)) {
+        i2c_sw_stop(m);
+        m->busy = 0;
+        return I2C_Err_NACK;
+    }
+
+    for (uint16_t i = 0; i < len; i++) {
+        /* 最后一个字节发 NACK，之前的发 ACK */
+        uint8_t ack = (i < len - 1) ? 1 : 0;
+        buf[i]      = i2c_sw_recv_byte(m, ack);
+    }
+
+    i2c_sw_stop(m);
+    m->busy = 0;
+    return I2C_Err_OK;
+}
+
+/*
+ * 混合模式：write + REPEATED START → read
+ *
+ * 时序：
+ *   S  [dev_addr + W]  ACK  [tx_data...]  ACK  Sr  [dev_addr + R]  ACK  [rx_data...]  NACK  P
+ *
+ * 典型场景：先写寄存器地址，后读数据。
+ */
+I2C_Err_t i2c_sw_write_read(I2C_Model_t *m, uint8_t dev_addr,
+                            const uint8_t *tx_data, uint16_t tx_len,
+                            uint8_t *rx_buf, uint16_t rx_len)
+{
+    if (rx_len == 0)
+        return I2C_Err_OK;
+
+    m->busy = 1;
+
+    /* --- 写阶段 --- */
+    i2c_sw_start(m);
+    if (send_addr(m, dev_addr, I2C_Write)) {
+        i2c_sw_stop(m);
+        m->busy = 0;
+        return I2C_Err_NACK;
+    }
+
+    for (uint16_t i = 0; i < tx_len; i++) {
+        if (i2c_sw_send_byte(m, tx_data[i])) {
+            i2c_sw_stop(m);
+            m->busy = 0;
+            return I2C_Err_NACK;
+        }
+    }
+
+    /* --- REPEATED START（不发送 STOP） --- */
+    i2c_sw_start(m); /* 重复 START */
+
+    /* --- 读阶段 --- */
+    if (send_addr(m, dev_addr, I2C_Read)) {
+        i2c_sw_stop(m);
+        m->busy = 0;
+        return I2C_Err_NACK;
+    }
+
+    for (uint16_t i = 0; i < rx_len; i++) {
+        uint8_t ack = (i < rx_len - 1) ? 1 : 0;
+        rx_buf[i]   = i2c_sw_recv_byte(m, ack);
+    }
+
+    i2c_sw_stop(m);
+    m->busy = 0;
+    return I2C_Err_OK;
 }
