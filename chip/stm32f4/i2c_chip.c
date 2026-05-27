@@ -7,7 +7,7 @@
  * 软件 I2C (bit-bang)：
  *   - SDA/SCL 固定为 Output_OD，强制开漏
  *   - 使用 bsp_gpio API 控制引脚电平
- *   - 使用 DelayUs 控制时序
+ *   - 使用 dwt_delay_us 控制时序
  * ============================================================
  */
 
@@ -18,14 +18,13 @@
  * API 实现
  * ============================================================ */
 
-I2C_Err_t i2c_register(I2C_Model_t *m, GPIO_Speed_t speed,
+I2C_Err_t i2c_register(I2C_Model_t *m,
                        GPIO_Port_t sda_port, GPIO_Pin_t sda_pin,
                        GPIO_Port_t scl_port, GPIO_Pin_t scl_pin)
 {
     gpio_register(&m->src.sw.sda, sda_port, sda_pin);
     gpio_register(&m->src.sw.scl, scl_port, scl_pin);
 
-    m->config.sw.speed = speed;
     m->busy            = 0;
 
     return I2C_Err_OK;
