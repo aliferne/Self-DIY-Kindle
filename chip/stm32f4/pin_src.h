@@ -15,13 +15,18 @@
 
 /*
  * 按键：
- *   - Page Up    (上翻页)
- *   - Page Down  (下翻页)
- *   - Back       (返回)
- *   - Confirm    (确认)
- *   - Home       (主页)
+ *   - Page Up    (上翻页)  PE7
+ *   - Page Down  (下翻页)  PE8
+ *   - Back       (返回)    PE9
+ *   - Confirm    (确认)    PE10
+ *   - Home       (主页)    PE11
+ *
  * LED：
- *   - User LED
+ *   - User LED             PB2
+ * 
+ * ESCREEN:
+ *  
+ * 
  */
 
 #define PAGEUP_BTN_PORT   GPIOE
@@ -42,9 +47,35 @@
 #define USER_LED_PORT     GPIOB
 #define USER_LED_PIN      GPIO_PIN_2
 
-#define I2C_SCL_PORT       GPIOA
-#define I2C_SCL_PIN        GPIO_PIN_4
+/*
+ * 墨水屏 (4.2inch e-Paper V2)：
+ *   - SCK 
+ *   - MOSI 
+ *   - MISO →  复用 MOSI 引脚（电子纸无需回读）
+ *   - CS
+ *   - DC
+ *   - RST
+ *   - BUSY
+ *
+ * 以下为占位符，请在确定实际接线后修改。
+ */
+#define EPAPER_SCK_PORT  GPIOE
+#define EPAPER_SCK_PIN   GPIO_PIN_7
 
-#define I2C_SDA_PORT       GPIOA
-#define I2C_SDA_PIN        GPIO_PIN_3
+#define EPAPER_MOSI_PORT GPIOE
+#define EPAPER_MOSI_PIN  GPIO_PIN_9
 
+#define EPAPER_MISO_PORT GPIOE
+#define EPAPER_MISO_PIN  GPIO_PIN_9
+
+#define EPAPER_CS_PORT   GPIOE
+#define EPAPER_CS_PIN    GPIO_PIN_15
+
+#define EPAPER_DC_PORT   GPIOE
+#define EPAPER_DC_PIN    GPIO_PIN_13
+
+#define EPAPER_RST_PORT  GPIOE
+#define EPAPER_RST_PIN   GPIO_PIN_11
+
+#define EPAPER_BUSY_PORT GPIOE
+#define EPAPER_BUSY_PIN  GPIO_PIN_14
