@@ -9,8 +9,8 @@ static void handle_btn_event();
 void StartInputTask(void const *argument)
 {
     for (;;) {
-        handle_btn_event();
-        Delay(1);
+        // handle_btn_event();
+        os_delay_ms(1);
     }
 }
 
