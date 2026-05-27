@@ -90,10 +90,38 @@ virtualFolder:
           files:
             - path: Middlewares/miniz/miniz.c
           folders: []
+        - name: EPaper
+          files:
+            - path: Middlewares/epaper/epaper.c
+          folders:
+            - name: drv
+              files:
+                - path: Middlewares/epaper/drv/epd_4in2_v2.c
+              folders: []
+            - name: config
+              files:
+                - path: Middlewares/epaper/config/DEV_Config.c
+              folders: []
+            - name: gui
+              files:
+                - path: Middlewares/epaper/gui/gui_paint.c
+              folders: []
+            - name: fonts
+              files:
+                - path: Middlewares/epaper/fonts/font8.c
+                - path: Middlewares/epaper/fonts/font12.c
+                - path: Middlewares/epaper/fonts/font12CN.c
+                - path: Middlewares/epaper/fonts/font16.c
+                - path: Middlewares/epaper/fonts/font20.c
+                - path: Middlewares/epaper/fonts/font24.c
+                - path: Middlewares/epaper/fonts/font24CN.c
+              folders: []
     - name: BSP
       files:
         - path: bsp/bsp_config.c
         - path: bsp/bsp_rtc.c
+        - path: bsp/bsp_i2c.c
+        - path: bsp/bsp_spi.c
       folders: []
     - name: Services
       files:
@@ -124,10 +152,12 @@ virtualFolder:
                 - path: chip/stm32f4/i2c_chip.c
                 - path: chip/stm32f4/i2s_chip.c
                 - path: chip/stm32f4/spi_chip.c
+                - path: chip/stm32f4/sys_chip.c
               folders:
                 - name: irq
                   files:
                     - path: chip/stm32f4/irq/irq_gpio_exti.c
+                    - path: chip/stm32f4/irq/irq_sys_it.c
                   folders: []
 dependenceList: []
 outDir: build
@@ -157,10 +187,16 @@ targets:
         - applications
         - .
         - chip/stm32f4
+        - Middlewares/epaper
+        - Middlewares/epaper/config
+        - Middlewares/epaper/drv
+        - Middlewares/epaper/fonts
+        - Middlewares/epaper/gui
       libList: []
     excludeList:
       - <virtual_root>/Application/MDK-ARM/startup_stm32f407xx.s
-    settings: {}
+    settings:
+      debugger: cortex-debug
     toolchain: GCC
     toolchainConfigMap:
       AC5:
@@ -272,12 +308,9 @@ targets:
         options:
           version: 5
           afterBuildTasks: []
-          asm-compiler:
-            ASM_FLAGS: ""
+          asm-compiler: {}
           beforeBuildTasks: []
           c/cpp-compiler:
-            CXX_FLAGS: ""
-            C_FLAGS: ""
             language-c: c11
             language-cpp: c++11
             one-elf-section-per-data: true
@@ -286,14 +319,16 @@ targets:
             warnings: all-warnings
           global:
             $float-abi-type: hard
-            misc-control: ""
+            arm-thumb-mode: thumb
+            callgraph-info: true
             not-use-syscalls: true
             output-debug-info: enable
+            stack-usage: true
             use-newlib-nano: true
           linker:
             $outputTaskExcludes:
               - .bin
-            LD_FLAGS: ""
+            $toolName: auto
             LIB_FLAGS: -lm
             output-format: elf
             remove-unused-input-sections: true
@@ -307,8 +342,8 @@ targets:
         baseAddr: ""
         bin: ""
         cpuInfo:
-          cpuName: "null"
-          vendor: "null"
+          cpuName: STM32F407VE
+          vendor: ST
         otherCmds: ""
         proType: 1
         speed: 8000
@@ -317,4 +352,4 @@ targets:
         bin: ""
         interface: cmsis-dap
         target: stm32f4x
-    uploader: OpenOCD
+    uploader: JLink

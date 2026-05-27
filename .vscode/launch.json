@@ -5,6 +5,21 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "cwd": "${workspaceFolder}",
+            "executable": "./build/Self-DIY-Kindle/Self-DIY-Kindle.elf",
+            "name": "Debug with JLink",
+            "liveWatch": {
+                "enabled": true,
+                "samplesPerSecond": 1
+            },
+            "request": "launch",
+            "type": "cortex-debug",
+            "device": "stm32f407ve",
+            "runToEntryPoint": "main",
+            "showDevDebugOutput": "none",
+            "servertype": "jlink"
+        },
+        {
             "cwd": "${workspaceRoot}",
             "executable": "./build/Self-DIY-Kindle/Self-DIY-Kindle.elf",
             "name": "Debug with OpenOCD",
