@@ -1,5 +1,8 @@
 #include "bsp_config.h"
+#include "bsp_gpio.h"
 #include "pin_src.h"
+#include "epaper.h" /* 需要完整类型来调用 register/init */
+#include "bsp_sys.h"
 
 GPIO_Model_t usr_led;
 GPIO_Model_t pgup_btn;
@@ -8,21 +11,16 @@ GPIO_Model_t back_btn;
 GPIO_Model_t home_btn;
 GPIO_Model_t confirm_btn;
 
-I2C_Model_t oled;
-
-SPI_Model_t spi;
-
 static void bsp_init_buttons(void);
 static void bsp_init_leds(void);
-static void bsp_init_i2c(void);
-static void bsp_init_spi(void);
+static void bsp_init_epaper(void);
 
 void bsp_init_hardware(void)
 {
+    dwt_init(); /* 初始化 DWT 以支持微秒级延时 */
     bsp_init_leds();
     bsp_init_buttons();
-    bsp_init_i2c();
-    bsp_init_spi();
+    bsp_init_epaper();
 }
 
 /* ============================================================
@@ -92,26 +90,20 @@ static void bsp_init_leds(void)
     gpio_init(&usr_led, &init_conf);
 }
 
-static void bsp_init_i2c(void)
+static void bsp_init_epaper(void)
 {
-    i2c_register(&oled, GPIO_Speed_Low,
-                 (GPIO_Port_t)I2C_SDA_PORT,
-                 (GPIO_Pin_t)I2C_SDA_PIN,
-                 (GPIO_Port_t)I2C_SCL_PORT,
-                 (GPIO_Pin_t)I2C_SCL_PIN);
+    EPaper_Err_t err;
 
-    I2C_Config_t i2c_conf = {
-        .sw = {
-            .scl_delay_us = 50,
-            .scl_pull     = GPIO_Pull_Up,
-            .sda_pull     = GPIO_Pull_Up,
-        },
-    };
+    epaper_hw_register(
+        &e_paper,
+        (GPIO_Port_t)EPAPER_SCK_PORT, (GPIO_Pin_t)EPAPER_SCK_PIN,
+        (GPIO_Port_t)EPAPER_MOSI_PORT, (GPIO_Pin_t)EPAPER_MOSI_PIN,
+        (GPIO_Port_t)EPAPER_MISO_PORT, (GPIO_Pin_t)EPAPER_MISO_PIN,
+        (GPIO_Port_t)EPAPER_CS_PORT, (GPIO_Pin_t)EPAPER_CS_PIN,
+        (GPIO_Port_t)EPAPER_DC_PORT, (GPIO_Pin_t)EPAPER_DC_PIN,
+        (GPIO_Port_t)EPAPER_RST_PORT, (GPIO_Pin_t)EPAPER_RST_PIN,
+        (GPIO_Port_t)EPAPER_BUSY_PORT, (GPIO_Pin_t)EPAPER_BUSY_PIN);
 
-    i2c_init(&oled, &i2c_conf);
-}
-
-static void bsp_init_spi(void)
-{
-    // spi_register();
+    err = epaper_hw_init(&e_paper);
+    GIVEUP(err);
 }

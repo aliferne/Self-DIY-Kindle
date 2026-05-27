@@ -132,7 +132,7 @@ void MX_FREERTOS_Init(void) {
   ProcessTaskHandle = osThreadCreate(osThread(ProcessTask), NULL);
 
   /* definition and creation of UITask */
-  osThreadDef(UITask, StartUITask, osPriorityNormal, 0, 128);
+  osThreadDef(UITask, StartUITask, osPriorityNormal, 0, 512);
   UITaskHandle = osThreadCreate(osThread(UITask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
