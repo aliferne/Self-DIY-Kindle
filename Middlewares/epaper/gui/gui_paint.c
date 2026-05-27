@@ -79,7 +79,7 @@
 #include <string.h> //memset()
 #include <math.h>
 
-Paint_Model_t Paint;
+Painter_Model_t Paint;
 
 /******************************************************************************
 function: Create Image
@@ -89,7 +89,7 @@ parameter:
     Height  :   The height of the picture
     Color   :   Whether the picture is inverted
 ******************************************************************************/
-void Paint_NewImage(Paint_Model_t *paint, UBYTE *image, UWORD Width, UWORD Height, UWORD Rotate, UWORD Color)
+void Paint_NewImage(Painter_Model_t *paint, UBYTE *image, UWORD Width, UWORD Height, UWORD Rotate, UWORD Color)
 {
     paint->Image = NULL;
     paint->Image = image;
@@ -121,7 +121,7 @@ function: Select Image
 parameter:
     image : Pointer to the image cache
 ******************************************************************************/
-void Paint_SelectImage(Paint_Model_t *paint, UBYTE *image)
+void Paint_SelectImage(Painter_Model_t *paint, UBYTE *image)
 {
     paint->Image = image;
 }
@@ -131,7 +131,7 @@ function: Select Image Rotate
 parameter:
     Rotate : 0,90,180,270
 ******************************************************************************/
-void Paint_SetRotate(Paint_Model_t *paint, UWORD Rotate)
+void Paint_SetRotate(Painter_Model_t *paint, UWORD Rotate)
 {
     if (Rotate == ROTATE_0 || Rotate == ROTATE_90 || Rotate == ROTATE_180 || Rotate == ROTATE_270) {
         Debug("Set image Rotate %d\r\n", Rotate);
@@ -141,7 +141,7 @@ void Paint_SetRotate(Paint_Model_t *paint, UWORD Rotate)
     }
 }
 
-void Paint_SetScale(Paint_Model_t *paint, UBYTE scale)
+void Paint_SetScale(Painter_Model_t *paint, UBYTE scale)
 {
     if (scale == 2) {
         paint->Scale     = scale;
@@ -163,7 +163,7 @@ function:	Select Image mirror
 parameter:
     mirror   :Not mirror,Horizontal mirror,Vertical mirror,Origin mirror
 ******************************************************************************/
-void Paint_SetMirroring(Paint_Model_t *paint, UBYTE mirror)
+void Paint_SetMirroring(Painter_Model_t *paint, UBYTE mirror)
 {
     if (mirror == MIRROR_NONE || mirror == MIRROR_HORIZONTAL ||
         mirror == MIRROR_VERTICAL || mirror == MIRROR_ORIGIN) {
@@ -182,7 +182,7 @@ parameter:
     Ypoint : At point Y
     Color  : Painted colors
 ******************************************************************************/
-void Paint_SetPixel(Paint_Model_t *paint, UWORD Xpoint, UWORD Ypoint, UWORD Color)
+void Paint_SetPixel(Painter_Model_t *paint, UWORD Xpoint, UWORD Ypoint, UWORD Color)
 {
     if (Xpoint > paint->Width || Ypoint > paint->Height) {
         Debug("Exceeding display boundaries\r\n");
@@ -261,7 +261,7 @@ function: Clear the color of the picture
 parameter:
     Color : Painted colors
 ******************************************************************************/
-void Paint_Clear(Paint_Model_t *paint, UWORD Color)
+void Paint_Clear(Painter_Model_t *paint, UWORD Color)
 {
     if (paint->Scale == 2) {
         for (UWORD Y = 0; Y < paint->HeightByte; Y++) {
@@ -296,7 +296,7 @@ parameter:
     Yend   : y end point
     Color  : Painted colors
 ******************************************************************************/
-void Paint_ClearWindows(Paint_Model_t *paint, UWORD Xstart, UWORD Ystart, UWORD Xend, UWORD Yend, UWORD Color)
+void Paint_ClearWindows(Painter_Model_t *paint, UWORD Xstart, UWORD Ystart, UWORD Xend, UWORD Yend, UWORD Color)
 {
     UWORD X, Y;
     for (Y = Ystart; Y < Yend; Y++) {
@@ -315,7 +315,7 @@ parameter:
     Dot_Pixel	: point size
     Dot_Style	: point Style
 ******************************************************************************/
-void Paint_DrawPoint(Paint_Model_t *paint, UWORD Xpoint, UWORD Ypoint, UWORD Color,
+void Paint_DrawPoint(Painter_Model_t *paint, UWORD Xpoint, UWORD Ypoint, UWORD Color,
                      DOT_PIXEL Dot_Pixel, DOT_STYLE Dot_Style)
 {
     if (Xpoint > paint->Width || Ypoint > paint->Height) {
@@ -355,7 +355,7 @@ parameter:
     Line_width : Line width
     Line_Style: Solid and dotted lines
 ******************************************************************************/
-void Paint_DrawLine(Paint_Model_t *paint, UWORD Xstart, UWORD Ystart, UWORD Xend, UWORD Yend,
+void Paint_DrawLine(Painter_Model_t *paint, UWORD Xstart, UWORD Ystart, UWORD Xend, UWORD Yend,
                     UWORD Color, DOT_PIXEL Line_width, LINE_STYLE Line_Style)
 {
     if (Xstart > paint->Width || Ystart > paint->Height ||
@@ -413,7 +413,7 @@ parameter:
     Line_width: Line width
     Draw_Fill : Whether to fill the inside of the rectangle
 ******************************************************************************/
-void Paint_DrawRectangle(Paint_Model_t *paint, UWORD Xstart, UWORD Ystart, UWORD Xend, UWORD Yend,
+void Paint_DrawRectangle(Painter_Model_t *paint, UWORD Xstart, UWORD Ystart, UWORD Xend, UWORD Yend,
                          UWORD Color, DOT_PIXEL Line_width, DRAW_FILL Draw_Fill)
 {
     if (Xstart > paint->Width || Ystart > paint->Height ||
@@ -446,7 +446,7 @@ parameter:
     Line_width: Line width
     Draw_Fill : Whether to fill the inside of the Circle
 ******************************************************************************/
-void Paint_DrawCircle(Paint_Model_t *paint, UWORD X_Center, UWORD Y_Center, UWORD Radius,
+void Paint_DrawCircle(Painter_Model_t *paint, UWORD X_Center, UWORD Y_Center, UWORD Radius,
                       UWORD Color, DOT_PIXEL Line_width, DRAW_FILL Draw_Fill)
 {
     if (X_Center > paint->Width || Y_Center >= paint->Height) {
@@ -515,7 +515,7 @@ parameter:
     Color_Foreground : Select the foreground color
     Color_Background : Select the background color
 ******************************************************************************/
-void Paint_DrawChar(Paint_Model_t *paint, UWORD Xpoint, UWORD Ypoint, const char Acsii_Char,
+void Paint_DrawChar(Painter_Model_t *paint, UWORD Xpoint, UWORD Ypoint, const char Acsii_Char,
                     sFONT *Font, UWORD Color_Foreground, UWORD Color_Background)
 {
     UWORD Page, Column;
@@ -564,7 +564,7 @@ parameter:
     Color_Foreground : Select the foreground color
     Color_Background : Select the background color
 ******************************************************************************/
-void Paint_DrawString_EN(Paint_Model_t *paint, UWORD Xstart, UWORD Ystart, const char *pString,
+void Paint_DrawString_EN(Painter_Model_t *paint, UWORD Xstart, UWORD Ystart, const char *pString,
                          sFONT *Font, UWORD Color_Foreground, UWORD Color_Background)
 {
     UWORD Xpoint = Xstart;
@@ -608,7 +608,7 @@ parameter:
     Color_Foreground : Select the foreground color
     Color_Background : Select the background color
 ******************************************************************************/
-void Paint_DrawString_CN(Paint_Model_t *paint, UWORD Xstart, UWORD Ystart, const char *pString, cFONT *font,
+void Paint_DrawString_CN(Painter_Model_t *paint, UWORD Xstart, UWORD Ystart, const char *pString, cFONT *font,
                          UWORD Color_Foreground, UWORD Color_Background)
 {
     const char *p_text = pString;
@@ -698,7 +698,7 @@ parameter:
     Color_Background : Select the background color
 ******************************************************************************/
 #define ARRAY_LEN 255
-void Paint_DrawNum(Paint_Model_t *paint, UWORD Xpoint, UWORD Ypoint, int32_t Nummber,
+void Paint_DrawNum(Painter_Model_t *paint, UWORD Xpoint, UWORD Ypoint, int32_t Nummber,
                    sFONT *Font, UWORD Color_Foreground, UWORD Color_Background)
 {
 
@@ -740,7 +740,7 @@ parameter:
     Color_Foreground : Select the foreground color
     Color_Background : Select the background color
 ******************************************************************************/
-void Paint_DrawNumDecimals(Paint_Model_t *paint, UWORD Xpoint, UWORD Ypoint, double Nummber,
+void Paint_DrawNumDecimals(Painter_Model_t *paint, UWORD Xpoint, UWORD Ypoint, double Nummber,
                            sFONT *Font, UWORD Digit, UWORD Color_Foreground, UWORD Color_Background)
 {
     int16_t Num_Bit = 0, Str_Bit = 0;
@@ -799,7 +799,7 @@ parameter:
     Color_Foreground : Select the foreground color
     Color_Background : Select the background color
 ******************************************************************************/
-void Paint_DrawTime(Paint_Model_t *paint, UWORD Xstart, UWORD Ystart, PAINT_TIME *pTime, sFONT *Font,
+void Paint_DrawTime(Painter_Model_t *paint, UWORD Xstart, UWORD Ystart, PAINT_TIME *pTime, sFONT *Font,
                     UWORD Color_Foreground, UWORD Color_Background)
 {
     uint8_t value[10] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
@@ -825,7 +825,7 @@ info:
     Use a computer to convert the image into a corresponding array,
     and then embed the array directly into Imagedata.cpp as a .c file.
 ******************************************************************************/
-void Paint_DrawBitMap(Paint_Model_t *paint, const unsigned char *image_buffer)
+void Paint_DrawBitMap(Painter_Model_t *paint, const unsigned char *image_buffer)
 {
     UWORD x, y;
     UDOUBLE Addr = 0;
@@ -850,7 +850,7 @@ parameter:
 info:
     Use this function to paste image data into a buffer
 ******************************************************************************/
-void Paint_DrawBitMap_Paste(Paint_Model_t *paint, const unsigned char *image_buffer, UWORD xStart, UWORD yStart, UWORD imageWidth, UWORD imageHeight, UBYTE flipColor)
+void Paint_DrawBitMap_Paste(Painter_Model_t *paint, const unsigned char *image_buffer, UWORD xStart, UWORD yStart, UWORD imageWidth, UWORD imageHeight, UBYTE flipColor)
 {
     UBYTE color, srcImage;
     UWORD x, y;
@@ -868,7 +868,7 @@ void Paint_DrawBitMap_Paste(Paint_Model_t *paint, const unsigned char *image_buf
     }
 }
 
-void Paint_DrawBitMap_Block(Paint_Model_t *paint, const unsigned char *image_buffer, UBYTE Region)
+void Paint_DrawBitMap_Block(Painter_Model_t *paint, const unsigned char *image_buffer, UBYTE Region)
 {
     UWORD x, y;
     UDOUBLE Addr = 0;

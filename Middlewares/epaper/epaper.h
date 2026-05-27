@@ -26,6 +26,12 @@
  * ============================================================ */
 
 typedef enum {
+    EPaper_Normal_Init = 0,
+    EPaper_Fast_Init   = 1,
+    EPaper_4Gray_Init  = 2,
+} EPaper_Init_Mode_t;
+
+typedef enum {
     EPaper_Err_OK        = 0,
     EPaper_Err_Busy      = 1, /**< 屏幕忙，操作未完成 */
     EPaper_Err_IO        = 2, /**< SPI/GPIO 通信错误 */
@@ -34,16 +40,21 @@ typedef enum {
 } EPaper_Err_t;
 
 /* ============================================================
- * 墨水屏硬件模型
+ * 墨水屏模型
  * ============================================================ */
 
-typedef struct EPaper_Model {
-    SPI_Model_t spi;        /**< SPI 句柄（含 CS、SCK、MOSI、MISO） */
-    GPIO_Model_t dc;        /**< Data/Command 选择线 */
-    GPIO_Model_t rst;       /**< 复位线 */
-    GPIO_Model_t busy;      /**< 忙检测线（输入） */
-    Paint_Model_t paint;    /**< 画布模型 */
-    uint8_t hw_initialized; /**< 是否已调用 epaper_hw_init */
+typedef struct {
+    EPaper_Init_Mode_t init_mode;
+} EPaper_Config_t;
+
+typedef struct {
+    SPI_Model_t spi;   /**< SPI 句柄（含 CS、SCK、MOSI、MISO） */
+    GPIO_Model_t dc;   /**< Data/Command 选择线 */
+    GPIO_Model_t rst;  /**< 复位线 */
+    GPIO_Model_t busy; /**< 忙检测线（输入） */
+    EPaper_Config_t cfg;
+    Painter_Model_t painter; /**< 画笔模型 */
+    // uint8_t *canvas;         /**< 画布（数组）  */
 } EPaper_Model_t;
 
 extern EPaper_Model_t e_paper;
@@ -66,7 +77,7 @@ extern EPaper_Model_t e_paper;
  * @param rst_port/pin   复位
  * @param busy_port/pin  忙检测
  */
-void epaper_hw_register(
+void epaper_register(
     EPaper_Model_t *m,
     GPIO_Port_t sck_port, GPIO_Pin_t sck_pin,
     GPIO_Port_t mosi_port, GPIO_Pin_t mosi_pin,
@@ -83,9 +94,9 @@ void epaper_hw_register(
  *
  * @return EPaper_Err_OK 成功，其他为错误码。
  */
-EPaper_Err_t epaper_hw_init(EPaper_Model_t *m);
+EPaper_Err_t epaper_init(EPaper_Model_t *m, EPaper_Config_t *cfg);
 
 /**
  * 去初始化。
  */
-void epaper_hw_deinit(EPaper_Model_t *m);
+void epaper_deinit(EPaper_Model_t *m);

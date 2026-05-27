@@ -31,12 +31,17 @@
 #ifndef _EPD_4IN2_V2_H_
 #define _EPD_4IN2_V2_H_
 
-#include "DEV_Config.h"
-#include "epaper.h"
-
 // Display resolution
 #define EPD_4IN2_V2_WIDTH  400
 #define EPD_4IN2_V2_HEIGHT 300
+
+#define IMAGE_SIZE         (((EPD_4IN2_V2_WIDTH % 8 == 0) \
+                         ? (EPD_4IN2_V2_WIDTH / 8)        \
+                         : (EPD_4IN2_V2_WIDTH / 8 + 1)) * \
+                    EPD_4IN2_V2_HEIGHT)
+
+#include "DEV_Config.h"
+#include "epaper.h"
 
 typedef enum {
     Seconds_1_5S = 0, /* 1.5s */

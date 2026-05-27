@@ -83,7 +83,7 @@ typedef struct {
     UWORD WidthByte;
     UWORD HeightByte;
     UWORD Scale;
-} Paint_Model_t;
+} Painter_Model_t;
 
 /**
  * Display rotate
@@ -179,35 +179,35 @@ typedef struct {
 extern PAINT_TIME sPaint_time;
 
 // init and Clear
-void Paint_NewImage(Paint_Model_t *paint, UBYTE *image, UWORD Width, UWORD Height, UWORD Rotate, UWORD Color);
-void Paint_SelectImage(Paint_Model_t *paint, UBYTE *image);
-void Paint_SetRotate(Paint_Model_t *paint, UWORD Rotate);
-void Paint_SetMirroring(Paint_Model_t *paint, UBYTE mirror);
-void Paint_SetPixel(Paint_Model_t *paint, UWORD Xpoint, UWORD Ypoint, UWORD Color);
-void Paint_SetScale(Paint_Model_t *paint, UBYTE scale);
+void Paint_NewImage(Painter_Model_t *paint, UBYTE *image, UWORD Width, UWORD Height, UWORD Rotate, UWORD Color);
+void Paint_SelectImage(Painter_Model_t *paint, UBYTE *image);
+void Paint_SetRotate(Painter_Model_t *paint, UWORD Rotate);
+void Paint_SetMirroring(Painter_Model_t *paint, UBYTE mirror);
+void Paint_SetPixel(Painter_Model_t *paint, UWORD Xpoint, UWORD Ypoint, UWORD Color);
+void Paint_SetScale(Painter_Model_t *paint, UBYTE scale);
 
-void Paint_Clear(Paint_Model_t *paint, UWORD Color);
-void Paint_ClearWindows(Paint_Model_t *paint, UWORD Xstart, UWORD Ystart, UWORD Xend, UWORD Yend, UWORD Color);
+void Paint_Clear(Painter_Model_t *paint, UWORD Color);
+void Paint_ClearWindows(Painter_Model_t *paint, UWORD Xstart, UWORD Ystart, UWORD Xend, UWORD Yend, UWORD Color);
 
 // Drawing
-void Paint_DrawPoint(Paint_Model_t *paint, UWORD Xpoint, UWORD Ypoint, UWORD Color, DOT_PIXEL Dot_Pixel, DOT_STYLE Dot_FillWay);
-void Paint_DrawLine(Paint_Model_t *paint, UWORD Xstart, UWORD Ystart, UWORD Xend, UWORD Yend, UWORD Color, DOT_PIXEL Line_width, LINE_STYLE Line_Style);
-void Paint_DrawRectangle(Paint_Model_t *paint, UWORD Xstart, UWORD Ystart, UWORD Xend, UWORD Yend, UWORD Color, DOT_PIXEL Line_width, DRAW_FILL Draw_Fill);
-void Paint_DrawCircle(Paint_Model_t *paint, UWORD X_Center, UWORD Y_Center, UWORD Radius, UWORD Color, DOT_PIXEL Line_width, DRAW_FILL Draw_Fill);
+void Paint_DrawPoint(Painter_Model_t *paint, UWORD Xpoint, UWORD Ypoint, UWORD Color, DOT_PIXEL Dot_Pixel, DOT_STYLE Dot_FillWay);
+void Paint_DrawLine(Painter_Model_t *paint, UWORD Xstart, UWORD Ystart, UWORD Xend, UWORD Yend, UWORD Color, DOT_PIXEL Line_width, LINE_STYLE Line_Style);
+void Paint_DrawRectangle(Painter_Model_t *paint, UWORD Xstart, UWORD Ystart, UWORD Xend, UWORD Yend, UWORD Color, DOT_PIXEL Line_width, DRAW_FILL Draw_Fill);
+void Paint_DrawCircle(Painter_Model_t *paint, UWORD X_Center, UWORD Y_Center, UWORD Radius, UWORD Color, DOT_PIXEL Line_width, DRAW_FILL Draw_Fill);
 
 // Display string
-void Paint_DrawChar(Paint_Model_t *paint, UWORD Xstart, UWORD Ystart, const char Acsii_Char, sFONT *Font, UWORD Color_Foreground, UWORD Color_Background);
-void Paint_DrawString_EN(Paint_Model_t *paint, UWORD Xstart, UWORD Ystart, const char *pString, sFONT *Font, UWORD Color_Foreground, UWORD Color_Background);
-void Paint_DrawString_CN(Paint_Model_t *paint, UWORD Xstart, UWORD Ystart, const char *pString, cFONT *font, UWORD Color_Foreground, UWORD Color_Background);
-void Paint_DrawNum(Paint_Model_t *paint, UWORD Xpoint, UWORD Ypoint, int32_t Nummber, sFONT *Font, UWORD Color_Foreground, UWORD Color_Background);
-void Paint_DrawNumDecimals(Paint_Model_t *paint, UWORD Xpoint, UWORD Ypoint, double Nummber, sFONT *Font, UWORD Digit, UWORD Color_Foreground, UWORD Color_Background); // Able to display decimals
-void Paint_DrawTime(Paint_Model_t *paint, UWORD Xstart, UWORD Ystart, PAINT_TIME *pTime, sFONT *Font, UWORD Color_Foreground, UWORD Color_Background);
+void Paint_DrawChar(Painter_Model_t *paint, UWORD Xstart, UWORD Ystart, const char Acsii_Char, sFONT *Font, UWORD Color_Foreground, UWORD Color_Background);
+void Paint_DrawString_EN(Painter_Model_t *paint, UWORD Xstart, UWORD Ystart, const char *pString, sFONT *Font, UWORD Color_Foreground, UWORD Color_Background);
+void Paint_DrawString_CN(Painter_Model_t *paint, UWORD Xstart, UWORD Ystart, const char *pString, cFONT *font, UWORD Color_Foreground, UWORD Color_Background);
+void Paint_DrawNum(Painter_Model_t *paint, UWORD Xpoint, UWORD Ypoint, int32_t Nummber, sFONT *Font, UWORD Color_Foreground, UWORD Color_Background);
+void Paint_DrawNumDecimals(Painter_Model_t *paint, UWORD Xpoint, UWORD Ypoint, double Nummber, sFONT *Font, UWORD Digit, UWORD Color_Foreground, UWORD Color_Background); // Able to display decimals
+void Paint_DrawTime(Painter_Model_t *paint, UWORD Xstart, UWORD Ystart, PAINT_TIME *pTime, sFONT *Font, UWORD Color_Foreground, UWORD Color_Background);
 
 // pic
-void Paint_DrawBitMap(Paint_Model_t *paint, const unsigned char *image_buffer);
-void Paint_DrawBitMap_Paste(Paint_Model_t *paint, const unsigned char *image_buffer, UWORD Xstart, UWORD Ystart, UWORD imageWidth, UWORD imageHeight, UBYTE flipColor);
+void Paint_DrawBitMap(Painter_Model_t *paint, const unsigned char *image_buffer);
+void Paint_DrawBitMap_Paste(Painter_Model_t *paint, const unsigned char *image_buffer, UWORD Xstart, UWORD Ystart, UWORD imageWidth, UWORD imageHeight, UBYTE flipColor);
 // void Paint_DrawBitMap_Half(const unsigned char* image_buffer, UBYTE Region);
 // void Paint_DrawBitMap_OneQuarter(const unsigned char* image_buffer, UBYTE Region);
 // void Paint_DrawBitMap_OneEighth(const unsigned char* image_buffer, UBYTE Region);
-void Paint_DrawBitMap_Block(Paint_Model_t *paint, const unsigned char *image_buffer, UBYTE Region);
+void Paint_DrawBitMap_Block(Painter_Model_t *paint, const unsigned char *image_buffer, UBYTE Region);
 #endif

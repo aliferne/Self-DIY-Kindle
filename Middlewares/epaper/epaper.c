@@ -14,6 +14,8 @@
 #include "epaper.h"
 #include "DEV_Config.h"
 #include "bsp_gpio.h"
+#include "epd_4in2_v2.h"
+#include "gui_paint.h"
 
 EPaper_Model_t e_paper;
 
@@ -21,7 +23,7 @@ EPaper_Model_t e_paper;
  * 注册
  * ============================================================ */
 
-void epaper_hw_register(
+void epaper_register(
     EPaper_Model_t *m,
     GPIO_Port_t sck_port, GPIO_Pin_t sck_pin,
     GPIO_Port_t mosi_port, GPIO_Pin_t mosi_pin,
@@ -48,8 +50,10 @@ void epaper_hw_register(
  * 初始化
  * ============================================================ */
 
-EPaper_Err_t epaper_hw_init(EPaper_Model_t *m)
+EPaper_Err_t epaper_init(EPaper_Model_t *m, EPaper_Config_t *cfg)
 {
+    m->cfg = *cfg;
+
     SPI_Err_t spi_err;
 
     /* ---- SPI ---- */
@@ -100,7 +104,15 @@ EPaper_Err_t epaper_hw_init(EPaper_Model_t *m)
     gpio_write(&m->dc, GPIO_Level_Low);
     gpio_write(&m->rst, GPIO_Level_High);
 
-    m->hw_initialized = 1;
+    if (cfg->init_mode == EPaper_Fast_Init) {
+
+    } else if (cfg->init_mode == EPaper_Normal_Init) {
+
+    } else if (cfg->init_mode == EPaper_4Gray_Init) {
+    }
+
+    Paint_NewImage(&e_paper.painter, black_image, EPD_4IN2_V2_WIDTH, EPD_4IN2_V2_HEIGHT, 0, WHITE);
+
     return EPaper_Err_OK;
 }
 
@@ -108,7 +120,7 @@ EPaper_Err_t epaper_hw_init(EPaper_Model_t *m)
  * 去初始化 ( 参考 `DEV_Module_Exit` )
  * ============================================================ */
 
-void epaper_hw_deinit(EPaper_Model_t *m)
+void epaper_deinit(EPaper_Model_t *m)
 {
     gpio_write(&m->dc, GPIO_Level_Low);
     gpio_write(&m->spi.src.sw.cs, GPIO_Level_Low);
@@ -120,7 +132,6 @@ void epaper_hw_deinit(EPaper_Model_t *m)
     gpio_deinit(&m->dc);
     gpio_deinit(&m->rst);
     gpio_deinit(&m->busy);
-    m->hw_initialized = 0;
 }
 
 /* ============================================================

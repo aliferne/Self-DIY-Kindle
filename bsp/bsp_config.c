@@ -94,7 +94,7 @@ static void bsp_init_epaper(void)
 {
     EPaper_Err_t err;
 
-    epaper_hw_register(
+    epaper_register(
         &e_paper,
         (GPIO_Port_t)EPAPER_SCK_PORT, (GPIO_Pin_t)EPAPER_SCK_PIN,
         (GPIO_Port_t)EPAPER_MOSI_PORT, (GPIO_Pin_t)EPAPER_MOSI_PIN,
@@ -104,6 +104,6 @@ static void bsp_init_epaper(void)
         (GPIO_Port_t)EPAPER_RST_PORT, (GPIO_Pin_t)EPAPER_RST_PIN,
         (GPIO_Port_t)EPAPER_BUSY_PORT, (GPIO_Pin_t)EPAPER_BUSY_PIN);
 
-    err = epaper_hw_init(&e_paper);
+    err = epaper_init(&e_paper);
     GIVEUP(err);
 }

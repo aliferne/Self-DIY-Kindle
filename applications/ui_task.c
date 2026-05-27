@@ -14,11 +14,6 @@ extern EPaper_Model_t e_paper;
                          ? (EPD_4IN2_V2_WIDTH / 8)        \
                          : (EPD_4IN2_V2_WIDTH / 8 + 1)) * \
                     EPD_4IN2_V2_HEIGHT)
-/* 四级灰度需要 2bpp，缓冲区大小翻倍 */
-UBYTE gray_buf[((EPD_4IN2_V2_WIDTH % 4 == 0)
-                    ? (EPD_4IN2_V2_WIDTH / 4)
-                    : (EPD_4IN2_V2_WIDTH / 4 + 1)) *
-               EPD_4IN2_V2_HEIGHT];
 
 static UBYTE black_image[IMAGE_SIZE];
 
@@ -27,23 +22,23 @@ static UBYTE black_image[IMAGE_SIZE];
  * ============================================================ */
 static void draw_test_pattern(void)
 {
-    Paint_DrawPoint(&e_paper.paint, 10, 80, BLACK, DOT_PIXEL_1X1, DOT_STYLE_DFT);
-    Paint_DrawPoint(&e_paper.paint, 10, 90, BLACK, DOT_PIXEL_2X2, DOT_STYLE_DFT);
-    Paint_DrawPoint(&e_paper.paint, 10, 100, BLACK, DOT_PIXEL_3X3, DOT_STYLE_DFT);
-    Paint_DrawLine(&e_paper.paint, 20, 70, 70, 120, BLACK, DOT_PIXEL_1X1, LINE_STYLE_SOLID);
-    Paint_DrawLine(&e_paper.paint, 70, 70, 20, 120, BLACK, DOT_PIXEL_1X1, LINE_STYLE_SOLID);
-    Paint_DrawRectangle(&e_paper.paint, 20, 70, 70, 120, BLACK, DOT_PIXEL_1X1, DRAW_FILL_EMPTY);
-    Paint_DrawRectangle(&e_paper.paint, 80, 70, 130, 120, BLACK, DOT_PIXEL_1X1, DRAW_FILL_FULL);
-    Paint_DrawCircle(&e_paper.paint, 45, 95, 20, BLACK, DOT_PIXEL_1X1, DRAW_FILL_EMPTY);
-    Paint_DrawCircle(&e_paper.paint, 105, 95, 20, WHITE, DOT_PIXEL_1X1, DRAW_FILL_FULL);
-    Paint_DrawLine(&e_paper.paint, 85, 95, 125, 95, BLACK, DOT_PIXEL_1X1, LINE_STYLE_DOTTED);
-    Paint_DrawLine(&e_paper.paint, 105, 75, 105, 115, BLACK, DOT_PIXEL_1X1, LINE_STYLE_DOTTED);
-    Paint_DrawString_EN(&e_paper.paint, 10, 0, "waveshare", &Font16, BLACK, WHITE);
-    Paint_DrawString_EN(&e_paper.paint, 10, 20, "hello world", &Font12, WHITE, BLACK);
-    Paint_DrawNum(&e_paper.paint, 10, 33, 123456789, &Font12, BLACK, WHITE);
-    Paint_DrawNum(&e_paper.paint, 10, 50, 987654321, &Font16, WHITE, BLACK);
-    Paint_DrawString_CN(&e_paper.paint, 130, 0, " 你好abc", &Font12CN, BLACK, WHITE);
-    Paint_DrawString_CN(&e_paper.paint, 130, 20, "微雪电子", &Font24CN, WHITE, BLACK);
+    Paint_DrawPoint(&e_paper.painter, 10, 80, BLACK, DOT_PIXEL_1X1, DOT_STYLE_DFT);
+    Paint_DrawPoint(&e_paper.painter, 10, 90, BLACK, DOT_PIXEL_2X2, DOT_STYLE_DFT);
+    Paint_DrawPoint(&e_paper.painter, 10, 100, BLACK, DOT_PIXEL_3X3, DOT_STYLE_DFT);
+    Paint_DrawLine(&e_paper.painter, 20, 70, 70, 120, BLACK, DOT_PIXEL_1X1, LINE_STYLE_SOLID);
+    Paint_DrawLine(&e_paper.painter, 70, 70, 20, 120, BLACK, DOT_PIXEL_1X1, LINE_STYLE_SOLID);
+    Paint_DrawRectangle(&e_paper.painter, 20, 70, 70, 120, BLACK, DOT_PIXEL_1X1, DRAW_FILL_EMPTY);
+    Paint_DrawRectangle(&e_paper.painter, 80, 70, 130, 120, BLACK, DOT_PIXEL_1X1, DRAW_FILL_FULL);
+    Paint_DrawCircle(&e_paper.painter, 45, 95, 20, BLACK, DOT_PIXEL_1X1, DRAW_FILL_EMPTY);
+    Paint_DrawCircle(&e_paper.painter, 105, 95, 20, WHITE, DOT_PIXEL_1X1, DRAW_FILL_FULL);
+    Paint_DrawLine(&e_paper.painter, 85, 95, 125, 95, BLACK, DOT_PIXEL_1X1, LINE_STYLE_DOTTED);
+    Paint_DrawLine(&e_paper.painter, 105, 75, 105, 115, BLACK, DOT_PIXEL_1X1, LINE_STYLE_DOTTED);
+    Paint_DrawString_EN(&e_paper.painter, 10, 0, "waveshare", &Font16, BLACK, WHITE);
+    Paint_DrawString_EN(&e_paper.painter, 10, 20, "hello world", &Font12, WHITE, BLACK);
+    Paint_DrawNum(&e_paper.painter, 10, 33, 123456789, &Font12, BLACK, WHITE);
+    Paint_DrawNum(&e_paper.painter, 10, 50, 987654321, &Font16, WHITE, BLACK);
+    Paint_DrawString_CN(&e_paper.painter, 130, 0, " 你好abc", &Font12CN, BLACK, WHITE);
+    Paint_DrawString_CN(&e_paper.painter, 130, 20, "微雪电子", &Font24CN, WHITE, BLACK);
 }
 
 /* ============================================================
@@ -54,7 +49,7 @@ static void draw_partial_clock(void)
     UBYTE clock_buf[200 * 50 / 8]; /* 200x50 局部缓冲区，1bpp */
     PAINT_TIME t;
 
-    Paint_NewImage(&e_paper.paint, clock_buf, 200, 50, 0, WHITE);
+    Paint_NewImage(&e_paper.painter, clock_buf, 200, 50, 0, WHITE);
 
     t.Hour = 12;
     t.Min  = 34;
@@ -73,8 +68,8 @@ static void draw_partial_clock(void)
             }
         }
 
-        Paint_Clear(&e_paper.paint, WHITE);
-        Paint_DrawTime(&e_paper.paint, 20, 10, &t, &Font20, WHITE, BLACK);
+        Paint_Clear(&e_paper.painter, WHITE);
+        Paint_DrawTime(&e_paper.painter, 20, 10, &t, &Font20, WHITE, BLACK);
         EPD_4IN2_V2_PartialDisplay(&e_paper, clock_buf, 80, 200, 280, 250);
         os_delay_ms(500);
     }
@@ -111,9 +106,9 @@ void test()
     /* ============================================================
      * 测试 1：绘制图形和文字（标准刷新）
      * ============================================================ */
-    Paint_NewImage(&e_paper.paint, black_image, EPD_4IN2_V2_WIDTH, EPD_4IN2_V2_HEIGHT, 0, WHITE);
-    Paint_SelectImage(&e_paper.paint, black_image);
-    Paint_Clear(&e_paper.paint, WHITE);
+    Paint_NewImage(&e_paper.painter, black_image, EPD_4IN2_V2_WIDTH, EPD_4IN2_V2_HEIGHT, 0, WHITE);
+    Paint_SelectImage(&e_paper.painter, black_image);
+    Paint_Clear(&e_paper.painter, WHITE);
 
     EPD_4IN2_V2_Display(&e_paper, black_image);
     os_delay_ms(3000);
@@ -122,7 +117,7 @@ void test()
      * 测试 2：快速刷新
      * ============================================================ */
     EPD_4IN2_V2_Init_Fast(&e_paper, Seconds_1S);
-    Paint_Clear(&e_paper.paint, WHITE);
+    Paint_Clear(&e_paper.painter, WHITE);
 
     draw_test_pattern();
 
