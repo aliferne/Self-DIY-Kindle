@@ -116,6 +116,9 @@ virtualFolder:
                 - path: Middlewares/epaper/fonts/font24.c
                 - path: Middlewares/epaper/fonts/font24CN.c
               folders: []
+        - name: lvgl
+          files: []
+          folders: []
     - name: BSP
       files:
         - path: bsp/bsp_config.c
@@ -192,6 +195,8 @@ targets:
         - Middlewares/epaper/drv
         - Middlewares/epaper/fonts
         - Middlewares/epaper/gui
+        - Middlewares/lvgl
+        - Middlewares
       libList: []
     excludeList:
       - <virtual_root>/Application/MDK-ARM/startup_stm32f407xx.s
