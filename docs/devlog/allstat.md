@@ -36,7 +36,7 @@
 [STM32 I2S 代码示例](https://doc.embedfire.com/mcu/stm32/f429tiaozhanzhe/std/zh/latest/book/I2S.html)
 [ESP32-with-arduino 驱动 PCM5102 模块代码示例](https://jishuzhan.net/article/1863030601469136897)
 [TI PCM5102 数据手册](https://www.ti.com/product/PCM5102)
-[LVGL 移植指南](https://www.cnblogs.com/RefuelW/articles/18940211)
+[LVGL 移植指南](https://blog.csdn.net/weixin_56167571/article/details/147879170)
 [LVGL 生成中文字库指南](https://www.cnblogs.com/hwd00001/p/17393135.html)
 
 ## 书籍

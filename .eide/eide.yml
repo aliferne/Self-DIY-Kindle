@@ -118,7 +118,143 @@ virtualFolder:
               folders: []
         - name: lvgl
           files: []
-          folders: []
+          folders:
+            - name: config
+              files:
+                - path: Middlewares/lvgl/lv_conf.h
+                - path: Middlewares/lvgl/lvgl.h
+              folders: []
+            - name: porting
+              files:
+                - path: Middlewares/lvgl/porting/lv_port_disp.c
+                - path: Middlewares/lvgl/porting/lv_port_fs.c
+                - path: Middlewares/lvgl/porting/lv_port_indev.c
+              folders: []
+            - name: src
+              files: []
+              folders:
+                - name: core
+                  files:
+                    - path: Middlewares/lvgl/src/core/lv_disp.c
+                    - path: Middlewares/lvgl/src/core/lv_event.c
+                    - path: Middlewares/lvgl/src/core/lv_group.c
+                    - path: Middlewares/lvgl/src/core/lv_indev_scroll.c
+                    - path: Middlewares/lvgl/src/core/lv_indev.c
+                    - path: Middlewares/lvgl/src/core/lv_obj_class.c
+                    - path: Middlewares/lvgl/src/core/lv_obj_draw.c
+                    - path: Middlewares/lvgl/src/core/lv_obj_pos.c
+                    - path: Middlewares/lvgl/src/core/lv_obj_scroll.c
+                    - path: Middlewares/lvgl/src/core/lv_obj_style_gen.c
+                    - path: Middlewares/lvgl/src/core/lv_obj_style.c
+                    - path: Middlewares/lvgl/src/core/lv_obj_tree.c
+                    - path: Middlewares/lvgl/src/core/lv_obj.c
+                    - path: Middlewares/lvgl/src/core/lv_refr.c
+                    - path: Middlewares/lvgl/src/core/lv_theme.c
+                  folders: []
+                - name: draw
+                  files:
+                    - path: Middlewares/lvgl/src/draw/lv_draw_arc.c
+                    - path: Middlewares/lvgl/src/draw/lv_draw_img.c
+                    - path: Middlewares/lvgl/src/draw/lv_draw_label.c
+                    - path: Middlewares/lvgl/src/draw/lv_draw_layer.c
+                    - path: Middlewares/lvgl/src/draw/lv_draw_line.c
+                    - path: Middlewares/lvgl/src/draw/lv_draw_mask.c
+                    - path: Middlewares/lvgl/src/draw/lv_draw_rect.c
+                    - path: Middlewares/lvgl/src/draw/lv_draw_transform.c
+                    - path: Middlewares/lvgl/src/draw/lv_draw_triangle.c
+                    - path: Middlewares/lvgl/src/draw/lv_draw.c
+                    - path: Middlewares/lvgl/src/draw/lv_img_buf.c
+                    - path: Middlewares/lvgl/src/draw/lv_img_cache.c
+                    - path: Middlewares/lvgl/src/draw/lv_img_decoder.c
+                    - path: Middlewares/lvgl/src/draw/arm2d/lv_gpu_arm2d.c
+                    - path: Middlewares/lvgl/src/draw/stm32_dma2d/lv_gpu_stm32_dma2d.c
+                  folders: []
+                - name: extra
+                  files: []
+                  folders: []
+                - name: font
+                  files:
+                    - path: Middlewares/lvgl/src/font/lv_font_dejavu_16_persian_hebrew.c
+                    - path: Middlewares/lvgl/src/font/lv_font_fmt_txt.c
+                    - path: Middlewares/lvgl/src/font/lv_font_loader.c
+                    - path: Middlewares/lvgl/src/font/lv_font_montserrat_8.c
+                    - path: Middlewares/lvgl/src/font/lv_font_montserrat_10.c
+                    - path: Middlewares/lvgl/src/font/lv_font_montserrat_12_subpx.c
+                    - path: Middlewares/lvgl/src/font/lv_font_montserrat_12.c
+                    - path: Middlewares/lvgl/src/font/lv_font_montserrat_14.c
+                    - path: Middlewares/lvgl/src/font/lv_font_montserrat_16.c
+                    - path: Middlewares/lvgl/src/font/lv_font_montserrat_18.c
+                    - path: Middlewares/lvgl/src/font/lv_font_montserrat_20.c
+                    - path: Middlewares/lvgl/src/font/lv_font_montserrat_22.c
+                    - path: Middlewares/lvgl/src/font/lv_font_montserrat_24.c
+                    - path: Middlewares/lvgl/src/font/lv_font_montserrat_26.c
+                    - path: Middlewares/lvgl/src/font/lv_font_montserrat_28_compressed.c
+                    - path: Middlewares/lvgl/src/font/lv_font_montserrat_28.c
+                    - path: Middlewares/lvgl/src/font/lv_font_montserrat_30.c
+                    - path: Middlewares/lvgl/src/font/lv_font_montserrat_32.c
+                    - path: Middlewares/lvgl/src/font/lv_font_montserrat_34.c
+                    - path: Middlewares/lvgl/src/font/lv_font_montserrat_36.c
+                    - path: Middlewares/lvgl/src/font/lv_font_montserrat_38.c
+                    - path: Middlewares/lvgl/src/font/lv_font_montserrat_40.c
+                    - path: Middlewares/lvgl/src/font/lv_font_montserrat_42.c
+                    - path: Middlewares/lvgl/src/font/lv_font_montserrat_44.c
+                    - path: Middlewares/lvgl/src/font/lv_font_montserrat_46.c
+                    - path: Middlewares/lvgl/src/font/lv_font_montserrat_48.c
+                    - path: Middlewares/lvgl/src/font/lv_font_simsun_16_cjk.c
+                    - path: Middlewares/lvgl/src/font/lv_font_unscii_8.c
+                    - path: Middlewares/lvgl/src/font/lv_font_unscii_16.c
+                    - path: Middlewares/lvgl/src/font/lv_font.c
+                  folders: []
+                - name: hal
+                  files:
+                    - path: Middlewares/lvgl/src/hal/lv_hal_disp.c
+                    - path: Middlewares/lvgl/src/hal/lv_hal_indev.c
+                    - path: Middlewares/lvgl/src/hal/lv_hal_tick.c
+                  folders: []
+                - name: misc
+                  files:
+                    - path: Middlewares/lvgl/src/misc/lv_anim_timeline.c
+                    - path: Middlewares/lvgl/src/misc/lv_anim.c
+                    - path: Middlewares/lvgl/src/misc/lv_area.c
+                    - path: Middlewares/lvgl/src/misc/lv_async.c
+                    - path: Middlewares/lvgl/src/misc/lv_bidi.c
+                    - path: Middlewares/lvgl/src/misc/lv_color.c
+                    - path: Middlewares/lvgl/src/misc/lv_fs.c
+                    - path: Middlewares/lvgl/src/misc/lv_gc.c
+                    - path: Middlewares/lvgl/src/misc/lv_ll.c
+                    - path: Middlewares/lvgl/src/misc/lv_log.c
+                    - path: Middlewares/lvgl/src/misc/lv_lru.c
+                    - path: Middlewares/lvgl/src/misc/lv_math.c
+                    - path: Middlewares/lvgl/src/misc/lv_mem.c
+                    - path: Middlewares/lvgl/src/misc/lv_printf.c
+                    - path: Middlewares/lvgl/src/misc/lv_style_gen.c
+                    - path: Middlewares/lvgl/src/misc/lv_style.c
+                    - path: Middlewares/lvgl/src/misc/lv_templ.c
+                    - path: Middlewares/lvgl/src/misc/lv_timer.c
+                    - path: Middlewares/lvgl/src/misc/lv_tlsf.c
+                    - path: Middlewares/lvgl/src/misc/lv_txt_ap.c
+                    - path: Middlewares/lvgl/src/misc/lv_txt.c
+                    - path: Middlewares/lvgl/src/misc/lv_utils.c
+                  folders: []
+                - name: widget
+                  files:
+                    - path: Middlewares/lvgl/src/widgets/lv_arc.c
+                    - path: Middlewares/lvgl/src/widgets/lv_bar.c
+                    - path: Middlewares/lvgl/src/widgets/lv_btn.c
+                    - path: Middlewares/lvgl/src/widgets/lv_btnmatrix.c
+                    - path: Middlewares/lvgl/src/widgets/lv_canvas.c
+                    - path: Middlewares/lvgl/src/widgets/lv_checkbox.c
+                    - path: Middlewares/lvgl/src/widgets/lv_dropdown.c
+                    - path: Middlewares/lvgl/src/widgets/lv_img.c
+                    - path: Middlewares/lvgl/src/widgets/lv_label.c
+                    - path: Middlewares/lvgl/src/widgets/lv_line.c
+                    - path: Middlewares/lvgl/src/widgets/lv_objx_templ.c
+                    - path: Middlewares/lvgl/src/widgets/lv_roller.c
+                    - path: Middlewares/lvgl/src/widgets/lv_slider.c
+                    - path: Middlewares/lvgl/src/widgets/lv_switch.c
+                    - path: Middlewares/lvgl/src/widgets/lv_table.c
+                    - path: Middlewares/lvgl/src/widgets/lv_textarea.c
+                  folders: []
     - name: BSP
       files:
         - path: bsp/bsp_config.c
@@ -190,13 +326,21 @@ targets:
         - applications
         - .
         - chip/stm32f4
+        - Middlewares
         - Middlewares/epaper
         - Middlewares/epaper/config
         - Middlewares/epaper/drv
         - Middlewares/epaper/fonts
         - Middlewares/epaper/gui
         - Middlewares/lvgl
-        - Middlewares
+        - Middlewares/lvgl/demos
+        - Middlewares/lvgl/porting
+        - Middlewares/lvgl/src/core
+        - Middlewares/lvgl/src/font
+        - Middlewares/lvgl/src
+        - Middlewares/lvgl/src/hal
+        - Middlewares/lvgl/src/widgets
+        - Middlewares/lvgl/src/misc
       libList: []
     excludeList:
       - <virtual_root>/Application/MDK-ARM/startup_stm32f407xx.s
