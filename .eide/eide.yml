@@ -58,13 +58,22 @@ virtualFolder:
             - path: Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.c
             - path: Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.c
             - path: Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c
+            - path: Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_i2c.c
+            - path: Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_i2s.c
+            - path: Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_spi.c
+            - path: Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_sd.c
+            - path: Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_usart.c
+            - path: Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c
+            - path: Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_wwdg.c
+            - path: Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.c
           folders: []
         - name: CMSIS
           files:
             - path: Core/Src/system_stm32f4xx.c
           folders: []
     - name: Middlewares
-      files: []
+      files:
+        - path: Middlewares/mid_config.c
       folders:
         - name: FatFs
           files:
@@ -308,6 +317,7 @@ targets:
       defineList:
         - USE_HAL_DRIVER
         - STM32F407xx
+        - HAL_SPI_MODULE_ENABLED
       incList:
         - Core/Inc
         - Drivers/STM32F4xx_HAL_Driver/Inc

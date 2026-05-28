@@ -245,12 +245,12 @@ void Paint_SetPixel(Painter_Model_t *paint, UWORD Xpoint, UWORD Ypoint, UWORD Co
         Color        = Color % 4; // Guaranteed color scale is 4  --- 0~3
         UBYTE Rdata  = paint->Image[Addr];
 
-        Rdata             = Rdata & (~(0xC0 >> ((X % 4) * 2)));
+        Rdata              = Rdata & (~(0xC0 >> ((X % 4) * 2)));
         paint->Image[Addr] = Rdata | ((Color << 6) >> ((X % 4) * 2));
     } else if (paint->Scale == 6 || paint->Scale == 7) {
-        UDOUBLE Addr      = X / 2 + Y * paint->WidthByte;
-        UBYTE Rdata       = paint->Image[Addr];
-        Rdata             = Rdata & (~(0xF0 >> ((X % 2) * 4))); // Clear first, then set value
+        UDOUBLE Addr       = X / 2 + Y * paint->WidthByte;
+        UBYTE Rdata        = paint->Image[Addr];
+        Rdata              = Rdata & (~(0xF0 >> ((X % 2) * 4))); // Clear first, then set value
         paint->Image[Addr] = Rdata | ((Color << 4) >> ((X % 2) * 4));
         // printf("Add =  %d ,data = %d\r\n",Addr,Rdata);
     }
@@ -266,21 +266,21 @@ void Paint_Clear(Painter_Model_t *paint, UWORD Color)
     if (paint->Scale == 2) {
         for (UWORD Y = 0; Y < paint->HeightByte; Y++) {
             for (UWORD X = 0; X < paint->WidthByte; X++) { // 8 pixel =  1 byte
-                UDOUBLE Addr      = X + Y * paint->WidthByte;
+                UDOUBLE Addr       = X + Y * paint->WidthByte;
                 paint->Image[Addr] = Color;
             }
         }
     } else if (paint->Scale == 4) {
         for (UWORD Y = 0; Y < paint->HeightByte; Y++) {
             for (UWORD X = 0; X < paint->WidthByte; X++) {
-                UDOUBLE Addr      = X + Y * paint->WidthByte;
+                UDOUBLE Addr       = X + Y * paint->WidthByte;
                 paint->Image[Addr] = (Color << 6) | (Color << 4) | (Color << 2) | Color;
             }
         }
     } else if (paint->Scale == 6 || paint->Scale == 7) {
         for (UWORD Y = 0; Y < paint->HeightByte; Y++) {
             for (UWORD X = 0; X < paint->WidthByte; X++) {
-                UDOUBLE Addr      = X + Y * paint->WidthByte;
+                UDOUBLE Addr       = X + Y * paint->WidthByte;
                 paint->Image[Addr] = (Color << 4) | Color;
             }
         }
@@ -832,7 +832,7 @@ void Paint_DrawBitMap(Painter_Model_t *paint, const unsigned char *image_buffer)
 
     for (y = 0; y < paint->HeightByte; y++) {
         for (x = 0; x < paint->WidthByte; x++) { // 8 pixel =  1 byte
-            Addr              = x + y * paint->WidthByte;
+            Addr               = x + y * paint->WidthByte;
             paint->Image[Addr] = (unsigned char)image_buffer[Addr];
         }
     }

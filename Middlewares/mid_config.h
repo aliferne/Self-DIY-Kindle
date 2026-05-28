@@ -6,4 +6,4 @@
 
 #include "epaper.h"
 
-
+void mid_init_modules(void);

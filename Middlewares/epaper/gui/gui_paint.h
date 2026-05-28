@@ -107,9 +107,11 @@ typedef enum {
 /**
  * image color
  **/
-#define WHITE 0xFFFF
-#define BLACK 0x0000
+// #define WHITE 0xFFFF
+// #define BLACK 0x0000
 // #define RED              0xF800
+#define WHITE            0xFF
+#define BLACK            0x00
 #define RED              BLACK
 
 #define IMAGE_BACKGROUND WHITE
@@ -210,4 +212,5 @@ void Paint_DrawBitMap_Paste(Painter_Model_t *paint, const unsigned char *image_b
 // void Paint_DrawBitMap_OneQuarter(const unsigned char* image_buffer, UBYTE Region);
 // void Paint_DrawBitMap_OneEighth(const unsigned char* image_buffer, UBYTE Region);
 void Paint_DrawBitMap_Block(Painter_Model_t *paint, const unsigned char *image_buffer, UBYTE Region);
+
 #endif

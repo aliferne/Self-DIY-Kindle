@@ -578,6 +578,7 @@ EPaper_Err_t EPD_4IN2_V2_Display(EPaper_Model_t *epd, UBYTE *Image)
 }
 
 /******************************************************************************
+warning: 这个 Display Fast 应该是有问题的，不要调用
 function :	Sends the image buffer in RAM to e-Paper and fast displays
 parameter:
 ******************************************************************************/

@@ -104,16 +104,33 @@ EPaper_Err_t epaper_init(EPaper_Model_t *m, EPaper_Config_t *cfg)
     gpio_write(&m->dc, GPIO_Level_Low);
     gpio_write(&m->rst, GPIO_Level_High);
 
-    if (cfg->init_mode == EPaper_Fast_Init) {
+    EPaper_Err_t epaper_err = EPaper_Err_OK;
 
-    } else if (cfg->init_mode == EPaper_Normal_Init) {
-
-    } else if (cfg->init_mode == EPaper_4Gray_Init) {
+    if (m->cfg.init_mode == EPaper_Fast_Init) {
+        epaper_err = EPD_4IN2_V2_Init_Fast(
+            m,
+            (m->cfg.fast_init_time == 1.5f) ? Seconds_1_5S : Seconds_1S);
+    } else if (m->cfg.init_mode == EPaper_Normal_Init) {
+        epaper_err = EPD_4IN2_V2_Init(m);
+    } else if (m->cfg.init_mode == EPaper_4Gray_Init) {
+        epaper_err = EPD_4IN2_V2_Init_4Gray(m);
     }
 
-    Paint_NewImage(&e_paper.painter, black_image, EPD_4IN2_V2_WIDTH, EPD_4IN2_V2_HEIGHT, 0, WHITE);
+    if (epaper_err != EPaper_Err_OK)
+        return epaper_err;
+
+    epaper_err = EPD_4IN2_V2_Clear(m);
+    if (epaper_err != EPaper_Err_OK)
+        return epaper_err;
 
     return EPaper_Err_OK;
+}
+
+void epaper_sleep(EPaper_Model_t *m)
+{
+    EPD_4IN2_V2_Init(m);
+    EPD_4IN2_V2_Clear(m);
+    EPD_4IN2_V2_Sleep(m);
 }
 
 /* ============================================================

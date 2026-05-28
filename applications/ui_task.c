@@ -1,6 +1,6 @@
 #include "ui_task.h"
-#include "cmsis_os.h"
 #include "bsp_sys.h"
+#include "cmsis_os.h"
 
 #include "epaper.h"
 #include "epd_4in2_v2.h"
@@ -88,20 +88,8 @@ void StartUITask(void const *argument)
 
 void test()
 {
-    EPaper_Err_t err;
     /* --- 等待硬件初始化完成 --- */
     os_delay_ms(100);
-
-    /* --- 全屏清屏 --- */
-    err = EPD_4IN2_V2_Init(&e_paper);
-    if (err != EPaper_Err_OK)
-        return;
-
-    err = EPD_4IN2_V2_Clear(&e_paper);
-    if (err != EPaper_Err_OK)
-        return;
-
-    os_delay_ms(500);
 
     /* ============================================================
      * 测试 1：绘制图形和文字（标准刷新）
@@ -110,43 +98,20 @@ void test()
     Paint_SelectImage(&e_paper.painter, black_image);
     Paint_Clear(&e_paper.painter, WHITE);
 
-    EPD_4IN2_V2_Display(&e_paper, black_image);
-    os_delay_ms(3000);
-
-    /* ============================================================
-     * 测试 2：快速刷新
-     * ============================================================ */
-    EPD_4IN2_V2_Init_Fast(&e_paper, Seconds_1S);
-    Paint_Clear(&e_paper.painter, WHITE);
-
     draw_test_pattern();
 
-    EPD_4IN2_V2_Display_Fast(&e_paper, black_image);
-    os_delay_ms(3000);
+    EPD_4IN2_V2_Display(&e_paper, black_image);
+    os_delay_ms(10000);
 
-    // /* ============================================================
-    //  * 测试 3：正常刷新（再次）
-    //  * ============================================================ */
-    // EPD_4IN2_V2_Init(&e_paper);
-    // Paint_Clear(RED);
+    /* ============================================================
+     * 收尾：清屏 + 休眠
+     * ============================================================ */
+    epaper_sleep(&e_paper);
+    epaper_deinit(&e_paper);
+    os_delay_ms(10000);
 
-    // draw_test_pattern();
-
-    // EPD_4IN2_V2_Display(&e_paper, black_image);
-    // os_delay_ms(3000);
-
-    // /* ============================================================
-    //  * 测试 4：局部刷新 — 模拟时钟
-    //  * ============================================================ */
     // draw_partial_clock();
 
     // EPD_4IN2_V2_Display(&e_paper, black_image);
-    // os_delay_ms(3000);
-
-    // /* ============================================================
-    //  * 收尾：清屏 + 休眠
-    //  * ============================================================ */
-    // EPD_4IN2_V2_Init(&e_paper);
-    // EPD_4IN2_V2_Clear(&e_paper);
-    // EPD_4IN2_V2_Sleep(&e_paper);
+    // os_delay_ms(10000);
 }

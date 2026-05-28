@@ -1,7 +1,6 @@
 #include "bsp_config.h"
 #include "bsp_gpio.h"
 #include "pin_src.h"
-#include "epaper.h" /* 需要完整类型来调用 register/init */
 #include "bsp_sys.h"
 
 GPIO_Model_t usr_led;
@@ -13,14 +12,12 @@ GPIO_Model_t confirm_btn;
 
 static void bsp_init_buttons(void);
 static void bsp_init_leds(void);
-static void bsp_init_epaper(void);
 
 void bsp_init_hardware(void)
 {
     dwt_init(); /* 初始化 DWT 以支持微秒级延时 */
     bsp_init_leds();
     bsp_init_buttons();
-    bsp_init_epaper();
 }
 
 /* ============================================================
@@ -88,22 +85,4 @@ static void bsp_init_leds(void)
     };
 
     gpio_init(&usr_led, &init_conf);
-}
-
-static void bsp_init_epaper(void)
-{
-    EPaper_Err_t err;
-
-    epaper_register(
-        &e_paper,
-        (GPIO_Port_t)EPAPER_SCK_PORT, (GPIO_Pin_t)EPAPER_SCK_PIN,
-        (GPIO_Port_t)EPAPER_MOSI_PORT, (GPIO_Pin_t)EPAPER_MOSI_PIN,
-        (GPIO_Port_t)EPAPER_MISO_PORT, (GPIO_Pin_t)EPAPER_MISO_PIN,
-        (GPIO_Port_t)EPAPER_CS_PORT, (GPIO_Pin_t)EPAPER_CS_PIN,
-        (GPIO_Port_t)EPAPER_DC_PORT, (GPIO_Pin_t)EPAPER_DC_PIN,
-        (GPIO_Port_t)EPAPER_RST_PORT, (GPIO_Pin_t)EPAPER_RST_PIN,
-        (GPIO_Port_t)EPAPER_BUSY_PORT, (GPIO_Pin_t)EPAPER_BUSY_PIN);
-
-    err = epaper_init(&e_paper);
-    GIVEUP(err);
 }

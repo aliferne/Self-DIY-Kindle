@@ -45,6 +45,11 @@ typedef enum {
 
 typedef struct {
     EPaper_Init_Mode_t init_mode;
+    /* 
+     * 支持 1 和 1.5 两个选项，单位为秒
+     * 传入非 1 或 1.5 的值将被设置为 1
+     */
+    float fast_init_time; 
 } EPaper_Config_t;
 
 typedef struct {
@@ -54,7 +59,7 @@ typedef struct {
     GPIO_Model_t busy; /**< 忙检测线（输入） */
     EPaper_Config_t cfg;
     Painter_Model_t painter; /**< 画笔模型 */
-    // uint8_t *canvas;         /**< 画布（数组）  */
+    uint8_t *canvas;         /**< 画布（数组）  */
 } EPaper_Model_t;
 
 extern EPaper_Model_t e_paper;
@@ -88,13 +93,18 @@ void epaper_register(
     GPIO_Port_t busy_port, GPIO_Pin_t busy_pin);
 
 /**
- * 初始化 epaper 硬件（GPIO + SPI 配置）。
+ * 初始化 epaper，并自动设置画布和辅助清屏
  *
- * 必须在 epaper_hw_register 之后调用。
+ * 必须在 epaper_register 之后调用。
  *
  * @return EPaper_Err_OK 成功，其他为错误码。
  */
 EPaper_Err_t epaper_init(EPaper_Model_t *m, EPaper_Config_t *cfg);
+
+/**
+ * 休眠模式。
+ */
+void epaper_sleep(EPaper_Model_t *m);
 
 /**
  * 去初始化。
