@@ -21,22 +21,43 @@
 
 static SPI_Err_t hal_status_to_spi_err(HAL_StatusTypeDef stat);
 
+/* 硬件 SPI 传输实现（通过虚函数表调用，外部不直接使用） */
+static SPI_Err_t spi_hw_write_read(SPI_Model_t *m,
+                                   const uint8_t *tx, uint8_t *rx, uint16_t len);
+static SPI_Err_t spi_hw_write(SPI_Model_t *m,
+                              const uint8_t *tx, uint16_t len);
+static SPI_Err_t spi_hw_read(SPI_Model_t *m,
+                             uint8_t *rx, uint16_t len);
+
 /* ============================================================
  * API 实现
  * ============================================================ */
 
-SPI_Err_t spi_register(SPI_Model_t *m,
-                       GPIO_Port_t cs_port, GPIO_Pin_t cs_pin,
-                       GPIO_Port_t sclk_port, GPIO_Pin_t sclk_pin,
-                       GPIO_Port_t mosi_port, GPIO_Pin_t mosi_pin,
-                       GPIO_Port_t miso_port, GPIO_Pin_t miso_pin)
+SPI_Err_t spi_register(SPI_Model_t *m, SPI_Register_Cfg_t *cfg)
 {
-    gpio_register(&m->src.sw.cs, cs_port, cs_pin);
-    gpio_register(&m->src.sw.sclk, sclk_port, sclk_pin);
-    gpio_register(&m->src.sw.mosi, mosi_port, mosi_pin);
-    gpio_register(&m->src.sw.miso, miso_port, miso_pin);
-
+    m->drv  = cfg->drv;
     m->busy = 0;
+
+    if (cfg->drv == SPI_Driver_SW) {
+        /* ---- 软件 SPI：注册四个 GPIO 引脚 ---- */
+        gpio_register(&m->src.sw.cs,   cfg->src.sw.cs_port,  cfg->src.sw.cs_pin);
+        gpio_register(&m->src.sw.sclk, cfg->src.sw.sck_port, cfg->src.sw.sck_pin);
+        gpio_register(&m->src.sw.mosi, cfg->src.sw.mosi_port, cfg->src.sw.mosi_pin);
+        gpio_register(&m->src.sw.miso, cfg->src.sw.miso_port, cfg->src.sw.miso_pin);
+
+        /* 填入 SW 虚函数表 */
+        m->write_read = spi_sw_write_read;
+        m->write      = spi_sw_write;
+        m->read       = spi_sw_read;
+    } else {
+        /* ---- 硬件 SPI：保存外设句柄 ---- */
+        m->src.hw = cfg->src.hw;
+
+        /* 填入 HW 虚函数表 */
+        m->write_read = spi_hw_write_read;
+        m->write      = spi_hw_write;
+        m->read       = spi_hw_read;
+    }
 
     return SPI_Err_OK;
 }
@@ -90,21 +111,24 @@ SPI_Err_t spi_deinit(SPI_Model_t *m)
     return SPI_Err_OK;
 }
 
-SPI_Err_t spi_hw_read(SPI_Model_t *m, uint8_t *rx, uint16_t len)
+static SPI_Err_t spi_hw_read(SPI_Model_t *m, uint8_t *rx, uint16_t len)
 {
-    HAL_StatusTypeDef stat = HAL_SPI_Receive(m->src.hw.hspi, rx, len, m->config.hw.timeout);
+    SPI_HandleTypeDef *hspi = (SPI_HandleTypeDef *)m->src.hw;
+    HAL_StatusTypeDef stat  = HAL_SPI_Receive(hspi, rx, len, m->config.hw.timeout);
     return hal_status_to_spi_err(stat);
 }
 
-SPI_Err_t spi_hw_write(SPI_Model_t *m, const uint8_t *tx, uint16_t len)
+static SPI_Err_t spi_hw_write(SPI_Model_t *m, const uint8_t *tx, uint16_t len)
 {
-    HAL_StatusTypeDef stat = HAL_SPI_Transmit(m->src.hw.hspi, tx, len, m->config.hw.timeout);
+    SPI_HandleTypeDef *hspi = (SPI_HandleTypeDef *)m->src.hw;
+    HAL_StatusTypeDef stat  = HAL_SPI_Transmit(hspi, tx, len, m->config.hw.timeout);
     return hal_status_to_spi_err(stat);
 }
 
-SPI_Err_t spi_hw_write_read(SPI_Model_t *m, const uint8_t *tx, uint8_t *rx, uint16_t len)
+static SPI_Err_t spi_hw_write_read(SPI_Model_t *m, const uint8_t *tx, uint8_t *rx, uint16_t len)
 {
-    HAL_StatusTypeDef stat = HAL_SPI_TransmitReceive(m->src.hw.hspi, tx, rx, len, m->config.hw.timeout);
+    SPI_HandleTypeDef *hspi = (SPI_HandleTypeDef *)m->src.hw;
+    HAL_StatusTypeDef stat  = HAL_SPI_TransmitReceive(hspi, tx, rx, len, m->config.hw.timeout);
     return hal_status_to_spi_err(stat);
 }
 

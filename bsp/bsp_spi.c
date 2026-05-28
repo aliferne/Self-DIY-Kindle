@@ -5,7 +5,30 @@
 #define SPI_DELAY(delay) dwt_delay_us(delay)
 
 /* ============================================================
- * 外部函数，软件 SPI 可在 BSP 层直接实现
+ * 统一 API 转发层
+ *
+ * 通过 SPI_Model_t 中的函数指针分发到 SW 或 HW 实现。
+ * 调用方无需关心底层驱动类型。
+ * ============================================================ */
+
+SPI_Err_t spi_write_read(SPI_Model_t *m,
+                         const uint8_t *tx, uint8_t *rx, uint16_t len)
+{
+    return m->write_read(m, tx, rx, len);
+}
+
+SPI_Err_t spi_write(SPI_Model_t *m, const uint8_t *tx, uint16_t len)
+{
+    return m->write(m, tx, len);
+}
+
+SPI_Err_t spi_read(SPI_Model_t *m, uint8_t *rx, uint16_t len)
+{
+    return m->read(m, rx, len);
+}
+
+/* ============================================================
+ * 软件 SPI 实现
  * ============================================================ */
 
 SPI_Err_t spi_sw_write_read(SPI_Model_t *m,

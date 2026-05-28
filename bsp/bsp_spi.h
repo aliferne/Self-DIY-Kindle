@@ -12,23 +12,30 @@
  *
  * 使用示例：
  *
+ *   // === 软件 SPI ===
  *   SPI_Model_t display;
- *   spi_register(&display,
- *       GPIOA, GPIO_PIN_4,   // CS
- *       GPIOA, GPIO_PIN_5,   // SCLK
- *       GPIOA, GPIO_PIN_7,   // MOSI
- *       GPIOA, GPIO_PIN_6);  // MISO
+ *   spi_register(&display, &(SPI_Register_Cfg_t){
+ *       .drv = SPI_Driver_SW,
+ *       .src.sw = {
+ *           .cs_port   = GPIOA, .cs_pin   = GPIO_PIN_4,
+ *           .sck_port  = GPIOA, .sck_pin  = GPIO_PIN_5,
+ *           .mosi_port = GPIOA, .mosi_pin = GPIO_PIN_7,
+ *           .miso_port = GPIOA, .miso_pin = GPIO_PIN_6,
+ *       },
+ *   });
  *   spi_init(&display, &(SPI_Config_t){ .sw = {
  *       .mode         = SPI_Mode_0,
  *       .bit_delay_us = 1,
  *   }});
+ *   spi_transmit(&display, tx, 2);       // 仅发送
+ *   spi_receive(&display, rx, 2);        // 仅接收
+ *   spi_transmit_receive(&display, tx, rx, 2); // 全双工
  *
- *   uint8_t tx[2] = {0x90, 0x00}, rx[2];
- *   spi_transmit_receive(&display, tx, rx, 2);
- *   // 或仅发送：
- *   spi_transmit(&display, tx, 2);
- *   // 或仅接收：
- *   spi_receive(&display, rx, 2);
+ *   // === 硬件 SPI ===
+ *   // spi_register(&display, &(SPI_Register_Cfg_t){
+ *   //     .drv     = SPI_Driver_HW,
+ *   //     .src.hw  = &hspi2,
+ *   // });
  */
 
 #include "bsp_gpio.h"
@@ -41,7 +48,7 @@
 /* 软件 SPI 或者硬件 SPI */
 typedef enum {
     SPI_Driver_HW = 0,
-    SPI_Driver_SW = 0,
+    SPI_Driver_SW = 1,
 } SPI_Driver_t;
 
 typedef enum {
@@ -110,47 +117,41 @@ typedef union {
     } hw;
 } SPI_Config_t;
 
+/* 软件 SPI 注册参数：四个引脚的 (Port, Pin) */
 typedef struct {
-    /* 决定软件/硬件类型 */
+    GPIO_Port_t cs_port;
+    GPIO_Pin_t cs_pin;
+    GPIO_Port_t sck_port;
+    GPIO_Pin_t sck_pin;
+    GPIO_Port_t mosi_port;
+    GPIO_Pin_t mosi_pin;
+    GPIO_Port_t miso_port;
+    GPIO_Pin_t miso_pin;
+} SPI_Register_SW_Cfg_t;
+
+/* 统一注册配置 */
+typedef struct {
     SPI_Driver_t drv;
-    /* 只有软件 SPI 需要填写这些 */
     union {
-        struct {
-            GPIO_Port_t port;
-            GPIO_Pin_t pin;
-        } cs;
-        struct {
-            GPIO_Port_t port;
-            GPIO_Pin_t pin;
-        } sck;
-        struct {
-            GPIO_Port_t port;
-            GPIO_Pin_t pin;
-        } mosi;
-        struct {
-            GPIO_Port_t port;
-            GPIO_Pin_t pin;
-        } miso;
-        /* 只有硬件 SPI 需要填写这个 */
-        SPI_Handle_t hspi;
+        SPI_Register_SW_Cfg_t sw;
+        SPI_Handle_t hw; /* 硬件 SPI：直接用句柄指针 */
     } src;
 } SPI_Register_Cfg_t;
 
 /*
  * SPI_Model_t — 运行时模型
  */
-typedef struct {
+typedef struct spi_model {
     SPI_Driver_t drv;
     SPI_Source_t src;
     SPI_Config_t config;
     volatile uint8_t busy : 1;
+    
+    SPI_Err_t (*read)(struct spi_model *m, uint8_t *rx, uint16_t len);
+    SPI_Err_t (*write)(struct spi_model *m, const uint8_t *tx, uint16_t len);
+    SPI_Err_t (*write_read)(struct spi_model *m, const uint8_t *tx, uint8_t *rx, uint16_t len);
 } SPI_Model_t;
 
-typedef struct {
-    SPI_Err_t (*read)(SPI_Model_t *m, uint8_t *rx, uint16_t len);
-    SPI_Err_t (*write)(SPI_Model_t *m, const uint8_t *tx, uint16_t len);
-    SPI_Err_t (*write_read)(SPI_Model_t *m, const uint8_t *tx, uint8_t *rx, uint16_t len);
-} SPI_Oprs_t;
 /* ============================================================
  * 外部函数声明（由芯片层实现）
  * ============================================================ */
@@ -166,15 +167,10 @@ SPI_Err_t spi_write_read(SPI_Model_t *m,
 SPI_Err_t spi_write(SPI_Model_t *m, const uint8_t *tx, uint16_t len);
 SPI_Err_t spi_read(SPI_Model_t *m, uint8_t *rx, uint16_t len);
 
-/* TODO: 待废弃  */
-SPI_Err_t spi_hw_write_read(SPI_Model_t *m,
-                            const uint8_t *tx, uint8_t *rx, uint16_t len);
-
-SPI_Err_t spi_hw_write(SPI_Model_t *m, const uint8_t *tx, uint16_t len);
-SPI_Err_t spi_hw_read(SPI_Model_t *m, uint8_t *rx, uint16_t len);
-
 /* ============================================================
- * 外部函数声明，软件 SPI 可在 BSP 层直接实现
+ * 以下函数由 BSP 层或芯片层内部实现，
+ * 通过 SPI_Model_t 中的函数指针间接调用。
+ * 外部不建议直接使用。
  * ============================================================ */
 
 SPI_Err_t spi_sw_write_read(SPI_Model_t *m,
@@ -184,7 +180,7 @@ SPI_Err_t spi_sw_write(SPI_Model_t *m, const uint8_t *tx, uint16_t len);
 SPI_Err_t spi_sw_read(SPI_Model_t *m, uint8_t *rx, uint16_t len);
 
 /* ============================================================
- * 芯片级原语
+ * 芯片级原语（软件 SPI 用，对外可见以便 spi_chip.c 引用）
  *
  * 直接操作 GPIO.
  * ============================================================ */

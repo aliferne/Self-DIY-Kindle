@@ -33,12 +33,22 @@ void epaper_register(
     GPIO_Port_t rst_port, GPIO_Pin_t rst_pin,
     GPIO_Port_t busy_port, GPIO_Pin_t busy_pin)
 {
+    SPI_Register_Cfg_t spi_cfg = {
+        .drv    = SPI_Driver_SW,
+        .src.sw = {
+            .cs_port   = cs_port,
+            .cs_pin    = cs_pin,
+            .sck_port  = sck_port,
+            .sck_pin   = sck_pin,
+            .mosi_port = mosi_port,
+            .mosi_pin  = mosi_pin,
+            .miso_port = miso_port,
+            .miso_pin  = miso_pin,
+        },
+    };
+
     /* SPI 四线 */
-    spi_register(&m->spi,
-                 cs_port, cs_pin,
-                 sck_port, sck_pin,
-                 mosi_port, mosi_pin,
-                 miso_port, miso_pin);
+    spi_register(&m->spi, &spi_cfg);
 
     /* 独立的 GPIO */
     gpio_register(&m->dc, dc_port, dc_pin);
