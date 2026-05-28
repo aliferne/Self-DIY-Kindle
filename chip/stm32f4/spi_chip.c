@@ -15,6 +15,11 @@
  */
 
 #include "bsp_spi.h"
+#include "stm32f4xx_hal.h"
+#include "stm32f4xx_hal_def.h"
+#include "stm32f4xx_hal_spi.h"
+
+static SPI_Err_t hal_status_to_spi_err(HAL_StatusTypeDef stat);
 
 /* ============================================================
  * API 实现
@@ -31,7 +36,7 @@ SPI_Err_t spi_register(SPI_Model_t *m,
     gpio_register(&m->src.sw.mosi, mosi_port, mosi_pin);
     gpio_register(&m->src.sw.miso, miso_port, miso_pin);
 
-    m->busy            = 0;
+    m->busy = 0;
 
     return SPI_Err_OK;
 }
@@ -83,4 +88,36 @@ SPI_Err_t spi_deinit(SPI_Model_t *m)
     gpio_deinit(&m->src.sw.miso);
     m->busy = 0;
     return SPI_Err_OK;
+}
+
+SPI_Err_t spi_hw_read(SPI_Model_t *m, uint8_t *rx, uint16_t len)
+{
+    HAL_StatusTypeDef stat = HAL_SPI_Receive(m->src.hw.hspi, rx, len, m->config.hw.timeout);
+    return hal_status_to_spi_err(stat);
+}
+
+SPI_Err_t spi_hw_write(SPI_Model_t *m, const uint8_t *tx, uint16_t len)
+{
+    HAL_StatusTypeDef stat = HAL_SPI_Transmit(m->src.hw.hspi, tx, len, m->config.hw.timeout);
+    return hal_status_to_spi_err(stat);
+}
+
+SPI_Err_t spi_hw_write_read(SPI_Model_t *m, const uint8_t *tx, uint8_t *rx, uint16_t len)
+{
+    HAL_StatusTypeDef stat = HAL_SPI_TransmitReceive(m->src.hw.hspi, tx, rx, len, m->config.hw.timeout);
+    return hal_status_to_spi_err(stat);
+}
+
+static SPI_Err_t hal_status_to_spi_err(HAL_StatusTypeDef stat)
+{
+    switch (stat) {
+        case HAL_ERROR:
+            return SPI_Err_Error;
+        case HAL_BUSY:
+            return SPI_Err_Busy;
+        case HAL_TIMEOUT:
+            return SPI_Err_Timeout;
+        default:
+            return SPI_Err_OK;
+    }
 }

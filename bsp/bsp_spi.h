@@ -32,13 +32,23 @@
  */
 
 #include "bsp_gpio.h"
+#include <stdint.h>
 
 /* ============================================================
  * 枚举定义
  * ============================================================ */
 
+/* 软件 SPI 或者硬件 SPI */
 typedef enum {
-    SPI_Err_OK = 0,
+    SPI_Driver_HW = 0,
+    SPI_Driver_SW = 0,
+} SPI_Driver_t;
+
+typedef enum {
+    SPI_Err_OK      = 0,
+    SPI_Err_Error   = 1,
+    SPI_Err_Timeout = 2,
+    SPI_Err_Busy    = 3,
 } SPI_Err_t;
 
 /*
@@ -61,69 +71,102 @@ typedef enum {
  * 结构体定义
  * ============================================================ */
 
-/* ---------- 软件 SPI 配置 ---------- */
-/*
- * 设计思路：
- *   - mode、bit_delay_us 由用户填入
- *   - spi_init() 根据 mode 预计算 sclk_idle / sclk_active / cpha，
- *     存入结构体。运行时 spi_sw_xfer_byte 直接使用预计算值，
- *     避免每个 bit 都查表/分支。
- */
-typedef struct {
-    SPI_Mode_t mode;       /**< SPI 模式 0-3（用户填入） */
-    GPIO_Speed_t speed;    /**< GPIO 速度配置 */
-    uint16_t bit_delay_us; /**< 半位周期延时 (μs)（用户填入） */
-    /* ---- 以下由 spi_init 预计算，运行时只读 ---- */
-    GPIO_Level_t sclk_idle;   /**< CPOL → SCLK 空闲电平 */
-    GPIO_Level_t sclk_active; /**< !CPOL → SCLK 活跃电平 */
-    uint8_t cpha;             /**< CPHA: 0=数据在第一个沿前准备好, 1=数据在第一个沿改变 */
-} SPI_SW_Config_t;
+/** SPI 端口句柄（芯片实现内部转型为具体外设指针） */
+typedef void *SPI_Handle_t;
 
-/* ---------- 软件 SPI 模型（引脚） ---------- */
-typedef struct {
-    GPIO_Model_t cs;
-    GPIO_Model_t sclk;
-    GPIO_Model_t mosi;
-    GPIO_Model_t miso;
-} SPI_SW_Model_t;
-/*
-目前看来软件 SPI 的硬件模型可以和硬件 SPI 一致，本质都是引脚
-但是配置的功能势必是不同的，硬件 SPI 要求必须使用 AF 功能
-后面如果做硬件 SPI 的话再思考如何扩展
- */
+typedef union {
+    struct {
+        GPIO_Model_t cs;
+        GPIO_Model_t sclk;
+        GPIO_Model_t mosi;
+        GPIO_Model_t miso;
+    } sw; /**< 软件 SPI: 四个 GPIO 引脚 */
 
+    SPI_Handle_t hw; /**< 硬件 SPI：一个 HSPI 句柄 */
+} SPI_Source_t;
 /*
  * SPI_Config_t — union 形式，后续可扩展 hw 配置
  */
 typedef union {
-    SPI_SW_Config_t sw;
+    /* ---------- 软件 SPI 配置 ---------- */
+    /*
+     * 设计思路：
+     *   - mode、bit_delay_us 由用户填入
+     *   - spi_init() 根据 mode 预计算 sclk_idle / sclk_active / cpha，
+     *     存入结构体。运行时 spi_sw_xfer_byte 直接使用预计算值，
+     *     避免每个 bit 都查表/分支。
+     */
+    struct {
+        SPI_Mode_t mode;       /**< SPI 模式 0-3（用户填入） */
+        GPIO_Speed_t speed;    /**< GPIO 速度配置 */
+        uint16_t bit_delay_us; /**< 半位周期延时 (μs)（用户填入） */
+        /* ---- 以下由 spi_init 预计算，运行时只读 ---- */
+        GPIO_Level_t sclk_idle;   /**< CPOL → SCLK 空闲电平 */
+        GPIO_Level_t sclk_active; /**< !CPOL → SCLK 活跃电平 */
+        uint8_t cpha;             /**< CPHA: 0=数据在第一个沿前准备好, 1=数据在第一个沿改变 */
+    } sw;
+    struct {
+        uint32_t timeout; /**< 发送/接收的超时时间 */
+    } hw;
 } SPI_Config_t;
+
+typedef struct {
+    /* 决定软件/硬件类型 */
+    SPI_Driver_t drv;
+    /* 只有软件 SPI 需要填写这些 */
+    union {
+        struct {
+            GPIO_Port_t port;
+            GPIO_Pin_t pin;
+        } cs;
+        struct {
+            GPIO_Port_t port;
+            GPIO_Pin_t pin;
+        } sck;
+        struct {
+            GPIO_Port_t port;
+            GPIO_Pin_t pin;
+        } mosi;
+        struct {
+            GPIO_Port_t port;
+            GPIO_Pin_t pin;
+        } miso;
+        /* 只有硬件 SPI 需要填写这个 */
+        SPI_Handle_t hspi;
+    } src;
+} SPI_Register_Cfg_t;
 
 /*
  * SPI_Model_t — 运行时模型
  */
 typedef struct {
-    union {
-        SPI_SW_Model_t sw; /**< 软件 SPI: 四个 GPIO 引脚 */
-        /* TODO: hw_spi 外设 */
-    } src;
+    SPI_Driver_t drv;
+    SPI_Source_t src;
     SPI_Config_t config;
     volatile uint8_t busy : 1;
 } SPI_Model_t;
 
+typedef struct {
+    SPI_Err_t (*read)(SPI_Model_t *m, uint8_t *rx, uint16_t len);
+    SPI_Err_t (*write)(SPI_Model_t *m, const uint8_t *tx, uint16_t len);
+    SPI_Err_t (*write_read)(SPI_Model_t *m, const uint8_t *tx, uint8_t *rx, uint16_t len);
+} SPI_Oprs_t;
 /* ============================================================
  * 外部函数声明（由芯片层实现）
  * ============================================================ */
 
-SPI_Err_t spi_register(SPI_Model_t *m,
-                       GPIO_Port_t cs_port, GPIO_Pin_t cs_pin,
-                       GPIO_Port_t sclk_port, GPIO_Pin_t sclk_pin,
-                       GPIO_Port_t mosi_port, GPIO_Pin_t mosi_pin,
-                       GPIO_Port_t miso_port, GPIO_Pin_t miso_pin);
+SPI_Err_t spi_register(SPI_Model_t *m, SPI_Register_Cfg_t *cfg);
 
 SPI_Err_t spi_init(SPI_Model_t *m, const SPI_Config_t *cfg);
 SPI_Err_t spi_deinit(SPI_Model_t *m);
 
+SPI_Err_t spi_write_read(SPI_Model_t *m,
+                         const uint8_t *tx, uint8_t *rx, uint16_t len);
+
+SPI_Err_t spi_write(SPI_Model_t *m, const uint8_t *tx, uint16_t len);
+SPI_Err_t spi_read(SPI_Model_t *m, uint8_t *rx, uint16_t len);
+
+/* TODO: 待废弃  */
 SPI_Err_t spi_hw_write_read(SPI_Model_t *m,
                             const uint8_t *tx, uint8_t *rx, uint16_t len);
 

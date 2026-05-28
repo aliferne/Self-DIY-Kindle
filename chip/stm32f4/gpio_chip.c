@@ -171,7 +171,7 @@ GPIO_Err_t gpio_register(GPIO_Model_t *m, GPIO_Port_t port, GPIO_Pin_t pin)
 GPIO_Err_t gpio_init(GPIO_Model_t *m, const GPIO_Config_t *cfg)
 {
     /* 只允许非中断类型的初始化操作 */
-    if (cfg->mode > GPIO_Mode_IT_Rising)
+    if (cfg->mode >= GPIO_Mode_IT_Rising)
         return GPIO_Err_Incorrect_Mode;
 
     GPIO_TypeDef *gpiox = (GPIO_TypeDef *)m->src.port;
