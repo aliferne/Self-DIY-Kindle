@@ -125,6 +125,10 @@ virtualFolder:
                 - path: Middlewares/epaper/fonts/font24.c
                 - path: Middlewares/epaper/fonts/font24CN.c
               folders: []
+            - name: test
+              files:
+                - path: Middlewares/epaper/test/ImageData.c
+              folders: []
         - name: lvgl
           files: []
           folders:
@@ -351,6 +355,7 @@ targets:
         - Middlewares/lvgl/src/hal
         - Middlewares/lvgl/src/widgets
         - Middlewares/lvgl/src/misc
+        - Middlewares/epaper/test
       libList: []
     excludeList:
       - <virtual_root>/Application/MDK-ARM/startup_stm32f407xx.s

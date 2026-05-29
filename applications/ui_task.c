@@ -1,7 +1,10 @@
 #include "ui_task.h"
+#include "bsp_config.h"
+#include "bsp_gpio.h"
 #include "bsp_sys.h"
 #include "cmsis_os.h"
 
+#include "ImageData.h"
 #include "epaper.h"
 #include "epd_4in2_v2.h"
 #include "gui_paint.h"
@@ -88,30 +91,23 @@ void StartUITask(void const *argument)
 
 void test()
 {
-    /* --- 等待硬件初始化完成 --- */
-    os_delay_ms(100);
+    EPaper_Model_t *e  = &e_paper;
+    Painter_Model_t *p = &e->painter;
 
-    /* ============================================================
-     * 测试 1：绘制图形和文字（标准刷新）
-     * ============================================================ */
-    Paint_NewImage(&e_paper.painter, black_image, EPD_4IN2_V2_WIDTH, EPD_4IN2_V2_HEIGHT, 0, WHITE);
-    Paint_SelectImage(&e_paper.painter, black_image);
-    Paint_Clear(&e_paper.painter, WHITE);
+    EPD_4IN2_V2_Init_Normal(e);
+    EPD_4IN2_V2_Clear(e);
+    os_delay_ms(600);
+    
+    Paint_NewImage(p, black_image, EPD_4IN2_V2_WIDTH, EPD_4IN2_V2_HEIGHT, 0, WHITE);
 
-    draw_test_pattern();
+    /* show bmp -------------------------- */
+    Paint_SelectImage(p, black_image);
+    Paint_Clear(p, WHITE);
+    Paint_DrawBitMap(p, gImage_4in2);
+    /* FIXME: 显示图像有些不正常 */
+    EPD_4IN2_V2_Display(e, black_image);
+    os_delay_ms(4000);
 
-    EPD_4IN2_V2_Display(&e_paper, black_image);
-    os_delay_ms(10000);
-
-    /* ============================================================
-     * 收尾：清屏 + 休眠
-     * ============================================================ */
+    gpio_write(&usr_led, GPIO_Level_Low);
     epaper_sleep(&e_paper);
-    epaper_deinit(&e_paper);
-    os_delay_ms(10000);
-
-    // draw_partial_clock();
-
-    // EPD_4IN2_V2_Display(&e_paper, black_image);
-    // os_delay_ms(10000);
 }

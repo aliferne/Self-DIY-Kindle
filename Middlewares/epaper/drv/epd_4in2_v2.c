@@ -282,6 +282,8 @@ static void EPD_4IN2_V2_SendCommand(EPaper_Model_t *epd, UBYTE Reg)
 {
     DEV_Digital_Write(&epd->dc, 0);
     DEV_SPI_WriteByte(&epd->spi, Reg);
+    /* NOTE: 不太确定是不是和时序有点相关，可能需要看逻辑分析仪 */
+    DEV_Delay_ms(10);
 }
 
 /******************************************************************************
@@ -293,6 +295,8 @@ static void EPD_4IN2_V2_SendData(EPaper_Model_t *epd, UBYTE Data)
 {
     DEV_Digital_Write(&epd->dc, 1);
     DEV_SPI_WriteByte(&epd->spi, Data);
+    /* NOTE: 不太确定是不是和时序有点相关，可能需要看逻辑分析仪 */
+    DEV_Delay_ms(10);
 }
 
 /******************************************************************************
@@ -547,8 +551,7 @@ EPaper_Err_t EPD_4IN2_V2_Clear(EPaper_Model_t *epd)
             EPD_4IN2_V2_SendData(epd, 0xFF);
         }
     }
-    EPD_4IN2_V2_TurnOnDisplay(epd);
-    return EPaper_Err_OK;
+    return EPD_4IN2_V2_TurnOnDisplay(epd);
 }
 
 /******************************************************************************
