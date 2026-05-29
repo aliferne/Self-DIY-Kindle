@@ -46,7 +46,7 @@
 #define Seconds_1_5S 0 /* 1.5s */
 #define Seconds_1S   1 /* 1s */
 
-EPaper_Err_t EPD_4IN2_V2_Init(EPaper_Model_t *epd);
+EPaper_Err_t EPD_4IN2_V2_Init_Normal(EPaper_Model_t *epd);
 EPaper_Err_t EPD_4IN2_V2_Init_Fast(EPaper_Model_t *epd, UBYTE Mode);
 EPaper_Err_t EPD_4IN2_V2_Init_4Gray(EPaper_Model_t *epd);
 EPaper_Err_t EPD_4IN2_V2_Clear(EPaper_Model_t *epd);

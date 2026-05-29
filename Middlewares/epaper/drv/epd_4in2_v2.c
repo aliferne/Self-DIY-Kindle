@@ -395,7 +395,7 @@ static void EPD_4IN2_V2_4Gray_lut(EPaper_Model_t *epd)
 function :	Initialize the e-Paper register
 parameter:
 ******************************************************************************/
-EPaper_Err_t EPD_4IN2_V2_Init(EPaper_Model_t *epd)
+EPaper_Err_t EPD_4IN2_V2_Init_Normal(EPaper_Model_t *epd)
 {
     EPaper_Err_t err;
 

@@ -38,6 +38,7 @@
 [TI PCM5102 数据手册](https://www.ti.com/product/PCM5102)
 [LVGL 移植指南](https://blog.csdn.net/weixin_56167571/article/details/147879170)
 [LVGL 生成中文字库指南](https://www.cnblogs.com/hwd00001/p/17393135.html)
+[waveshare e-paper related docs](https://www.waveshare.net/wiki/4.2inch_e-Paper_Module_Manual)
 
 ## 书籍
 

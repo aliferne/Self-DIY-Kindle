@@ -121,7 +121,7 @@ EPaper_Err_t epaper_init(EPaper_Model_t *m, EPaper_Config_t *cfg)
             m,
             (m->cfg.fast_init_time == 1.5f) ? Seconds_1_5S : Seconds_1S);
     } else if (m->cfg.init_mode == EPaper_Normal_Init) {
-        epaper_err = EPD_4IN2_V2_Init(m);
+        epaper_err = EPD_4IN2_V2_Init_Normal(m);
     } else if (m->cfg.init_mode == EPaper_4Gray_Init) {
         epaper_err = EPD_4IN2_V2_Init_4Gray(m);
     }
@@ -138,7 +138,7 @@ EPaper_Err_t epaper_init(EPaper_Model_t *m, EPaper_Config_t *cfg)
 
 void epaper_sleep(EPaper_Model_t *m)
 {
-    EPD_4IN2_V2_Init(m);
+    EPD_4IN2_V2_Init_Normal(m);
     EPD_4IN2_V2_Clear(m);
     EPD_4IN2_V2_Sleep(m);
 }
