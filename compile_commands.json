@@ -36,6 +36,7 @@
       "-IMiddlewares/lvgl/src/misc",
       "-IMiddlewares/miniz",
       "-IMiddlewares/epaper",
+      "-IMiddlewares/FatFs",
       "-IMiddlewares/epaper/config",
       "-IMiddlewares/epaper/drv",
       "-IMiddlewares/epaper/fonts",
