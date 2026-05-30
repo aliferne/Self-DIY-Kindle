@@ -59,7 +59,9 @@ typedef struct {
     GPIO_Model_t busy; /**< 忙检测线（输入） */
     EPaper_Config_t cfg;
     Painter_Model_t painter; /**< 画笔模型 */
-    uint8_t *canvas;         /**< 画布（数组）  */
+    uint8_t *canvas;         /**< 画布（数组）, 暂未被实际使用  */
+
+    uint8_t is_sleeping: 1; /**< 休眠状态标志 */
 } EPaper_Model_t;
 
 extern EPaper_Model_t e_paper;
@@ -102,9 +104,10 @@ void epaper_register(
 EPaper_Err_t epaper_init(EPaper_Model_t *m, EPaper_Config_t *cfg);
 
 /**
- * 休眠模式。
+ * 进入休眠模式，可选是否清除画布
+ * need_clear: 1 - 清除画布，0 - 不清除
  */
-void epaper_sleep(EPaper_Model_t *m);
+void epaper_sleep(EPaper_Model_t *m, uint8_t need_clear);
 
 /**
  * 去初始化。

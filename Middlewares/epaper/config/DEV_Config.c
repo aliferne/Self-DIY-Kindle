@@ -32,14 +32,14 @@
 #include "DEV_Config.h"
 #include "bsp_spi.h"
 
-void DEV_SPI_WriteByte(SPI_Model_t *spi, UBYTE value)
-{
-    spi_sw_write(spi, (uint8_t[]){value}, 1);
-}
-
 void DEV_SPI_Write_nByte(SPI_Model_t *spi, UBYTE *value, UDOUBLE len)
 {
-    spi_sw_write(spi, value, len);
+    spi_write(spi, value, len);
+}
+
+void DEV_SPI_WriteByte(SPI_Model_t *spi, UBYTE value)
+{
+    DEV_SPI_Write_nByte(spi, (uint8_t[]){value}, 1);
 }
 
 // int DEV_Module_Init(void)

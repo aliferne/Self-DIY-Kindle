@@ -40,6 +40,7 @@
       "-IMiddlewares/epaper/drv",
       "-IMiddlewares/epaper/fonts",
       "-IMiddlewares/epaper/gui",
+      "-IMiddlewares/epaper/test",
       "-Iservices",
       "-Iapplications",
       "-Og",

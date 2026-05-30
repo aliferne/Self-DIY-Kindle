@@ -33,6 +33,7 @@ void epaper_register(
     GPIO_Port_t rst_port, GPIO_Pin_t rst_pin,
     GPIO_Port_t busy_port, GPIO_Pin_t busy_pin)
 {
+    /* TODO: 如果这里是硬件 SPI，这种封装看起来似乎并不合理 */
     SPI_Register_Cfg_t spi_cfg = {
         .drv    = SPI_Driver_SW,
         .src.sw = {
@@ -128,6 +129,8 @@ EPaper_Err_t epaper_init(EPaper_Model_t *m, EPaper_Config_t *cfg)
 
     if (epaper_err != EPaper_Err_OK)
         return epaper_err;
+    
+    m->is_sleeping = 0;
 
     epaper_err = EPD_4IN2_V2_Clear(m);
     if (epaper_err != EPaper_Err_OK)
@@ -136,11 +139,20 @@ EPaper_Err_t epaper_init(EPaper_Model_t *m, EPaper_Config_t *cfg)
     return EPaper_Err_OK;
 }
 
-void epaper_sleep(EPaper_Model_t *m)
+/*
+ * 进入休眠模式，可选是否清除画布
+ * need_clear: 1 - 清除画布，0 - 不清除
+ */
+void epaper_sleep(EPaper_Model_t *m, uint8_t need_clear)
 {
     EPD_4IN2_V2_Init_Normal(m);
-    EPD_4IN2_V2_Clear(m);
+    
+    if (need_clear)
+        EPD_4IN2_V2_Clear(m);
+
     EPD_4IN2_V2_Sleep(m);
+    
+    m->is_sleeping = 1;
 }
 
 /* ============================================================
@@ -160,12 +172,3 @@ void epaper_deinit(EPaper_Model_t *m)
     gpio_deinit(&m->rst);
     gpio_deinit(&m->busy);
 }
-
-/* ============================================================
- * epaper 专用 SPI 原语（薄封装 bsp_spi）
- *
- * 电子纸的 SPI 协议特点：
- *   - 只发不收（除极少数情况需回读）
- *   - CS 在命令+数据之间保持低电平（由上层手动控制 CS）
- *   - DC 线由上层在 SendCommand/SendData 中切换
- * ============================================================ */

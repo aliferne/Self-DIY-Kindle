@@ -282,8 +282,6 @@ static void EPD_4IN2_V2_SendCommand(EPaper_Model_t *epd, UBYTE Reg)
 {
     DEV_Digital_Write(&epd->dc, 0);
     DEV_SPI_WriteByte(&epd->spi, Reg);
-    /* NOTE: 不太确定是不是和时序有点相关，可能需要看逻辑分析仪 */
-    DEV_Delay_ms(10);
 }
 
 /******************************************************************************
@@ -295,8 +293,6 @@ static void EPD_4IN2_V2_SendData(EPaper_Model_t *epd, UBYTE Data)
 {
     DEV_Digital_Write(&epd->dc, 1);
     DEV_SPI_WriteByte(&epd->spi, Data);
-    /* NOTE: 不太确定是不是和时序有点相关，可能需要看逻辑分析仪 */
-    DEV_Delay_ms(10);
 }
 
 /******************************************************************************
@@ -561,20 +557,23 @@ parameter:
 EPaper_Err_t EPD_4IN2_V2_Display(EPaper_Model_t *epd, UBYTE *Image)
 {
     UWORD Width, Height;
+    UWORD data;
     Width  = (EPD_4IN2_V2_WIDTH % 8 == 0) ? (EPD_4IN2_V2_WIDTH / 8) : (EPD_4IN2_V2_WIDTH / 8 + 1);
     Height = EPD_4IN2_V2_HEIGHT;
 
     EPD_4IN2_V2_SendCommand(epd, 0x24);
     for (UWORD j = 0; j < Height; j++) {
         for (UWORD i = 0; i < Width; i++) {
-            EPD_4IN2_V2_SendData(epd, Image[i + j * Width]);
+            data = Image[i + j * Width];
+            EPD_4IN2_V2_SendData(epd, data);
         }
     }
 
     EPD_4IN2_V2_SendCommand(epd, 0x26);
     for (UWORD j = 0; j < Height; j++) {
         for (UWORD i = 0; i < Width; i++) {
-            EPD_4IN2_V2_SendData(epd, Image[i + j * Width]);
+            data = Image[i + j * Width];
+            EPD_4IN2_V2_SendData(epd, data);
         }
     }
     return EPD_4IN2_V2_TurnOnDisplay(epd);
@@ -594,14 +593,16 @@ EPaper_Err_t EPD_4IN2_V2_Display_Fast(EPaper_Model_t *epd, UBYTE *Image)
     EPD_4IN2_V2_SendCommand(epd, 0x24);
     for (UWORD j = 0; j < Height; j++) {
         for (UWORD i = 0; i < Width; i++) {
-            EPD_4IN2_V2_SendData(epd, Image[i + j * Width]);
+            UWORD data = Image[i + j * Width];
+            EPD_4IN2_V2_SendData(epd, data);
         }
     }
 
     EPD_4IN2_V2_SendCommand(epd, 0x26);
     for (UWORD j = 0; j < Height; j++) {
         for (UWORD i = 0; i < Width; i++) {
-            EPD_4IN2_V2_SendData(epd, Image[i + j * Width]);
+            UWORD data = Image[i + j * Width];
+            EPD_4IN2_V2_SendData(epd, data);
         }
     }
     return EPD_4IN2_V2_TurnOnDisplay_Fast(epd);

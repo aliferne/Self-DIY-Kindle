@@ -74,7 +74,7 @@ static void draw_partial_clock(void)
         Paint_Clear(&e_paper.painter, WHITE);
         Paint_DrawTime(&e_paper.painter, 20, 10, &t, &Font20, WHITE, BLACK);
         EPD_4IN2_V2_PartialDisplay(&e_paper, clock_buf, 80, 200, 280, 250);
-        os_delay_ms(500);
+        os_delay_ms(600);
     }
 }
 
@@ -97,17 +97,39 @@ void test()
     EPD_4IN2_V2_Init_Normal(e);
     EPD_4IN2_V2_Clear(e);
     os_delay_ms(600);
-    
-    Paint_NewImage(p, black_image, EPD_4IN2_V2_WIDTH, EPD_4IN2_V2_HEIGHT, 0, WHITE);
 
+    Paint_NewImage(p, black_image, EPD_4IN2_V2_WIDTH, EPD_4IN2_V2_HEIGHT, 0, WHITE);
+    
     /* show bmp -------------------------- */
+    // Paint_SelectImage(p, black_image);
+    // Paint_Clear(p, WHITE);
+    // Paint_DrawBitMap(p, gImage_4in2);
+    // /* FIXME: 显示图像有些不正常 */
+    // EPD_4IN2_V2_Display(e, black_image);
+    // os_delay_ms(4000);
+
+    /* show test pattern ----------------- */
+    EPD_4IN2_V2_Init_Fast(e, Seconds_1S);
     Paint_SelectImage(p, black_image);
     Paint_Clear(p, WHITE);
-    Paint_DrawBitMap(p, gImage_4in2);
-    /* FIXME: 显示图像有些不正常 */
+    draw_test_pattern();
     EPD_4IN2_V2_Display(e, black_image);
     os_delay_ms(4000);
 
-    gpio_write(&usr_led, GPIO_Level_Low);
-    epaper_sleep(&e_paper);
+    gpio_toggle(&usr_led);
+    epaper_sleep(&e_paper, 0);
+    os_delay_ms(4000);
+
+    EPD_4IN2_V2_Init_Fast(e, Seconds_1S);
+    Paint_SelectImage(p, black_image);
+    // Paint_Clear(p, WHITE);
+    Paint_DrawString_EN(&e_paper.painter, 10, 200, "waveshare", &Font16, BLACK, WHITE);
+    EPD_4IN2_V2_Display(e, black_image);
+    os_delay_ms(4000);
+
+    draw_partial_clock();
+
+    gpio_toggle(&usr_led);
+    epaper_sleep(&e_paper, 0);
+    os_delay_ms(4000);
 }
