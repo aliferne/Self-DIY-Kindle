@@ -71,21 +71,27 @@ extern EPaper_Model_t e_paper;
  * ============================================================ */
 
 /**
- * 注册 epaper 硬件引脚。
+ * 初始化 epaper 硬件并启动显示控制器。
  *
- * 将各个引脚绑定到 GPIO_Model_t，但不初始化硬件（由 epaper_hw_init 完成）。
+ * 将 SPI 引脚和 GPIO 控制引脚注册并初始化，然后根据 cfg->init_mode
+ * 执行对应的电子纸初始化序列（含全屏清除）。
+ *
  * 注意：miso_port/pin 可复用 mosi 的物理引脚（电子纸通常只写不读）。
  *
- * @param sck_port/pin   SPI 时钟
- * @param mosi_port/pin  SPI MOSI（数据输出）
- * @param miso_port/pin  SPI MISO（可复用 mosi 引脚，用作临时回读）
- * @param cs_port/pin    SPI 片选
- * @param dc_port/pin    Data/Command 选择
- * @param rst_port/pin   复位
- * @param busy_port/pin  忙检测
+ * @param m               EPaper 模型指针
+ * @param cfg             配置（初始化模式、快速刷新时间）
+ * @param sck_port/pin    SPI 时钟
+ * @param mosi_port/pin   SPI MOSI（数据输出）
+ * @param miso_port/pin   SPI MISO（可复用 mosi 引脚，用作临时回读）
+ * @param cs_port/pin     SPI 片选
+ * @param dc_port/pin     Data/Command 选择
+ * @param rst_port/pin    复位
+ * @param busy_port/pin   忙检测
+ * @return EPaper_Err_OK 成功，其他为错误码。
  */
-void epaper_register(
+EPaper_Err_t epaper_init(
     EPaper_Model_t *m,
+    EPaper_Config_t *cfg,
     GPIO_Port_t sck_port, GPIO_Pin_t sck_pin,
     GPIO_Port_t mosi_port, GPIO_Pin_t mosi_pin,
     GPIO_Port_t miso_port, GPIO_Pin_t miso_pin,
@@ -93,15 +99,6 @@ void epaper_register(
     GPIO_Port_t dc_port, GPIO_Pin_t dc_pin,
     GPIO_Port_t rst_port, GPIO_Pin_t rst_pin,
     GPIO_Port_t busy_port, GPIO_Pin_t busy_pin);
-
-/**
- * 初始化 epaper，并自动设置画布和辅助清屏
- *
- * 必须在 epaper_register 之后调用。
- *
- * @return EPaper_Err_OK 成功，其他为错误码。
- */
-EPaper_Err_t epaper_init(EPaper_Model_t *m, EPaper_Config_t *cfg);
 
 /**
  * 进入休眠模式，可选是否清除画布

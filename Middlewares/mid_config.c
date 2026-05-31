@@ -12,10 +12,13 @@ void mid_init_modules(void)
 
 static void mid_init_epaper(void)
 {
-    EPaper_Err_t err;
+    EPaper_Config_t cfg = {
+        .fast_init_time = 1.0f,
+        .init_mode      = EPaper_Fast_Init,
+    };
 
-    epaper_register(
-        &e_paper,
+    EPaper_Err_t err = epaper_init(
+        &e_paper, &cfg,
         (GPIO_Port_t)EPAPER_SCK_PORT, (GPIO_Pin_t)EPAPER_SCK_PIN,
         (GPIO_Port_t)EPAPER_MOSI_PORT, (GPIO_Pin_t)EPAPER_MOSI_PIN,
         (GPIO_Port_t)EPAPER_MISO_PORT, (GPIO_Pin_t)EPAPER_MISO_PIN,
@@ -23,12 +26,5 @@ static void mid_init_epaper(void)
         (GPIO_Port_t)EPAPER_DC_PORT, (GPIO_Pin_t)EPAPER_DC_PIN,
         (GPIO_Port_t)EPAPER_RST_PORT, (GPIO_Pin_t)EPAPER_RST_PIN,
         (GPIO_Port_t)EPAPER_BUSY_PORT, (GPIO_Pin_t)EPAPER_BUSY_PIN);
-
-    EPaper_Config_t cfg = {
-        .fast_init_time = 1.0f,
-        .init_mode      = EPaper_Fast_Init,
-    };
-
-    err = epaper_init(&e_paper, &cfg);
     GIVEUP(err);
 }

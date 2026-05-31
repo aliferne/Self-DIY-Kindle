@@ -18,14 +18,17 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "bsp_gpio.h"
 #include "cmsis_os.h"
-#include "fatfs.h"
+#include "dma.h"
+#include "sdio.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "bsp_config.h"
 #include "mid_config.h"
+#include "storage_srv.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -90,12 +93,16 @@ int main(void)
 
     /* Initialize all configured peripherals */
     MX_GPIO_Init();
-    MX_FATFS_Init();
+    MX_DMA_Init();
+    MX_SDIO_SD_Init();
     /* USER CODE BEGIN 2 */
     bsp_init_hardware();
     mid_init_modules();
 
     gpio_write(&usr_led, GPIO_Level_High);
+    
+    storage_erase();
+    gpio_toggle(&usr_led);
     /* USER CODE END 2 */
 
     /* Call init function for freertos objects (in cmsis_os2.c) */

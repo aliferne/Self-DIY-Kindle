@@ -18,19 +18,10 @@
  * API 实现
  * ============================================================ */
 
-I2C_Err_t i2c_register(I2C_Model_t *m,
-                       GPIO_Port_t sda_port, GPIO_Pin_t sda_pin,
-                       GPIO_Port_t scl_port, GPIO_Pin_t scl_pin)
-{
-    gpio_register(&m->src.sw.sda, sda_port, sda_pin);
-    gpio_register(&m->src.sw.scl, scl_port, scl_pin);
-
-    m->busy            = 0;
-
-    return I2C_Err_OK;
-}
-
-I2C_Err_t i2c_init(I2C_Model_t *m, const I2C_Config_t *cfg)
+I2C_Err_t i2c_init(I2C_Model_t *m,
+                   GPIO_Port_t sda_port, GPIO_Pin_t sda_pin,
+                   GPIO_Port_t scl_port, GPIO_Pin_t scl_pin,
+                   const I2C_Config_t *cfg)
 {
     /*
      * 软件 I2C 强制使用 Output_OD（开漏），
@@ -51,10 +42,10 @@ I2C_Err_t i2c_init(I2C_Model_t *m, const I2C_Config_t *cfg)
     if (cfg->sw.scl_pull == GPIO_Pull_Down)
         return I2C_Err_Invalid_Mode;
 
-    gpio_init(&m->src.sw.sda, &pin_cfg);
+    gpio_init(&m->src.sw.sda, sda_port, sda_pin, &pin_cfg);
 
     pin_cfg.pull = cfg->sw.scl_pull;
-    gpio_init(&m->src.sw.scl, &pin_cfg);
+    gpio_init(&m->src.sw.scl, scl_port, scl_pin, &pin_cfg);
 
     m->config = *cfg;
     m->busy   = 0;

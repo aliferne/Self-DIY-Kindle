@@ -158,28 +158,23 @@ static IRQn_Type get_exti_irqn(uint16_t pin)
  * API 实现
  * ============================================================ */
 
-GPIO_Err_t gpio_register(GPIO_Model_t *m, GPIO_Port_t port, GPIO_Pin_t pin)
-{
-    m->src.port = port;
-    m->src.pin  = pin;
-    m->use_irq  = 0;
-    m->irq_flag = 0;
-
-    return GPIO_Err_OK;
-}
-
-GPIO_Err_t gpio_init(GPIO_Model_t *m, const GPIO_Config_t *cfg)
+GPIO_Err_t gpio_init(GPIO_Model_t *m, GPIO_Port_t port, GPIO_Pin_t pin, const GPIO_Config_t *cfg)
 {
     /* 只允许非中断类型的初始化操作 */
     if (cfg->mode >= GPIO_Mode_IT_Rising)
         return GPIO_Err_Incorrect_Mode;
 
-    GPIO_TypeDef *gpiox = (GPIO_TypeDef *)m->src.port;
+    m->src.port = port;
+    m->src.pin  = pin;
+    m->use_irq = 0;
+    m->irq_flag = 0;
+
+    GPIO_TypeDef *gpiox = (GPIO_TypeDef *)port;
 
     clock_init(gpiox);
 
     GPIO_InitTypeDef init = {
-        .Pin       = m->src.pin,
+        .Pin       = pin,
         .Mode      = mode_to_hal(cfg->mode),
         .Pull      = pull_to_hal(cfg->pull),
         .Speed     = speed_to_hal(cfg->speed),
@@ -234,7 +229,6 @@ GPIO_Err_t gpio_attach_irq(GPIO_Model_t *m, const GPIO_IRQ_Config_t *irq_cfg)
         .Alternate = m->config.alternate,
     };
 
-    HAL_GPIO_Init(gpiox, &init);
 
     m->irq_config = *irq_cfg;
     m->irq_flag   = 0;
@@ -285,22 +279,4 @@ GPIO_Err_t gpio_detach_irq(GPIO_Model_t *m)
     HAL_GPIO_Init((GPIO_TypeDef *)m->src.port, &init);
 
     return GPIO_Err_OK;
-}
-
-void gpio_set_irq_flag(GPIO_Model_t *m)
-{
-    m->irq_flag = 1;
-}
-
-void gpio_clear_irq_flag(GPIO_Model_t *m)
-{
-    m->irq_flag = 0;
-}
-
-int gpio_get_pin_num(GPIO_Pin_t pin)
-{
-    if (pin == 0)
-        return -1;
-
-    return __builtin_ctz(pin);
 }

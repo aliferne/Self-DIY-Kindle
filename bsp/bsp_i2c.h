@@ -13,8 +13,8 @@
  * 使用示例：
  *
  *   I2C_Model_t eeprom;
- *   i2c_register(&eeprom, GPIOB, GPIO_PIN_6, GPIOB, GPIO_PIN_7);
- *   i2c_init(&eeprom, &(I2C_Config_t){ .sw = {
+ *   i2c_init(&eeprom, GPIOB, GPIO_PIN_6, GPIOB, GPIO_PIN_7,
+ *            &(I2C_Config_t){ .sw = {
  *       .scl_delay_us = 5,
  *       .sda_pull     = GPIO_Pull_Up,
  *       .scl_pull     = GPIO_Pull_Up,
@@ -89,11 +89,10 @@ typedef struct {
  * 外部函数（由芯片层实现）
  * ============================================================ */
 
-I2C_Err_t i2c_register(I2C_Model_t *m,
-                       GPIO_Port_t sda_port, GPIO_Pin_t sda_pin,
-                       GPIO_Port_t scl_port, GPIO_Pin_t scl_pin);
-
-I2C_Err_t i2c_init(I2C_Model_t *m, const I2C_Config_t *cfg);
+I2C_Err_t i2c_init(I2C_Model_t *m,
+                   GPIO_Port_t sda_port, GPIO_Pin_t sda_pin,
+                   GPIO_Port_t scl_port, GPIO_Pin_t scl_pin,
+                   const I2C_Config_t *cfg);
 I2C_Err_t i2c_deinit(I2C_Model_t *m);
 
 I2C_Err_t i2c_hw_write(I2C_Model_t *m, uint8_t dev_addr,

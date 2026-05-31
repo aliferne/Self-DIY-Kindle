@@ -4,6 +4,8 @@
 /* SPI 延时函数 */
 #define SPI_DELAY(delay) dwt_delay_us(delay)
 
+static uint8_t spi_sw_xfer_byte(SPI_Model_t *m, uint8_t tx_byte);
+
 /* ============================================================
  * 统一 API 转发层
  *
@@ -32,13 +34,13 @@ SPI_Err_t spi_read(SPI_Model_t *m, uint8_t *rx, uint16_t len)
  * ============================================================ */
 
 SPI_Err_t spi_sw_write_read(SPI_Model_t *m,
-                            const uint8_t *tx, uint8_t *rx, uint16_t len)
+                                   const uint8_t *tx, uint8_t *rx, uint16_t len)
 {
     if (len == 0)
         return SPI_Err_OK;
 
     m->busy = 1;
-    spi_sw_cs_select(m);
+    spi_cs_select(m);
 
     for (uint16_t i = 0; i < len; i++) {
         uint8_t tx_byte = (tx != NULL) ? tx[i] : 0xFF;
@@ -47,7 +49,7 @@ SPI_Err_t spi_sw_write_read(SPI_Model_t *m,
             rx[i] = rx_byte;
     }
 
-    spi_sw_cs_deselect(m);
+    spi_cs_deselect(m);
     m->busy = 0;
     return SPI_Err_OK;
 }
@@ -66,17 +68,14 @@ SPI_Err_t spi_sw_read(SPI_Model_t *m, uint8_t *rx, uint16_t len)
  * 芯片级原语
  *
  * 直接操作 GPIO。
- *
- * spi_init() 已将 CPOL/CPHA 预计算为 sclk_idle / sclk_active / cpha，
- * 下面的函数直接使用这些预计算值，运行时不判断模式。
  * ============================================================ */
 
-void spi_sw_cs_select(SPI_Model_t *m)
+void spi_cs_select(SPI_Model_t *m)
 {
     (void)gpio_write(&m->src.sw.cs, GPIO_Level_Low);
 }
 
-void spi_sw_cs_deselect(SPI_Model_t *m)
+void spi_cs_deselect(SPI_Model_t *m)
 {
     (void)gpio_write(&m->src.sw.cs, GPIO_Level_High);
 }
@@ -86,7 +85,7 @@ void spi_sw_cs_deselect(SPI_Model_t *m)
  *
  * 时序：设 MOSI → delay → idle→active(采样 MISO) → delay → active→idle
  */
-uint8_t spi_sw_xfer_byte_cpha0(
+static uint8_t spi_sw_xfer_byte_cpha0(
     SPI_Model_t *m,
     uint8_t tx_byte,
     uint32_t delay,
@@ -95,10 +94,13 @@ uint8_t spi_sw_xfer_byte_cpha0(
 {
     uint8_t rx_byte = 0;
 
+    /* 保证 MOSI 一定为输出模式 */
+    gpio_init(&m->src.sw.mosi, &m->src.sw.mosi.src.port, m->src.sw.mosi.src.pin, &m->src.sw.mosi.config);
+    /* 保证 MISO 一定为输入模式 */
+    gpio_init(&m->src.sw.miso, &m->src.sw.miso.src.port, m->src.sw.miso.src.pin, &m->src.sw.miso.config);
+
     for (int i = 7; i >= 0; i--) {
         /* 在时钟空闲期准备好 MOSI */
-        /* 保证 MOSI 一定为输出模式 */
-        gpio_init(&m->src.sw.mosi, &m->src.sw.mosi.config);
         if (tx_byte & (1 << i))
             (void)gpio_write(&m->src.sw.mosi, GPIO_Level_High);
         else
@@ -109,8 +111,6 @@ uint8_t spi_sw_xfer_byte_cpha0(
         /* 采样沿 (idle → active) + 采样 MISO */
         (void)gpio_write(&m->src.sw.sclk, active);
         SPI_DELAY(delay);
-        /* 保证 MISO 一定为输入模式 */
-        gpio_init(&m->src.sw.miso, &m->src.sw.miso.config);
         if (gpio_read(&m->src.sw.miso) == GPIO_Level_High)
             rx_byte |= (1 << i);
 
@@ -126,7 +126,7 @@ uint8_t spi_sw_xfer_byte_cpha0(
  *
  * 时序：设 MOSI + idle→active → delay → active→idle(采样 MISO) → delay
  */
-uint8_t spi_sw_xfer_byte_cpha1(
+static uint8_t spi_sw_xfer_byte_cpha1(
     SPI_Model_t *m,
     uint8_t tx_byte,
     uint32_t delay,
@@ -135,10 +135,13 @@ uint8_t spi_sw_xfer_byte_cpha1(
 {
     uint8_t rx_byte = 0;
 
+    /* 保证 MOSI 一定为输出模式 */
+    gpio_init(&m->src.sw.mosi, &m->src.sw.mosi.src.port, m->src.sw.mosi.src.pin, &m->src.sw.mosi.config);
+    /* 保证 MISO 一定为输入模式 */
+    gpio_init(&m->src.sw.miso, &m->src.sw.miso.src.port, m->src.sw.miso.src.pin, &m->src.sw.miso.config);
+
     for (int i = 7; i >= 0; i--) {
         /* 第一个沿 (idle → active)：同时改变 MOSI */
-        /* 保证 MOSI 一定为输出模式 */
-        gpio_init(&m->src.sw.mosi, &m->src.sw.mosi.config);
         if (tx_byte & (1 << i))
             (void)gpio_write(&m->src.sw.mosi, GPIO_Level_High);
         else
@@ -149,8 +152,6 @@ uint8_t spi_sw_xfer_byte_cpha1(
 
         /* 第二个沿 (active → idle)：采样 MISO */
         (void)gpio_write(&m->src.sw.sclk, idle);
-        /* 保证 MISO 一定为输入模式 */
-        gpio_init(&m->src.sw.miso, &m->src.sw.miso.config);
         SPI_DELAY(delay);
         if (gpio_read(&m->src.sw.miso) == GPIO_Level_High)
             rx_byte |= (1 << i);
@@ -165,7 +166,7 @@ uint8_t spi_sw_xfer_byte_cpha1(
  * 根据预计算的 cpha 选择时序路径，idle/active 电平也已在 spi_init 中确定。
  * 运行时每个 bit 内部无分支（除 MOSI 设置和 MISO 采样外）。
  */
-uint8_t spi_sw_xfer_byte(SPI_Model_t *m, uint8_t tx_byte)
+static uint8_t spi_sw_xfer_byte(SPI_Model_t *m, uint8_t tx_byte)
 {
     uint32_t delay      = m->config.sw.bit_delay_us;
     GPIO_Level_t idle   = m->config.sw.sclk_idle;

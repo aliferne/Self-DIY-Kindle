@@ -29,6 +29,7 @@ virtualFolder:
                 - path: Core/Src/sysmem.c
                 - path: Core/Src/syscalls.c
                 - path: Core/Src/sdio.c
+                - path: Core/Src/dma.c
               folders: []
             - name: FATFS
               files: []
@@ -67,6 +68,9 @@ virtualFolder:
             - path: Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c
             - path: Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_wwdg.c
             - path: Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.c
+            - path: Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_sdram.c
+            - path: Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_mmc.c
+            - path: Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_sdmmc.c
           folders: []
         - name: CMSIS
           files:
@@ -284,6 +288,7 @@ virtualFolder:
         - path: services/net_srv.c
         - path: services/time_srv.c
         - path: services/input_srv.c
+        - path: services/storage_srv.c
       folders: []
     - name: App_Tasks
       files:
@@ -306,6 +311,7 @@ virtualFolder:
                 - path: chip/stm32f4/i2s_chip.c
                 - path: chip/stm32f4/spi_chip.c
                 - path: chip/stm32f4/sys_chip.c
+                - path: chip/stm32f4/sdio_chip.c
               folders:
                 - name: irq
                   files:

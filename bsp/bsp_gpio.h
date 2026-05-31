@@ -19,8 +19,7 @@
  *       .mode  = GPIO_Mode_Input,
  *       .pull  = GPIO_Pull_Up,
  *   };
- *   gpio_register(&btn, ...);
- *   gpio_init(&btn, &cfg);
+ *   gpio_init(&btn, ...);
  *
  *   GPIO_IRQ_Config_t irq = {
  *       .trigger_edge     = GPIO_Mode_IT_Falling,
@@ -136,8 +135,7 @@ typedef struct {
 
 extern GPIO_Model_t *gpio_irq_models[GPIO_MAX_PIN];
 
-GPIO_Err_t gpio_register(GPIO_Model_t *m, GPIO_Port_t port, GPIO_Pin_t pin);
-GPIO_Err_t gpio_init(GPIO_Model_t *m, const GPIO_Config_t *cfg);
+GPIO_Err_t gpio_init(GPIO_Model_t *m, GPIO_Port_t port, GPIO_Pin_t pin, const GPIO_Config_t *cfg);
 GPIO_Err_t gpio_deinit(GPIO_Model_t *m);
 
 GPIO_Err_t gpio_write(GPIO_Model_t *m, GPIO_Level_t level);
@@ -148,10 +146,19 @@ GPIO_Err_t gpio_attach_irq(GPIO_Model_t *m, const GPIO_IRQ_Config_t *irq_cfg);
 GPIO_Err_t gpio_detach_irq(GPIO_Model_t *m);
 
 /** ISR 中调用，置 irq_flag（由芯片中断处理函数调用） */
-void gpio_set_irq_flag(GPIO_Model_t *m);
+inline void gpio_set_irq_flag(GPIO_Model_t *m)
+{
+    m->irq_flag = 1;
+}
 
 /** 应用层调用，清除 irq_flag */
-void gpio_clear_irq_flag(GPIO_Model_t *m);
+inline void gpio_clear_irq_flag(GPIO_Model_t *m)
+{
+    m->irq_flag = 0;
+}
 
 /** 从引脚掩码中提取引脚编号 (0-15), 可以有多种实现方式，包括强依赖 GCC 的 `__builtin_ctz` */
-int gpio_get_pin_num(GPIO_Pin_t pin);
+static inline int gpio_get_pin_num(GPIO_Pin_t pin)
+{
+    return (pin == 0) ? -1 : __builtin_ctz(pin);
+}

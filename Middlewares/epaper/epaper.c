@@ -20,11 +20,12 @@
 EPaper_Model_t e_paper;
 
 /* ============================================================
- * 注册
+ * 初始化（合并了原来的 epaper_register）
  * ============================================================ */
 
-void epaper_register(
+EPaper_Err_t epaper_init(
     EPaper_Model_t *m,
+    EPaper_Config_t *cfg,
     GPIO_Port_t sck_port, GPIO_Pin_t sck_pin,
     GPIO_Port_t mosi_port, GPIO_Pin_t mosi_pin,
     GPIO_Port_t miso_port, GPIO_Pin_t miso_pin,
@@ -33,52 +34,37 @@ void epaper_register(
     GPIO_Port_t rst_port, GPIO_Pin_t rst_pin,
     GPIO_Port_t busy_port, GPIO_Pin_t busy_pin)
 {
-    /* TODO: 如果这里是硬件 SPI，这种封装看起来似乎并不合理 */
-    SPI_Register_Cfg_t spi_cfg = {
-        .drv    = SPI_Driver_SW,
-        .src.sw = {
-            .cs_port   = cs_port,
-            .cs_pin    = cs_pin,
-            .sck_port  = sck_port,
-            .sck_pin   = sck_pin,
-            .mosi_port = mosi_port,
-            .mosi_pin  = mosi_pin,
-            .miso_port = miso_port,
-            .miso_pin  = miso_pin,
-        },
-    };
-
-    /* SPI 四线 */
-    spi_register(&m->spi, &spi_cfg);
-
-    /* 独立的 GPIO */
-    gpio_register(&m->dc, dc_port, dc_pin);
-    gpio_register(&m->rst, rst_port, rst_pin);
-    gpio_register(&m->busy, busy_port, busy_pin);
-}
-
-/* ============================================================
- * 初始化
- * ============================================================ */
-
-EPaper_Err_t epaper_init(EPaper_Model_t *m, EPaper_Config_t *cfg)
-{
     m->cfg = *cfg;
 
     SPI_Err_t spi_err;
 
-    /* ---- SPI ---- */
-    SPI_Config_t spi_cfg = {
-        .sw = {
-            .mode         = SPI_Mode_0,
-            .speed        = GPIO_Speed_Low,
-            .bit_delay_us = 1,
-            /* sclk_idle/active/cpha 由 spi_init 预计算 */
-        },
-    };
-    spi_err = spi_init(&m->spi, &spi_cfg);
-    if (spi_err != SPI_Err_OK)
-        return EPaper_Err_IO;
+    /* ---- SPI（合并了注册 + 初始化） ---- */
+    {
+        SPI_Register_Cfg_t reg_cfg = {
+            .drv    = SPI_Driver_SW,
+            .src.sw = {
+                .cs_port   = cs_port,
+                .cs_pin    = cs_pin,
+                .sck_port  = sck_port,
+                .sck_pin   = sck_pin,
+                .mosi_port = mosi_port,
+                .mosi_pin  = mosi_pin,
+                .miso_port = miso_port,
+                .miso_pin  = miso_pin,
+            },
+        };
+        SPI_Config_t spi_cfg = {
+            .sw = {
+                .mode         = SPI_Mode_0,
+                .speed        = GPIO_Speed_Low,
+                .bit_delay_us = 1,
+                /* sclk_idle/active/cpha 由 spi_init 预计算 */
+            },
+        };
+        spi_err = spi_init(&m->spi, &reg_cfg, &spi_cfg);
+        if (spi_err != SPI_Err_OK)
+            return EPaper_Err_IO;
+    }
 
     /* ---- DC (输出) ---- */
     {
@@ -87,7 +73,7 @@ EPaper_Err_t epaper_init(EPaper_Model_t *m, EPaper_Config_t *cfg)
             .pull  = GPIO_Pull_None,
             .speed = GPIO_Speed_Low,
         };
-        gpio_init(&m->dc, &out_cfg);
+        gpio_init(&m->dc, dc_port, dc_pin, &out_cfg);
     }
 
     /* ---- RST (输出) ---- */
@@ -97,7 +83,7 @@ EPaper_Err_t epaper_init(EPaper_Model_t *m, EPaper_Config_t *cfg)
             .pull  = GPIO_Pull_None,
             .speed = GPIO_Speed_Low,
         };
-        gpio_init(&m->rst, &out_cfg);
+        gpio_init(&m->rst, rst_port, rst_pin, &out_cfg);
     }
 
     /* ---- BUSY (输入) ---- */
@@ -107,11 +93,11 @@ EPaper_Err_t epaper_init(EPaper_Model_t *m, EPaper_Config_t *cfg)
             .pull  = GPIO_Pull_None,
             .speed = GPIO_Speed_Low,
         };
-        gpio_init(&m->busy, &in_cfg);
+        gpio_init(&m->busy, busy_port, busy_pin, &in_cfg);
     }
 
     /* 默认电平：CS 高（取消选中），DC 低，RST 高 */
-    spi_sw_cs_deselect(&m->spi);
+    spi_cs_deselect(&m->spi);
     gpio_write(&m->dc, GPIO_Level_Low);
     gpio_write(&m->rst, GPIO_Level_High);
 

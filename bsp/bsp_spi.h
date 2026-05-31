@@ -14,7 +14,7 @@
  *
  *   // === 软件 SPI ===
  *   SPI_Model_t display;
- *   spi_register(&display, &(SPI_Register_Cfg_t){
+ *   spi_init(&display, &(SPI_Register_Cfg_t){
  *       .drv = SPI_Driver_SW,
  *       .src.sw = {
  *           .cs_port   = GPIOA, .cs_pin   = GPIO_PIN_4,
@@ -22,8 +22,7 @@
  *           .mosi_port = GPIOA, .mosi_pin = GPIO_PIN_7,
  *           .miso_port = GPIOA, .miso_pin = GPIO_PIN_6,
  *       },
- *   });
- *   spi_init(&display, &(SPI_Config_t){ .sw = {
+ *   }, &(SPI_Config_t){ .sw = {
  *       .mode         = SPI_Mode_0,
  *       .bit_delay_us = 1,
  *   }});
@@ -32,10 +31,10 @@
  *   spi_transmit_receive(&display, tx, rx, 2); // 全双工
  *
  *   // === 硬件 SPI ===
- *   // spi_register(&display, &(SPI_Register_Cfg_t){
+ *   // spi_init(&display, &(SPI_Register_Cfg_t){
  *   //     .drv     = SPI_Driver_HW,
  *   //     .src.hw  = &hspi2,
- *   // });
+ *   // }, &(SPI_Config_t){ .hw = { .timeout = 100 } });
  */
 
 #include "bsp_gpio.h"
@@ -146,19 +145,17 @@ typedef struct spi_model {
     SPI_Source_t src;
     SPI_Config_t config;
     volatile uint8_t busy : 1;
-    
+
     SPI_Err_t (*read)(struct spi_model *m, uint8_t *rx, uint16_t len);
     SPI_Err_t (*write)(struct spi_model *m, const uint8_t *tx, uint16_t len);
     SPI_Err_t (*write_read)(struct spi_model *m, const uint8_t *tx, uint8_t *rx, uint16_t len);
 } SPI_Model_t;
 
 /* ============================================================
- * 外部函数声明（由芯片层实现）
+ * API 声明
  * ============================================================ */
 
-SPI_Err_t spi_register(SPI_Model_t *m, SPI_Register_Cfg_t *cfg);
-
-SPI_Err_t spi_init(SPI_Model_t *m, const SPI_Config_t *cfg);
+SPI_Err_t spi_init(SPI_Model_t *m, SPI_Register_Cfg_t *reg_cfg, const SPI_Config_t *cfg);
 SPI_Err_t spi_deinit(SPI_Model_t *m);
 
 SPI_Err_t spi_write_read(SPI_Model_t *m,
@@ -167,37 +164,5 @@ SPI_Err_t spi_write_read(SPI_Model_t *m,
 SPI_Err_t spi_write(SPI_Model_t *m, const uint8_t *tx, uint16_t len);
 SPI_Err_t spi_read(SPI_Model_t *m, uint8_t *rx, uint16_t len);
 
-/* ============================================================
- * 以下函数由 BSP 层或芯片层内部实现，
- * 通过 SPI_Model_t 中的函数指针间接调用。
- * 外部不建议直接使用。
- * ============================================================ */
-
-SPI_Err_t spi_sw_write_read(SPI_Model_t *m,
-                            const uint8_t *tx, uint8_t *rx, uint16_t len);
-
-SPI_Err_t spi_sw_write(SPI_Model_t *m, const uint8_t *tx, uint16_t len);
-SPI_Err_t spi_sw_read(SPI_Model_t *m, uint8_t *rx, uint16_t len);
-
-/* ============================================================
- * 芯片级原语（软件 SPI 用，对外可见以便 spi_chip.c 引用）
- *
- * 直接操作 GPIO.
- * ============================================================ */
-
-void spi_sw_cs_select(SPI_Model_t *m);
-void spi_sw_cs_deselect(SPI_Model_t *m);
-uint8_t spi_sw_xfer_byte_cpha0(
-    SPI_Model_t *m,
-    uint8_t tx_byte,
-    uint32_t delay,
-    GPIO_Level_t idle,
-    GPIO_Level_t active);
-
-uint8_t spi_sw_xfer_byte_cpha1(
-    SPI_Model_t *m,
-    uint8_t tx_byte,
-    uint32_t delay,
-    GPIO_Level_t idle,
-    GPIO_Level_t active);
-uint8_t spi_sw_xfer_byte(SPI_Model_t *m, uint8_t tx_byte);
+void spi_cs_select(SPI_Model_t *m);
+void spi_cs_deselect(SPI_Model_t *m);
