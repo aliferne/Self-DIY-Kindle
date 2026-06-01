@@ -101,7 +101,6 @@ int main(void)
 
     gpio_write(&usr_led, GPIO_Level_High);
     
-    storage_erase();
     gpio_toggle(&usr_led);
     /* USER CODE END 2 */
 
