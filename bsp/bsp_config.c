@@ -22,7 +22,6 @@ GPIO_Model_t tft_blk;
 
 static void bsp_init_buttons(void);
 static void bsp_init_leds(void);
-static void bsp_init_storage(void);
 static void bsp_init_tft(void);
 
 void bsp_init_hardware(void)
@@ -30,7 +29,8 @@ void bsp_init_hardware(void)
     dwt_init(); /* 初始化 DWT 以支持微秒级延时 */
     bsp_init_leds();
     bsp_init_buttons();
-    bsp_init_storage();
+    /* 由于引入了 FatFs，这里直接在 disk_initialize 中调用此初始化函数 */
+    // bsp_init_storage();
     bsp_init_tft();
 }
 
@@ -91,14 +91,14 @@ static void bsp_init_leds(void)
               &init_conf);
 }
 
-static void bsp_init_storage(void)
+SDIO_Err_t bsp_init_storage(void)
 {
     SDIO_Config_t sdio_cfg = {
         .mode     = SDIO_Mode_Polling,
         .wide_bus = 1,
     };
 
-    sdio_init(&storage, (SDIO_Handle_t *)&hsd, &sdio_cfg);
+    return sdio_init(&storage, (SDIO_Handle_t *)&hsd, &sdio_cfg);
 }
 
 static void bsp_init_tft(void)

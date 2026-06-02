@@ -36,3 +36,9 @@ extern GPIO_Model_t tft_blk;
  * ============================================================ */
 
 void bsp_init_hardware(void);
+
+/*
+ * FatFs 初始化设备的接口
+ */
+
+SDIO_Err_t bsp_init_storage(void);

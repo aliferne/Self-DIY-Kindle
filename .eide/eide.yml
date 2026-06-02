@@ -375,7 +375,6 @@ targets:
     excludeList:
       - <virtual_root>/Application/MDK-ARM/startup_stm32f407xx.s
       - <virtual_root>/Application/User/FATFS
-      - <virtual_root>/Middlewares/FatFs
     settings:
       debugger: cortex-debug
     toolchain: GCC
@@ -533,4 +532,4 @@ targets:
         bin: ""
         interface: cmsis-dap
         target: stm32f4x
-    uploader: OpenOCD
+    uploader: JLink

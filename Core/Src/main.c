@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "bsp_gpio.h"
 #include "cmsis_os.h"
 #include "dma.h"
 #include "sdio.h"
@@ -27,7 +28,9 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "bsp_config.h"
+#include "ff.h"
 #include "mid_config.h"
+#include "stm32f4xx_hal.h"
 #include "storage_srv.h"
 #include <stdio.h>
 /* USER CODE END Includes */
@@ -102,16 +105,58 @@ int main(void)
     bsp_init_hardware();
     mid_init_modules();
 
-    storage_write_blocks(data, 0, 1);
+    // storage_write_blocks(data, 0, 1);
 
-    storage_read_blocks(rx, 0, 1);
+    // storage_read_blocks(rx, 0, 1);
     // TODO: 启用 UART1 并完成 gcc 的 _write 重定向工作
     // printf("%s", rx);
 
+    /* start testing signal */
     gpio_write(&usr_led, GPIO_Level_High);
+    HAL_Delay(1500);
+    gpio_write(&usr_led, GPIO_Level_Low);
 
-    gpio_toggle(&usr_led);
+    FATFS fs;
+    FIL fil;
+    FRESULT res;
 
+    char writeData[]    = "Hello, Sakura!";
+    char readData[100]  = {0};
+    uint32_t write_data = 0, read_count = 0;
+    uint32_t fSize = 0;
+
+    res = f_mount(&fs, "0:", 1);
+    if (res) goto err_done;
+
+    res = f_open(&fil, "0:test.txt", FA_READ | FA_WRITE | FA_OPEN_ALWAYS);
+    if (res) goto err_done;
+
+    // 写入数据
+    /* FIXME: 目前写入操作不正常，先判断是否被置位 FA_DIRTY 后，没写入，接下来再去置位 FA_DIRTY，从而不会被写入 */
+    f_write(&fil, writeData, sizeof(writeData), (UINT *)&write_data);
+
+    // 写完文件的读写指针已经到末尾，我们需要重新定位到文件开头
+    f_lseek(&fil, 0);
+
+    // 获取文件大小
+    fSize = f_size(&fil);
+
+    // 读取数据
+    // 第一个参数是文件指针，第二个参数是读取的数据，第三个参数是要读取的数据长度，第四个参数保存实际读取的数据长度
+    f_read(&fil, readData, fSize, (UINT *)&read_count);
+    if (read_count) {
+        printf("read count: %u\r\n", read_count);
+        printf("data:\r\n");
+        printf("%s\r\n", readData);
+    }
+
+    gpio_write(&usr_led, GPIO_Level_High);
+    HAL_Delay(1500);
+    gpio_write(&usr_led, GPIO_Level_Low);
+    for (;;);
+
+err_done:
+    gpio_write(&usr_led, GPIO_Level_High);
     for (;;);
 
     TFT_TurnOff(&tft, 1);
