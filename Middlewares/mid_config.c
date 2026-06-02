@@ -1,13 +1,30 @@
 #include "mid_config.h"
+#include "bsp_config.h"
+#include "st7735s/tft.h"
 #include "bsp_sys.h"
 #include "pin_src.h"
 #include "epaper.h"
 
 static void mid_init_epaper(void);
+static void mid_init_tft(void);
+
+TFT_Model_t tft = {
+    .blk_pin = &tft_blk,
+    .dc_pin  = &tft_dc,
+    .rst_pin = &tft_rst,
+    .spi     = &tft_spi,
+};
 
 void mid_init_modules(void)
 {
-    mid_init_epaper();
+    // mid_init_epaper();
+    mid_init_tft();
+}
+
+static void mid_init_tft(void)
+{
+    /* hspi 已经由 CubeMX 代码自动 init */
+    TFT_Init(&tft);
 }
 
 static void mid_init_epaper(void)

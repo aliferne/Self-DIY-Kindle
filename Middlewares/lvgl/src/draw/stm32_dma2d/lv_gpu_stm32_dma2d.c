@@ -114,7 +114,7 @@ void lv_draw_stm32_dma2d_init(void)
     // AHB master timer configuration
     DMA2D->AMTCR = 0; // AHB bus guaranteed dead time disabled
 #if defined(LV_STM32_DMA2D_TEST)
-    _lv_gpu_stm32_dwt_init(); // init µs timer
+    _lv_gpu_stm32_dwt_init(); // init 碌s timer
 #endif
 }
 
@@ -747,7 +747,7 @@ LV_STM32_DMA2D_STATIC void _lv_gpu_stm32_dma2d_clean_cache(uint32_t address, lv_
 #endif // LV_STM32_DMA2D_USE_M7_CACHE
 
 #if defined(LV_STM32_DMA2D_TEST)
-// initialize µs timer
+// initialize 碌s timer
 LV_STM32_DMA2D_STATIC bool _lv_gpu_stm32_dwt_init(void)
 {
     // disable TRC
@@ -780,14 +780,14 @@ LV_STM32_DMA2D_STATIC bool _lv_gpu_stm32_dwt_init(void)
     }
 }
 
-// get elapsed µs since reset
+// get elapsed 碌s since reset
 LV_STM32_DMA2D_STATIC uint32_t _lv_gpu_stm32_dwt_get_us(void)
 {
     uint32_t us = (DWT->CYCCNT * 1000000) / HAL_RCC_GetHCLKFreq();
     return us;
 }
 
-// reset µs timer
+// reset 碌s timer
 LV_STM32_DMA2D_STATIC void _lv_gpu_stm32_dwt_reset(void)
 {
     DWT->CYCCNT = 0;

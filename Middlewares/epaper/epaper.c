@@ -41,18 +41,19 @@ EPaper_Err_t epaper_init(
     /* ---- SPI（合并了注册 + 初始化） ---- */
     {
         SPI_Register_Cfg_t reg_cfg = {
-            .drv    = SPI_Driver_SW,
+            .drv = SPI_Driver_SW,
+            .cs  = {
+                 .pin  = cs_pin,
+                 .port = cs_port,
+            },
             .src.sw = {
-                .cs_port   = cs_port,
-                .cs_pin    = cs_pin,
                 .sck_port  = sck_port,
                 .sck_pin   = sck_pin,
                 .mosi_port = mosi_port,
                 .mosi_pin  = mosi_pin,
                 .miso_port = miso_port,
                 .miso_pin  = miso_pin,
-            },
-        };
+            }};
         SPI_Config_t spi_cfg = {
             .sw = {
                 .mode         = SPI_Mode_0,
@@ -115,7 +116,7 @@ EPaper_Err_t epaper_init(
 
     if (epaper_err != EPaper_Err_OK)
         return epaper_err;
-    
+
     m->is_sleeping = 0;
 
     epaper_err = EPD_4IN2_V2_Clear(m);
@@ -132,12 +133,12 @@ EPaper_Err_t epaper_init(
 void epaper_sleep(EPaper_Model_t *m, uint8_t need_clear)
 {
     EPD_4IN2_V2_Init_Normal(m);
-    
+
     if (need_clear)
         EPD_4IN2_V2_Clear(m);
 
     EPD_4IN2_V2_Sleep(m);
-    
+
     m->is_sleeping = 1;
 }
 
@@ -148,7 +149,7 @@ void epaper_sleep(EPaper_Model_t *m, uint8_t need_clear)
 void epaper_deinit(EPaper_Model_t *m)
 {
     gpio_write(&m->dc, GPIO_Level_Low);
-    gpio_write(&m->spi.src.sw.cs, GPIO_Level_Low);
+    spi_cs_deselect(&m->spi);
     gpio_write(&m->rst, GPIO_Level_Low);
 
     DEV_Delay_ms(10);
