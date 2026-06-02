@@ -1,6 +1,7 @@
 #include "bsp_config.h"
 #include "bsp_gpio.h"
 #include "bsp_sdio.h"
+#include "bsp_spi.h"
 #include "pin_src.h"
 #include "bsp_sys.h"
 #include "sdio.h"
@@ -14,9 +15,15 @@ GPIO_Model_t confirm_btn;
 
 SDIO_Model_t storage;
 
+SPI_Model_t tft_spi;
+GPIO_Model_t tft_dc;
+GPIO_Model_t tft_rst;
+GPIO_Model_t tft_blk;
+
 static void bsp_init_buttons(void);
 static void bsp_init_leds(void);
 static void bsp_init_storage(void);
+static void bsp_init_tft(void);
 
 void bsp_init_hardware(void)
 {
@@ -24,6 +31,7 @@ void bsp_init_hardware(void)
     bsp_init_leds();
     bsp_init_buttons();
     bsp_init_storage();
+    bsp_init_tft();
 }
 
 /* ============================================================
@@ -86,9 +94,43 @@ static void bsp_init_leds(void)
 static void bsp_init_storage(void)
 {
     SDIO_Config_t sdio_cfg = {
-        .mode     = SDIO_Mode_DMA,
+        .mode     = SDIO_Mode_Polling,
         .wide_bus = 1,
     };
 
     sdio_init(&storage, (SDIO_Handle_t *)&hsd, &sdio_cfg);
+}
+
+static void bsp_init_tft(void)
+{
+    GPIO_Config_t init_conf = {
+        .mode  = GPIO_Mode_Output_PP,
+        .pull  = GPIO_Pull_None,
+        .speed = GPIO_Speed_Low,
+    };
+
+    gpio_init(&tft_blk,
+              (GPIO_Port_t)TFT_BLK_PORT, (GPIO_Pin_t)TFT_BLK_PIN,
+              &init_conf);
+    gpio_init(&tft_dc,
+              (GPIO_Port_t)TFT_DC_PORT, (GPIO_Pin_t)TFT_DC_PIN,
+              &init_conf);
+    gpio_init(&tft_rst,
+              (GPIO_Port_t)TFT_RST_PORT, (GPIO_Pin_t)TFT_RST_PIN,
+              &init_conf);
+
+    SPI_Register_Cfg_t spi_reg_cfg = {
+        .drv     = SPI_Driver_HW,
+        .src.hw  = (SPI_Handle_t *)TFT_HSPI,
+        .cs.port = TFT_CS_PORT,
+        .cs.pin  = TFT_CS_PIN,
+    };
+
+    SPI_Config_t tft_spi_cfg = {
+        .hw.timeout = 2000,
+    };
+
+    spi_init(&tft_spi,
+             &spi_reg_cfg,
+             &tft_spi_cfg);
 }

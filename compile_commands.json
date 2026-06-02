@@ -36,6 +36,7 @@
       "-IMiddlewares/lvgl/src/misc",
       "-IMiddlewares/miniz",
       "-IMiddlewares/epaper",
+      "-IMiddlewares/st7735s",
       "-IMiddlewares/FatFs",
       "-IMiddlewares/epaper/config",
       "-IMiddlewares/epaper/drv",

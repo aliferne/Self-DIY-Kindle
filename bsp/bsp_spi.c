@@ -72,12 +72,12 @@ SPI_Err_t spi_sw_read(SPI_Model_t *m, uint8_t *rx, uint16_t len)
 
 void spi_cs_select(SPI_Model_t *m)
 {
-    (void)gpio_write(&m->src.sw.cs, GPIO_Level_Low);
+    (void)gpio_write(&m->src.cs, GPIO_Level_Low);
 }
 
 void spi_cs_deselect(SPI_Model_t *m)
 {
-    (void)gpio_write(&m->src.sw.cs, GPIO_Level_High);
+    (void)gpio_write(&m->src.cs, GPIO_Level_High);
 }
 
 /**

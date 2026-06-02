@@ -54,9 +54,11 @@ SPI_Err_t spi_init(SPI_Model_t *m, SPI_Register_Cfg_t *reg_cfg, const SPI_Config
     m->drv  = reg_cfg->drv;
     m->busy = 0;
 
+    /* ---- 添加 CS ---- */
+    gpio_init(&m->src.cs, reg_cfg->cs.port, reg_cfg->cs.pin, &gpio_cfg);
+
     if (reg_cfg->drv == SPI_Driver_SW) {
-        /* ---- 软件 SPI：注册并初始化四个 GPIO 引脚 ---- */
-        gpio_init(&m->src.sw.cs, reg_cfg->src.sw.cs_port, reg_cfg->src.sw.cs_pin, &gpio_cfg);
+        /* ---- 软件 SPI：注册并初始化三个 GPIO 引脚 ---- */
         gpio_init(&m->src.sw.sclk, reg_cfg->src.sw.sck_port, reg_cfg->src.sw.sck_pin, &gpio_cfg);
         gpio_init(&m->src.sw.mosi, reg_cfg->src.sw.mosi_port, reg_cfg->src.sw.mosi_pin, &gpio_cfg);
 
@@ -102,7 +104,7 @@ SPI_Err_t spi_init(SPI_Model_t *m, SPI_Register_Cfg_t *reg_cfg, const SPI_Config
 
 SPI_Err_t spi_deinit(SPI_Model_t *m)
 {
-    gpio_deinit(&m->src.sw.cs);
+    gpio_deinit(&m->src.cs);
     gpio_deinit(&m->src.sw.sclk);
     gpio_deinit(&m->src.sw.mosi);
     gpio_deinit(&m->src.sw.miso);

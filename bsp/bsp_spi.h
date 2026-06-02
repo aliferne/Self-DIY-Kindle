@@ -82,12 +82,11 @@ typedef void *SPI_Handle_t;
 
 typedef union {
     struct {
-        GPIO_Model_t cs;
         GPIO_Model_t sclk;
         GPIO_Model_t mosi;
         GPIO_Model_t miso;
-    } sw; /**< 软件 SPI: 四个 GPIO 引脚 */
-
+    } sw;            /**< 软件 SPI: 三个 GPIO 引脚 */
+    GPIO_Model_t cs; /**< 片选信号 */
     SPI_Handle_t hw; /**< 硬件 SPI：一个 HSPI 句柄 */
 } SPI_Source_t;
 /*
@@ -116,10 +115,8 @@ typedef union {
     } hw;
 } SPI_Config_t;
 
-/* 软件 SPI 注册参数：四个引脚的 (Port, Pin) */
+/* 软件 SPI 注册参数：三个引脚的 (Port, Pin) */
 typedef struct {
-    GPIO_Port_t cs_port;
-    GPIO_Pin_t cs_pin;
     GPIO_Port_t sck_port;
     GPIO_Pin_t sck_pin;
     GPIO_Port_t mosi_port;
@@ -135,6 +132,10 @@ typedef struct {
         SPI_Register_SW_Cfg_t sw;
         SPI_Handle_t hw; /* 硬件 SPI：直接用句柄指针 */
     } src;
+    struct {
+        GPIO_Port_t port;
+        GPIO_Pin_t pin;
+    } cs;
 } SPI_Register_Cfg_t;
 
 /*

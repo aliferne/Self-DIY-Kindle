@@ -2,6 +2,7 @@
 
 #include "stm32f4xx_hal.h"
 #include "stm32f4xx_hal_gpio.h"
+#include "spi.h"
 
 /*
  * Pin source mapping for STM32F4xx series.
@@ -11,7 +12,7 @@
  * 引脚定义格式：
  *   #define <功能名>_PORT   <GPIO 端口>
  *   #define <功能名>_PIN    <GPIO 引脚>
- * 
+ *
  * 此外为了避免在 bsp 层造成芯片库相关内容的泄漏，
  * 应当在源文件中包含， 避免在头文件中包含
  * ============================================================ */
@@ -26,10 +27,10 @@
  *
  * LED：
  *   - User LED             PB2
- * 
+ *
  * ESCREEN:
- *  
- * 
+ *
+ *
  */
 
 #define PAGEUP_BTN_PORT   GPIOE
@@ -51,16 +52,31 @@
 #define USER_LED_PIN      GPIO_PIN_2
 
 /*
+ * TFT 屏驱动
+ */
+// #define TFT_SCK_PORT
+// #define TFT_SCK_PIN
+
+// #define TFT_MOSI_PORT
+// #define TFT_MOSI_PIN
+#define TFT_HSPI     (&hspi1)
+
+#define TFT_CS_PORT  GPIOA
+#define TFT_CS_PIN   GPIO_PIN_2
+
+#define TFT_DC_PORT  GPIOA
+#define TFT_DC_PIN   GPIO_PIN_1
+
+#define TFT_RST_PORT GPIOA
+#define TFT_RST_PIN  GPIO_PIN_0
+
+#define TFT_BLK_PORT GPIOA
+#define TFT_BLK_PIN  GPIO_PIN_3
+
+/*
  * 墨水屏 (4.2inch e-Paper V2)：
- *   - SCK 
- *   - MOSI 
- *   - MISO →  复用 MOSI 引脚（电子纸无需回读）
- *   - CS
- *   - DC
- *   - RST
- *   - BUSY
  *
- * 以下为占位符，请在确定实际接线后修改。
+ * 目前不再使用
  */
 #define EPAPER_SCK_PORT  GPIOE
 #define EPAPER_SCK_PIN   GPIO_PIN_7

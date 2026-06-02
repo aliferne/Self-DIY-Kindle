@@ -11,6 +11,7 @@
 
 #include "bsp_gpio.h"
 #include "bsp_sdio.h"
+#include "bsp_spi.h"
 
 /* ============================================================
  * 全局 GPIO 模型声明
@@ -24,6 +25,11 @@ extern GPIO_Model_t home_btn;
 extern GPIO_Model_t confirm_btn;
 
 extern SDIO_Model_t storage;
+
+extern SPI_Model_t tft_spi;
+extern GPIO_Model_t tft_dc;
+extern GPIO_Model_t tft_rst;
+extern GPIO_Model_t tft_blk;
 
 /* ============================================================
  * 初始化入口

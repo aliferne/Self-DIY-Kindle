@@ -30,6 +30,8 @@ virtualFolder:
                 - path: Core/Src/syscalls.c
                 - path: Core/Src/sdio.c
                 - path: Core/Src/dma.c
+                - path: Core/Src/spi.c
+                - path: Core/Src/stm32f4xx_hal_timebase_tim.c
               folders: []
             - name: FATFS
               files: []
@@ -71,6 +73,7 @@ virtualFolder:
             - path: Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_sdram.c
             - path: Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_mmc.c
             - path: Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_sdmmc.c
+            - path: Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.c
           folders: []
         - name: CMSIS
           files:
@@ -273,6 +276,10 @@ virtualFolder:
                     - path: Middlewares/lvgl/src/widgets/lv_table.c
                     - path: Middlewares/lvgl/src/widgets/lv_textarea.c
                   folders: []
+        - name: st7735s
+          files:
+            - path: Middlewares/st7735s/tft.c
+          folders: []
     - name: BSP
       files:
         - path: bsp/bsp_config.c
@@ -363,6 +370,7 @@ targets:
         - Middlewares/lvgl/src/widgets
         - Middlewares/lvgl/src/misc
         - Middlewares/epaper/test
+        - Middlewares/st7735s
       libList: []
     excludeList:
       - <virtual_root>/Application/MDK-ARM/startup_stm32f407xx.s
@@ -525,4 +533,4 @@ targets:
         bin: ""
         interface: cmsis-dap
         target: stm32f4x
-    uploader: JLink
+    uploader: OpenOCD

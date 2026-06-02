@@ -18,10 +18,10 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "bsp_gpio.h"
 #include "cmsis_os.h"
 #include "dma.h"
 #include "sdio.h"
+#include "spi.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -29,6 +29,8 @@
 #include "bsp_config.h"
 #include "mid_config.h"
 #include "storage_srv.h"
+#include "st7735s/tft.h"
+#include <stdint.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -61,7 +63,9 @@ void MX_FREERTOS_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+int colr[20]      = {0xf800, 0x07e0, 0x001f, 0x1c9f, 0x8811, 0xd8a7, 0xfa20, 0xffff, 0xFFE0, 0x07ff, 0xf81f, 0xdb92};
+uint8_t data[512] = "Hello World!\n";
+uint8_t rx[512]   = {0};
 /* USER CODE END 0 */
 
 /**
@@ -95,20 +99,29 @@ int main(void)
     MX_GPIO_Init();
     MX_DMA_Init();
     MX_SDIO_SD_Init();
+    MX_SPI1_Init();
     /* USER CODE BEGIN 2 */
     bsp_init_hardware();
     mid_init_modules();
 
+    // storage_write_blocks(data, 0, 1);
+
+    // storage_read_blocks(rx, 0, 1);
+    // // printf("%s", rx);
+
     gpio_write(&usr_led, GPIO_Level_High);
-    
+
     gpio_toggle(&usr_led);
+
+    TFT_TurnOff(&tft, 1);
+    HAL_Delay(500);
     /* USER CODE END 2 */
 
     /* Call init function for freertos objects (in cmsis_os2.c) */
-    MX_FREERTOS_Init();
+    // MX_FREERTOS_Init();
 
     /* Start scheduler */
-    osKernelStart();
+    // osKernelStart();
 
     /* We should never get here as control is now taken by the scheduler */
 
@@ -118,6 +131,26 @@ int main(void)
         /* USER CODE END WHILE */
 
         /* USER CODE BEGIN 3 */
+        TFT_Clear(&tft, TFT_RED);
+        HAL_Delay(500);
+        // for (int i = 1; i < 5; i++) {
+        //     TFT_ShowChinese(&tft, 0, 0, colr[i - 1], TFT_BLACK, "Chinese sample:");
+        //     TFT_ShowChinese(&tft, 0, 16, colr[i], TFT_BLACK, "我是一只猫快乐的星猫从来没烦恼你快乐就好");
+        //     HAL_Delay(50);
+        //     TFT_Clear(&tft, TFT_BLACK);
+        // }
+
+        // TFT_ShowChinese(&tft, 0, 0, TFT_BLUE2, TFT_BLACK, "Mix sample");
+        // TFT_ShowChinese(&tft, 0, 16, TFT_PURPLE, TFT_BLACK, "我是一只猫2525,快乐的星猫3434~从来没烦恼,你快乐就好!2233445,ahahahhahah");
+        // HAL_Delay(700);
+
+        // TFT_Clear(&tft, TFT_BLACK);
+        // TFT_ShowChinese(&tft, 0, 0, TFT_PURPLE3, TFT_BLACK, "special_font");
+        // TFT_ShowChinese(&tft, 0, 32, TFT_ORANGE, TFT_BLACK, "你是光");
+        // TFT_ShowChinese(&tft, 0, 64, TFT_CYAN, TFT_BLACK, "你是电");
+        // TFT_ShowChinese(&tft, 0, 96, TFT_PURPLE2, TFT_BLACK, "你是唯一的信仰");
+        // HAL_Delay(1000);
+        // TFT_Clear(&tft, TFT_BLACK);
     }
     /* USER CODE END 3 */
 }
@@ -144,9 +177,9 @@ void SystemClock_Config(void)
     RCC_OscInitStruct.PLL.PLLState   = RCC_PLL_ON;
     RCC_OscInitStruct.PLL.PLLSource  = RCC_PLLSOURCE_HSE;
     RCC_OscInitStruct.PLL.PLLM       = 4;
-    RCC_OscInitStruct.PLL.PLLN       = 192;
-    RCC_OscInitStruct.PLL.PLLP       = RCC_PLLP_DIV4;
-    RCC_OscInitStruct.PLL.PLLQ       = 4;
+    RCC_OscInitStruct.PLL.PLLN       = 168;
+    RCC_OscInitStruct.PLL.PLLP       = RCC_PLLP_DIV2;
+    RCC_OscInitStruct.PLL.PLLQ       = 8;
     if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
         Error_Handler();
     }
@@ -157,9 +190,9 @@ void SystemClock_Config(void)
     RCC_ClkInitStruct.SYSCLKSource   = RCC_SYSCLKSOURCE_PLLCLK;
     RCC_ClkInitStruct.AHBCLKDivider  = RCC_SYSCLK_DIV1;
     RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
-    RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV4;
+    RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
 
-    if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_3) != HAL_OK) {
+    if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK) {
         Error_Handler();
     }
 }
@@ -167,6 +200,27 @@ void SystemClock_Config(void)
 /* USER CODE BEGIN 4 */
 
 /* USER CODE END 4 */
+
+/**
+ * @brief  Period elapsed callback in non blocking mode
+ * @note   This function is called  when TIM7 interrupt took place, inside
+ * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
+ * a global variable "uwTick" used as application time base.
+ * @param  htim : TIM handle
+ * @retval None
+ */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+    /* USER CODE BEGIN Callback 0 */
+
+    /* USER CODE END Callback 0 */
+    if (htim->Instance == TIM7) {
+        HAL_IncTick();
+    }
+    /* USER CODE BEGIN Callback 1 */
+
+    /* USER CODE END Callback 1 */
+}
 
 /**
  * @brief  This function is executed in case of error occurrence.
