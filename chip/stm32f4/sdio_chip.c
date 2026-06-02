@@ -12,12 +12,25 @@
 
 #include "bsp_sdio.h"
 #include "stm32f4xx_hal.h"
+#include "stm32f4xx_hal_def.h"
 #include "stm32f4xx_hal_sd.h"
+#include <string.h>
 
-#define SDIO_TIMEOUT 2500
+#define SD_BLOCKSIZE 512U
+#define SDIO_TIMEOUT 2500U
 
 /* 假定芯片只使用一块 SD 卡，因此只需要单例 */
 static SDIO_Model_t *s_active = NULL;
+
+/* 
+TODO: 
+    需要利用下面的缓冲区将 dma 对齐，
+    并且需要查清为何无法使用中断和 DMA
+    中断模式下 check_card_state 会 Error，
+    并且跑第二次代码时需要重新拔插 SD 卡才能正常 MX_SD_SDIO_Init
+*/
+__ALIGN_BEGIN static uint8_t dma_buffer_tx[SD_BLOCKSIZE] __ALIGN_END;
+__ALIGN_BEGIN static uint8_t dma_buffer_rx[SD_BLOCKSIZE] __ALIGN_END;
 
 SDIO_Err_t sdio_init(SDIO_Model_t *m, SDIO_Handle_t handle,
                      const SDIO_Config_t *cfg)
@@ -35,7 +48,7 @@ SDIO_Err_t sdio_init(SDIO_Model_t *m, SDIO_Handle_t handle,
     /* 获取卡片信息 */
     HAL_SD_CardInfoTypeDef info;
     if (HAL_SD_GetCardInfo(h, &info) != HAL_OK) {
-        m->block_size  = 512;
+        m->block_size  = SD_BLOCKSIZE;
         m->block_count = 0;
     } else {
         /* 一般来说固定为 512 */
@@ -69,10 +82,8 @@ static void wait_for_completion(SDIO_Model_t *m)
 /* ============================================================
  * 内部辅助：等待 SD 卡进入 Transfer State
  *
- * HAL 要求在每次读写操作前检查卡状态。此函数自旋等待
+ * HAL 要求在每次读写操作前检查卡状态。此函数循环等待
  * 直到卡回到可传输状态，超时返回 SDIO_Err_Timeout。
- *
- * 超时值复用 SDIO_TIMEOUT（5000ms）。
  * ============================================================ */
 
 static SDIO_Err_t check_card_state(SDIO_Model_t *m)

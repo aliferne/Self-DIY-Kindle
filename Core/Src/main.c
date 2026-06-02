@@ -29,7 +29,7 @@
 #include "bsp_config.h"
 #include "mid_config.h"
 #include "storage_srv.h"
-#include <stdint.h>
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -62,7 +62,8 @@ void MX_FREERTOS_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-uint8_t rx[512] = {0};
+uint8_t data[512] = "Hello World!\n";
+uint8_t rx[512]   = {0};
 /* USER CODE END 0 */
 
 /**
@@ -101,14 +102,17 @@ int main(void)
     bsp_init_hardware();
     mid_init_modules();
 
-    // storage_write_blocks(data, 0, 1);
+    storage_write_blocks(data, 0, 1);
 
-    // storage_read_blocks(rx, 0, 1);
-    // // printf("%s", rx);
+    storage_read_blocks(rx, 0, 1);
+    // TODO: 启用 UART1 并完成 gcc 的 _write 重定向工作
+    // printf("%s", rx);
 
     gpio_write(&usr_led, GPIO_Level_High);
 
     gpio_toggle(&usr_led);
+
+    for (;;);
 
     TFT_TurnOff(&tft, 1);
     HAL_Delay(500);
