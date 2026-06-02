@@ -29,7 +29,6 @@
 #include "bsp_config.h"
 #include "mid_config.h"
 #include "storage_srv.h"
-#include "st7735s/tft.h"
 #include <stdint.h>
 /* USER CODE END Includes */
 
@@ -63,9 +62,7 @@ void MX_FREERTOS_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-int colr[20]      = {0xf800, 0x07e0, 0x001f, 0x1c9f, 0x8811, 0xd8a7, 0xfa20, 0xffff, 0xFFE0, 0x07ff, 0xf81f, 0xdb92};
-uint8_t data[512] = "Hello World!\n";
-uint8_t rx[512]   = {0};
+uint8_t rx[512] = {0};
 /* USER CODE END 0 */
 
 /**
@@ -118,10 +115,10 @@ int main(void)
     /* USER CODE END 2 */
 
     /* Call init function for freertos objects (in cmsis_os2.c) */
-    // MX_FREERTOS_Init();
+    MX_FREERTOS_Init();
 
     /* Start scheduler */
-    // osKernelStart();
+    osKernelStart();
 
     /* We should never get here as control is now taken by the scheduler */
 
@@ -131,26 +128,24 @@ int main(void)
         /* USER CODE END WHILE */
 
         /* USER CODE BEGIN 3 */
-        TFT_Clear(&tft, TFT_RED);
-        HAL_Delay(500);
-        // for (int i = 1; i < 5; i++) {
-        //     TFT_ShowChinese(&tft, 0, 0, colr[i - 1], TFT_BLACK, "Chinese sample:");
-        //     TFT_ShowChinese(&tft, 0, 16, colr[i], TFT_BLACK, "我是一只猫快乐的星猫从来没烦恼你快乐就好");
-        //     HAL_Delay(50);
+        //     for (int i = 1; i < 5; i++) {
+        //         TFT_ShowChinese(&tft, 0, 0, colr[i - 1], TFT_BLACK, "Chinese sample:");
+        //         TFT_ShowChinese(&tft, 0, 16, colr[i], TFT_BLACK, "我是一只猫快乐的星猫从来没烦恼你快乐就好");
+        //         HAL_Delay(50);
+        //         TFT_Clear(&tft, TFT_BLACK);
+        //     }
+
+        //     TFT_ShowChinese(&tft, 0, 0, TFT_BLUE2, TFT_BLACK, "Mix sample");
+        //     TFT_ShowChinese(&tft, 0, 16, TFT_PURPLE, TFT_BLACK, "我是一只猫2525,快乐的星猫3434~从来没烦恼,你快乐就好!2233445,ahahahhahah");
+        //     HAL_Delay(700);
+
         //     TFT_Clear(&tft, TFT_BLACK);
-        // }
-
-        // TFT_ShowChinese(&tft, 0, 0, TFT_BLUE2, TFT_BLACK, "Mix sample");
-        // TFT_ShowChinese(&tft, 0, 16, TFT_PURPLE, TFT_BLACK, "我是一只猫2525,快乐的星猫3434~从来没烦恼,你快乐就好!2233445,ahahahhahah");
-        // HAL_Delay(700);
-
-        // TFT_Clear(&tft, TFT_BLACK);
-        // TFT_ShowChinese(&tft, 0, 0, TFT_PURPLE3, TFT_BLACK, "special_font");
-        // TFT_ShowChinese(&tft, 0, 32, TFT_ORANGE, TFT_BLACK, "你是光");
-        // TFT_ShowChinese(&tft, 0, 64, TFT_CYAN, TFT_BLACK, "你是电");
-        // TFT_ShowChinese(&tft, 0, 96, TFT_PURPLE2, TFT_BLACK, "你是唯一的信仰");
-        // HAL_Delay(1000);
-        // TFT_Clear(&tft, TFT_BLACK);
+        //     TFT_ShowChinese(&tft, 0, 0, TFT_PURPLE3, TFT_BLACK, "special_font");
+        //     TFT_ShowChinese(&tft, 0, 32, TFT_ORANGE, TFT_BLACK, "你是光");
+        //     TFT_ShowChinese(&tft, 0, 64, TFT_CYAN, TFT_BLACK, "你是电");
+        //     TFT_ShowChinese(&tft, 0, 96, TFT_PURPLE2, TFT_BLACK, "你是唯一的信仰");
+        //     HAL_Delay(1000);
+        //     TFT_Clear(&tft, TFT_BLACK);
     }
     /* USER CODE END 3 */
 }
