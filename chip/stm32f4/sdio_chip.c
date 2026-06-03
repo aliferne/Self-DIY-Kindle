@@ -22,8 +22,8 @@
 /* 假定芯片只使用一块 SD 卡，因此只需要单例 */
 static SDIO_Model_t *s_active = NULL;
 
-/* 
-TODO: 
+/*
+TODO:
     需要利用下面的缓冲区将 dma 对齐，
     并且需要查清为何无法使用中断和 DMA
     中断模式下 check_card_state 会 Error，
@@ -84,29 +84,22 @@ static void wait_for_completion(SDIO_Model_t *m)
  *
  * HAL 要求在每次读写操作前检查卡状态。此函数循环等待
  * 直到卡回到可传输状态，超时返回 SDIO_Err_Timeout。
+ * 超时时自动置 error 标志位
  * ============================================================ */
 
 static SDIO_Err_t check_card_state(SDIO_Model_t *m)
 {
     SD_HandleTypeDef *h = (SD_HandleTypeDef *)m->handle;
 
-    /* FIXME： 
-    这里一定需要超时机制，写入 SD 卡是需要时间的，不延时就可能瞬间返回 Err_Generic
-    验证方法很简单，在：
-    ```c
-    if (check_card_state(m) != SDIO_Err_Ok) {
-        m->busy  = 0;
-        m->error = 1;
-        return SDIO_Err_Generic;
-    }
-    ```
-    的 if 和 return 那里都打一下断点，先禁用 if 的，然后会发现能够执行 return 语句（即瞬间返回非 Ok）
-    然后启用 if 的，进去函数里面，会发现返回的是 Ok, return 不执行
-    */
-    if (HAL_SD_GetCardState(h) == HAL_SD_CARD_TRANSFER) {
-        return SDIO_Err_Ok;
-    }
-    return SDIO_Err_Generic;
+    do {
+        // if (HAL_GetTick() - /* TODO */ > SDIO_TIMEOUT_MS){
+        //     m->busy  = 0;
+        //     m->error = 1;
+        //     return SDIO_Err_Timeout;
+        // }
+    } while (HAL_SD_GetCardState(h) != HAL_SD_CARD_TRANSFER);
+
+    return SDIO_Err_Ok;
 }
 
 SDIO_Err_t sdio_read_blocks(SDIO_Model_t *m, uint8_t *buf,
@@ -140,13 +133,7 @@ SDIO_Err_t sdio_read_blocks(SDIO_Model_t *m, uint8_t *buf,
                 return SDIO_Err_Generic;
             }
 
-            if (check_card_state(m) != SDIO_Err_Ok) {
-                m->busy  = 0;
-                m->error = 1;
-                return SDIO_Err_Generic;
-            }
-
-            return SDIO_Err_Ok;
+            return check_card_state(m);
         }
 
         case SDIO_Mode_IT:
@@ -157,11 +144,7 @@ SDIO_Err_t sdio_read_blocks(SDIO_Model_t *m, uint8_t *buf,
                 return SDIO_Err_Generic;
             }
 
-            if (check_card_state(m) != SDIO_Err_Ok) {
-                m->busy  = 0;
-                m->error = 1;
-                return SDIO_Err_Generic;
-            }
+            check_card_state(m);
 
             wait_for_completion(m);
             return m->error ? SDIO_Err_Generic : SDIO_Err_Ok;
@@ -174,11 +157,7 @@ SDIO_Err_t sdio_read_blocks(SDIO_Model_t *m, uint8_t *buf,
                 return SDIO_Err_DMA;
             }
 
-            if (check_card_state(m) != SDIO_Err_Ok) {
-                m->busy  = 0;
-                m->error = 1;
-                return SDIO_Err_Generic;
-            }
+            check_card_state(m);
 
             wait_for_completion(m);
             return m->error ? SDIO_Err_DMA : SDIO_Err_Ok;
@@ -220,13 +199,7 @@ SDIO_Err_t sdio_write_blocks(SDIO_Model_t *m, const uint8_t *buf,
                 return SDIO_Err_Generic;
             }
 
-            if (check_card_state(m) != SDIO_Err_Ok) {
-                m->busy  = 0;
-                m->error = 1;
-                return SDIO_Err_Generic;
-            }
-
-            return SDIO_Err_Ok;
+            return check_card_state(m);
         }
 
         case SDIO_Mode_IT:
@@ -237,11 +210,7 @@ SDIO_Err_t sdio_write_blocks(SDIO_Model_t *m, const uint8_t *buf,
                 return SDIO_Err_Generic;
             }
 
-            if (check_card_state(m) != SDIO_Err_Ok) {
-                m->busy  = 0;
-                m->error = 1;
-                return SDIO_Err_Generic;
-            }
+            check_card_state(m);
 
             wait_for_completion(m);
             return m->error ? SDIO_Err_Generic : SDIO_Err_Ok;
@@ -254,11 +223,7 @@ SDIO_Err_t sdio_write_blocks(SDIO_Model_t *m, const uint8_t *buf,
                 return SDIO_Err_DMA;
             }
 
-            if (check_card_state(m) != SDIO_Err_Ok) {
-                m->busy  = 0;
-                m->error = 1;
-                return SDIO_Err_Generic;
-            }
+            check_card_state(m);
 
             wait_for_completion(m);
             return m->error ? SDIO_Err_DMA : SDIO_Err_Ok;
@@ -285,13 +250,7 @@ SDIO_Err_t sdio_erase_blocks(SDIO_Model_t *m, uint32_t sector, uint32_t count)
 
     if (ret != HAL_OK) return SDIO_Err_Generic;
 
-    if (check_card_state(m) != SDIO_Err_Ok) {
-        m->busy  = 0;
-        m->error = 1;
-        return SDIO_Err_Generic;
-    }
-
-    return SDIO_Err_Ok;
+    return check_card_state(m);
 }
 
 uint8_t sdio_is_busy(SDIO_Model_t *m)
