@@ -32,6 +32,7 @@ virtualFolder:
                 - path: Core/Src/dma.c
                 - path: Core/Src/spi.c
                 - path: Core/Src/stm32f4xx_hal_timebase_tim.c
+                - path: Core/Src/usart.c
               folders: []
             - name: FATFS
               files: []
@@ -335,7 +336,6 @@ targets:
       defineList:
         - USE_HAL_DRIVER
         - STM32F407xx
-        - HAL_SPI_MODULE_ENABLED
       incList:
         - Core/Inc
         - Drivers/STM32F4xx_HAL_Driver/Inc
@@ -491,6 +491,7 @@ targets:
           asm-compiler: {}
           beforeBuildTasks: []
           c/cpp-compiler:
+            C_FLAGS: -u_printf_float -u_scanf_float
             language-c: c11
             language-cpp: c++11
             one-elf-section-per-data: true
@@ -532,4 +533,14 @@ targets:
         bin: ""
         interface: cmsis-dap
         target: stm32f4x
-    uploader: JLink
+      STLink:
+        address: "0x08000000"
+        bin: ""
+        elFile: None
+        optionBytes: .eide/self-diy-kindle.st.option.bytes.ini
+        otherCmds: ""
+        proType: SWD
+        resetMode: default
+        runAfterProgram: true
+        speed: 4000
+    uploader: OpenOCD

@@ -90,6 +90,19 @@ static SDIO_Err_t check_card_state(SDIO_Model_t *m)
 {
     SD_HandleTypeDef *h = (SD_HandleTypeDef *)m->handle;
 
+    /* FIXME： 
+    这里一定需要超时机制，写入 SD 卡是需要时间的，不延时就可能瞬间返回 Err_Generic
+    验证方法很简单，在：
+    ```c
+    if (check_card_state(m) != SDIO_Err_Ok) {
+        m->busy  = 0;
+        m->error = 1;
+        return SDIO_Err_Generic;
+    }
+    ```
+    的 if 和 return 那里都打一下断点，先禁用 if 的，然后会发现能够执行 return 语句（即瞬间返回非 Ok）
+    然后启用 if 的，进去函数里面，会发现返回的是 Ok, return 不执行
+    */
     if (HAL_SD_GetCardState(h) == HAL_SD_CARD_TRANSFER) {
         return SDIO_Err_Ok;
     }

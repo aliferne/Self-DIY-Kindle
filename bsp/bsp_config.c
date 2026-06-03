@@ -121,7 +121,7 @@ static void bsp_init_tft(void)
 
     SPI_Register_Cfg_t spi_reg_cfg = {
         .drv     = SPI_Driver_HW,
-        .src.hw  = (SPI_Handle_t *)TFT_HSPI,
+        .src.hw  = (SPI_Handle_t)TFT_HSPI,
         .cs.port = TFT_CS_PORT,
         .cs.pin  = TFT_CS_PIN,
     };
