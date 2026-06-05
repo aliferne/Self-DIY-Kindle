@@ -39,7 +39,7 @@ typedef struct {
 
 UART_Err_t uart_init(UART_Model_t *m, const UART_Config_t *cfg);
 UART_Err_t uart_deinit(UART_Model_t *m);
-UART_Err_t uart_send(UART_Model_t *m, uint8_t data);
-uint8_t uart_recv(UART_Model_t *m);
+UART_Err_t uart_send(UART_Model_t *m, const uint8_t* data, uint16_t len);
+UART_Err_t uart_recv(UART_Model_t *m, uint8_t *data, uint16_t len);
 UART_Err_t uart_attach_irq(UART_Model_t *m, void (*callback)(void *));
 UART_Err_t uart_detach_irq(UART_Model_t *m);

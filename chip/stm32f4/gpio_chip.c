@@ -20,10 +20,6 @@
 
 GPIO_Model_t *gpio_irq_models[GPIO_MAX_PIN] = {NULL};
 
-/* ============================================================
- * 内部辅助：BSP 枚举 → HAL 枚举
- * ============================================================ */
-
 static uint32_t mode_to_hal(GPIO_Mode_t m)
 {
     switch (m) {

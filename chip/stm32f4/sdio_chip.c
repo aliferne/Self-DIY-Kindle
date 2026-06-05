@@ -8,6 +8,10 @@
  *   - Polling 模式：阻塞等待传输完成
  *   - IT 模式：立即返回，等待 ISR 清 busy 位
  *   - DMA 模式：使用 DMA 传输
+ *
+ * 需要注意的是， DMA 传输时需要满足内存地址对齐的要求，
+ * 否则有可能会导致 DMA 传输失败，
+ * 需要使用 __ALIGN_BEGIN 和 __ALIGN_END 宏对要使用 DMA 的数据进行对齐
  */
 
 #include "bsp_sdio.h"
@@ -24,13 +28,10 @@ static SDIO_Model_t *s_active = NULL;
 
 /*
 TODO:
-    需要利用下面的缓冲区将 dma 对齐，
-    并且需要查清为何无法使用中断和 DMA
+    需要查清为何无法使用中断和 DMA
     中断模式下 check_card_state 会 Error，
     并且跑第二次代码时需要重新拔插 SD 卡才能正常 MX_SD_SDIO_Init
 */
-__ALIGN_BEGIN static uint8_t dma_buffer_tx[SD_BLOCKSIZE] __ALIGN_END;
-__ALIGN_BEGIN static uint8_t dma_buffer_rx[SD_BLOCKSIZE] __ALIGN_END;
 
 SDIO_Err_t sdio_init(SDIO_Model_t *m, SDIO_Handle_t handle,
                      const SDIO_Config_t *cfg)
@@ -42,8 +43,6 @@ SDIO_Err_t sdio_init(SDIO_Model_t *m, SDIO_Handle_t handle,
 
     m->handle = handle;
     m->config = *cfg;
-    m->busy   = 0;
-    m->error  = 0;
 
     /* 获取卡片信息 */
     HAL_SD_CardInfoTypeDef info;
@@ -66,17 +65,6 @@ SDIO_Err_t sdio_init(SDIO_Model_t *m, SDIO_Handle_t handle,
     s_active = m;
 
     return SDIO_Err_Ok;
-}
-
-static void wait_for_completion(SDIO_Model_t *m)
-{
-    /* 等待传输完成 */
-    if (m->config.mode == SDIO_Mode_Polling)
-        return;
-
-    while (m->busy) {
-        /* FreeRTOS 调度器运行其他任务，ISR 返回后本任务继续 */
-    }
 }
 
 /* ============================================================
@@ -108,14 +96,8 @@ SDIO_Err_t sdio_read_blocks(SDIO_Model_t *m, uint8_t *buf,
     if (m == NULL || buf == NULL)
         return SDIO_Err_Param;
 
-    if (m->busy)
-        return SDIO_Err_Busy;
-
     SD_HandleTypeDef *h = (SD_HandleTypeDef *)m->handle;
     HAL_StatusTypeDef hal_ret;
-
-    m->busy  = 1;
-    m->error = 0;
 
     switch (m->config.mode) {
         case SDIO_Mode_Polling: {
@@ -124,46 +106,28 @@ SDIO_Err_t sdio_read_blocks(SDIO_Model_t *m, uint8_t *buf,
                 timeout = SDIO_TIMEOUT;
 
             hal_ret = HAL_SD_ReadBlocks(h, buf, sector, count, timeout);
-            m->busy = 0;
 
             if (hal_ret == HAL_TIMEOUT)
                 return SDIO_Err_Timeout;
-            if (hal_ret != HAL_OK) {
-                m->error = 1;
+            if (hal_ret != HAL_OK)
                 return SDIO_Err_Generic;
-            }
 
             return check_card_state(m);
         }
 
         case SDIO_Mode_IT:
             hal_ret = HAL_SD_ReadBlocks_IT(h, buf, sector, count);
-            if (hal_ret != HAL_OK) {
-                m->busy  = 0;
-                m->error = 1;
+            if (hal_ret != HAL_OK)
                 return SDIO_Err_Generic;
-            }
 
-            check_card_state(m);
-
-            wait_for_completion(m);
-            return m->error ? SDIO_Err_Generic : SDIO_Err_Ok;
-
+            return check_card_state(m);
         case SDIO_Mode_DMA:
             hal_ret = HAL_SD_ReadBlocks_DMA(h, buf, sector, count);
-            if (hal_ret != HAL_OK) {
-                m->busy  = 0;
-                m->error = 1;
+            if (hal_ret != HAL_OK)
                 return SDIO_Err_DMA;
-            }
 
-            check_card_state(m);
-
-            wait_for_completion(m);
-            return m->error ? SDIO_Err_DMA : SDIO_Err_Ok;
-
+            return check_card_state(m);
         default:
-            m->busy = 0;
             return SDIO_Err_Param;
     }
 }
@@ -174,14 +138,8 @@ SDIO_Err_t sdio_write_blocks(SDIO_Model_t *m, const uint8_t *buf,
     if (m == NULL || buf == NULL)
         return SDIO_Err_Param;
 
-    if (m->busy)
-        return SDIO_Err_Busy;
-
     SD_HandleTypeDef *h = (SD_HandleTypeDef *)m->handle;
     HAL_StatusTypeDef hal_ret;
-
-    m->busy  = 1;
-    m->error = 0;
 
     switch (m->config.mode) {
         case SDIO_Mode_Polling: {
@@ -190,46 +148,28 @@ SDIO_Err_t sdio_write_blocks(SDIO_Model_t *m, const uint8_t *buf,
                 timeout = SDIO_TIMEOUT;
 
             hal_ret = HAL_SD_WriteBlocks(h, (uint8_t *)buf, sector, count, timeout);
-            m->busy = 0;
 
             if (hal_ret == HAL_TIMEOUT)
                 return SDIO_Err_Timeout;
-            if (hal_ret != HAL_OK) {
-                m->error = 1;
+            if (hal_ret != HAL_OK)
                 return SDIO_Err_Generic;
-            }
 
             return check_card_state(m);
         }
 
         case SDIO_Mode_IT:
             hal_ret = HAL_SD_WriteBlocks_IT(h, (uint8_t *)buf, sector, count);
-            if (hal_ret != HAL_OK) {
-                m->busy  = 0;
-                m->error = 1;
+            if (hal_ret != HAL_OK)
                 return SDIO_Err_Generic;
-            }
 
-            check_card_state(m);
-
-            wait_for_completion(m);
-            return m->error ? SDIO_Err_Generic : SDIO_Err_Ok;
-
+            return check_card_state(m);
         case SDIO_Mode_DMA:
             hal_ret = HAL_SD_WriteBlocks_DMA(h, (uint8_t *)buf, sector, count);
-            if (hal_ret != HAL_OK) {
-                m->busy  = 0;
-                m->error = 1;
+            if (hal_ret != HAL_OK)
                 return SDIO_Err_DMA;
-            }
 
-            check_card_state(m);
-
-            wait_for_completion(m);
-            return m->error ? SDIO_Err_DMA : SDIO_Err_Ok;
-
+            return check_card_state(m);
         default:
-            m->busy = 0;
             return SDIO_Err_Param;
     }
 }
@@ -238,9 +178,6 @@ SDIO_Err_t sdio_erase_blocks(SDIO_Model_t *m, uint32_t sector, uint32_t count)
 {
     if (m == NULL)
         return SDIO_Err_Param;
-
-    if (m->busy)
-        return SDIO_Err_Busy;
 
     uint32_t start = sector;
     uint32_t end   = sector + count - 1;
@@ -253,11 +190,6 @@ SDIO_Err_t sdio_erase_blocks(SDIO_Model_t *m, uint32_t sector, uint32_t count)
     return check_card_state(m);
 }
 
-uint8_t sdio_is_busy(SDIO_Model_t *m)
-{
-    return (m != NULL) ? m->busy : 0;
-}
-
 void sdio_get_info(SDIO_Model_t *m, uint32_t *block_size, uint32_t *block_count)
 {
     if (m == NULL)
@@ -267,42 +199,4 @@ void sdio_get_info(SDIO_Model_t *m, uint32_t *block_size, uint32_t *block_count)
         *block_size = m->block_size;
     if (block_count)
         *block_count = m->block_count;
-}
-
-/* 以下均为 HAL 库内部的弱符号定义的回调函数 */
-
-void HAL_SD_TxCpltCallback(SD_HandleTypeDef *hsd)
-{
-    if (s_active == NULL || s_active->handle != (SDIO_Handle_t)hsd)
-        return;
-
-    s_active->busy  = 0;
-    s_active->error = 0;
-}
-
-void HAL_SD_RxCpltCallback(SD_HandleTypeDef *hsd)
-{
-    if (s_active == NULL || s_active->handle != (SDIO_Handle_t)hsd)
-        return;
-
-    s_active->busy  = 0;
-    s_active->error = 0;
-}
-
-void HAL_SD_ErrorCallback(SD_HandleTypeDef *hsd)
-{
-    if (s_active == NULL || s_active->handle != (SDIO_Handle_t)hsd)
-        return;
-
-    s_active->busy  = 0;
-    s_active->error = 1;
-}
-
-void HAL_SD_AbortCallback(SD_HandleTypeDef *hsd)
-{
-    if (s_active == NULL || s_active->handle != (SDIO_Handle_t)hsd)
-        return;
-
-    s_active->busy  = 0;
-    s_active->error = 1;
 }

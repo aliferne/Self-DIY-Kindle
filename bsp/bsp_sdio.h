@@ -80,9 +80,6 @@ typedef struct {
 typedef struct {
     SDIO_Config_t config;
     SDIO_Handle_t handle;         /**< SD_HandleTypeDef*（CubeMX 初始化） */
-    volatile uint8_t busy  : 1;   /**< 1=正在传输 */
-    volatile uint8_t error : 1;   /**< 1=上一次传输出错 */
-
     /* 卡片信息，sdio_init 时由 HAL_SD_GetCardInfo 填充 */
     uint32_t block_size;          /**< 逻辑块大小（字节），通常 512 */
     uint32_t block_count;         /**< 总块数 */
@@ -129,20 +126,13 @@ SDIO_Err_t sdio_write_blocks(SDIO_Model_t *m, const uint8_t *buf,
                              uint32_t sector, uint32_t count);
 
 /**
- * 擦除块（Polling 模式，同步阻塞）。
- *
- * 擦除操作是低频操作，使用 Polling 模式即可。
+ * 擦除块操作
  *
  * @param m       SDIO 模型
  * @param sector  起始扇区（LBA）
  * @param count   扇区数
  */
 SDIO_Err_t sdio_erase_blocks(SDIO_Model_t *m, uint32_t sector, uint32_t count);
-
-/**
- * 查询是否正在传输。
- */
-uint8_t sdio_is_busy(SDIO_Model_t *m);
 
 /**
  * 获取卡片信息。
