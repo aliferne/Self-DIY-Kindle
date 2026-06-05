@@ -1,11 +1,40 @@
 #include "bsp_sys.h"
 #include "cmsis_os.h"
 #include "stm32f4xx_hal.h"
+#include <stdint.h>
+
+uint32_t chip_get_tick(void)
+{
+    return HAL_GetTick();
+}
+
+/* -------------- 阻塞式 -------------- */
 
 void chip_delay_ms(uint32_t ms)
 {
     HAL_Delay(ms);
 }
+
+/*
+ * 函数是否到达最大延时，返回 1 则表示到达
+ * 此函数仅负责判断 SysTick 是否到达预设的目标值，实际使用方法为：
+ * 
+ * ```c
+ * while ( <cond> )
+ * {
+ *      if (chip_till_max_delay(start_time, max_delay))
+ *          // timeout, do something then
+ * }
+ * ```
+ * 
+ * 其本身是非阻塞的，但需要通过阻塞的方式来实现延时效果
+ */
+uint8_t chip_till_max_delay(uint32_t start_time, uint32_t max_delay)
+{
+    return (chip_get_tick() - start_time) >= max_delay;
+}
+
+/* -------------- 非阻塞式 -------------- */
 
 void os_delay_ms(uint32_t ms)
 {

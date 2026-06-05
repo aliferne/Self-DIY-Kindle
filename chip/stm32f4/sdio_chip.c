@@ -15,9 +15,11 @@
  */
 
 #include "bsp_sdio.h"
+#include "bsp_sys.h"
 #include "stm32f4xx_hal.h"
 #include "stm32f4xx_hal_def.h"
 #include "stm32f4xx_hal_sd.h"
+#include <stdint.h>
 #include <string.h>
 
 #define SD_BLOCKSIZE 512U
@@ -78,16 +80,21 @@ SDIO_Err_t sdio_init(SDIO_Model_t *m, SDIO_Handle_t handle,
 static SDIO_Err_t check_card_state(SDIO_Model_t *m)
 {
     SD_HandleTypeDef *h = (SD_HandleTypeDef *)m->handle;
+    SDIO_Err_t stat     = SDIO_Err_Ok;
 
-    do {
-        // if (HAL_GetTick() - /* TODO */ > SDIO_TIMEOUT_MS){
-        //     m->busy  = 0;
-        //     m->error = 1;
-        //     return SDIO_Err_Timeout;
-        // }
-    } while (HAL_SD_GetCardState(h) != HAL_SD_CARD_TRANSFER);
+    static uint32_t start_time = 0;
+    if (start_time == 0) start_time = chip_get_tick();
 
-    return SDIO_Err_Ok;
+    while (HAL_SD_GetCardState(h) != HAL_SD_CARD_TRANSFER) {
+        if (chip_till_max_delay(start_time, SDIO_TIMEOUT)) {
+            stat = SDIO_Err_Timeout;
+            break;
+        }
+    }
+    /* 清空起始时间以等待下次使用 */
+    start_time = 0;
+
+    return stat;
 }
 
 SDIO_Err_t sdio_read_blocks(SDIO_Model_t *m, uint8_t *buf,
