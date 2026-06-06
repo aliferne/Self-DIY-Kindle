@@ -297,6 +297,7 @@ virtualFolder:
         - path: services/time_srv.c
         - path: services/input_srv.c
         - path: services/storage_srv.c
+        - path: services/srv_config.c
       folders: []
     - name: App_Tasks
       files:

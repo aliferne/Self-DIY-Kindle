@@ -29,11 +29,11 @@
 /* USER CODE BEGIN Includes */
 #include "pin_src.h"
 #include "bsp_sys.h"
+#include "srv_config.h"
 #include "bsp_config.h"
 #include "ff.h"
 #include "mid_config.h"
 #include "stm32f4xx_hal.h"
-#include "storage_srv.h"
 #include <stdio.h>
 /* USER CODE END Includes */
 
@@ -67,8 +67,7 @@ void MX_FREERTOS_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-uint8_t data[512] = "Hello World!\n";
-uint8_t rx[512]   = {0};
+
 /* USER CODE END 0 */
 
 /**
@@ -109,11 +108,7 @@ int main(void)
     bsp_init_hardware();
     mid_init_modules();
 
-    // storage_write_blocks(data, 0, 1);
-
-    // storage_read_blocks(rx, 0, 1);
-    // TODO: 启用 UART1 并完成 gcc 的 _write 重定向工作
-    // printf("%s", rx);
+    service_init();
 
     /* start testing signal */
     gpio_write(&usr_led, GPIO_Level_High);

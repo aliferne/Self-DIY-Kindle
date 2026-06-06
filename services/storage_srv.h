@@ -2,6 +2,13 @@
 
 #include "bsp_sdio.h"
 
-void storage_erase();
-void storage_write_blocks(const uint8_t *data, uint32_t block_addr, uint32_t block_count);
-void storage_read_blocks(uint8_t *data, uint32_t block_addr, uint32_t block_count);
+enum StorageState {
+    Storage_Initialized = 0,
+};
+
+typedef struct {
+    uint8_t *volume;
+    uint8_t state;
+} Storage_t;
+
+void storage_srv_init(Storage_t *storage);
