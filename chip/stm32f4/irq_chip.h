@@ -24,3 +24,5 @@ void HAL_SD_TxCpltCallback(SD_HandleTypeDef *hsd);
 void HAL_SD_RxCpltCallback(SD_HandleTypeDef *hsd);
 void HAL_SD_ErrorCallback(SD_HandleTypeDef *hsd);
 void HAL_SD_AbortCallback(SD_HandleTypeDef *hsd);
+void HAL_UARTEx_TxCpltCallback(UART_HandleTypeDef *huart);
+void HAL_UARTEx_RxCpltCallback(UART_HandleTypeDef *huart);

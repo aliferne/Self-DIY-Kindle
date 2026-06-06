@@ -88,20 +88,6 @@ __attribute__((weak)) int _write(int file, char *ptr, int len)
     return len;
 }
 
-/* ------- __io_putchar 暂时直接放在这里 -------- */
-#include "stm32f4xx_hal.h"
-#include "stm32f4xx_hal_uart.h"
-#include "stm32f4xx_hal_usart.h"
-int __io_putchar(int ch)
-{
-    // TODO: 后面移植 bsp_uart 模块后，重定向到 UART1 上
-    // FIXME: 重定向有问题
-    while (USART1->SR & USART_SR_TXE == 0)
-        ;
-    USART1->DR = ch;
-    return ch;
-}
-
 int _close(int file)
 {
     (void)file;

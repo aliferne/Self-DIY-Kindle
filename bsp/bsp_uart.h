@@ -10,10 +10,10 @@
 #include <stdint.h>
 
 typedef enum {
-    UART_OK = 0,
-    UART_ERR_INVALID_ARG,
-    UART_ERR_TIMEOUT,
-    UART_ERR_HW_FAILURE,
+    UART_Err_Ok = 0,
+    UART_Err_Invalid_Args,
+    UART_Err_Timeout,
+    UART_Err_Generic
 } UART_Err_t;
 
 typedef enum {
@@ -37,9 +37,9 @@ typedef struct {
     UART_Handle_t handle;
 } UART_Model_t;
 
-UART_Err_t uart_init(UART_Model_t *m, const UART_Config_t *cfg);
+UART_Err_t uart_init(UART_Model_t *m, UART_Handle_t handle, const UART_Config_t *cfg);
 UART_Err_t uart_deinit(UART_Model_t *m);
-UART_Err_t uart_send(UART_Model_t *m, const uint8_t* data, uint16_t len);
+UART_Err_t uart_send(UART_Model_t *m, const uint8_t *data, uint16_t len);
 UART_Err_t uart_recv(UART_Model_t *m, uint8_t *data, uint16_t len);
 UART_Err_t uart_attach_irq(UART_Model_t *m, void (*callback)(void *));
 UART_Err_t uart_detach_irq(UART_Model_t *m);

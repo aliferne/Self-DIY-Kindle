@@ -320,11 +320,14 @@ virtualFolder:
                 - path: chip/stm32f4/spi_chip.c
                 - path: chip/stm32f4/sys_chip.c
                 - path: chip/stm32f4/sdio_chip.c
+                - path: chip/stm32f4/uart_chip.c
               folders:
                 - name: irq
                   files:
                     - path: chip/stm32f4/irq/irq_gpio_exti.c
                     - path: chip/stm32f4/irq/irq_sys_it.c
+                    - path: chip/stm32f4/irq/irq_sdio.c
+                    - path: chip/stm32f4/irq/irq_uart.c
                   folders: []
 dependenceList: []
 outDir: build
@@ -491,7 +494,7 @@ targets:
           asm-compiler: {}
           beforeBuildTasks: []
           c/cpp-compiler:
-            C_FLAGS: -u_printf_float -u_scanf_float
+            C_FLAGS: -u _printf_float -u _scanf_float
             language-c: c11
             language-cpp: c++11
             one-elf-section-per-data: true

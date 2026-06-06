@@ -28,6 +28,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "pin_src.h"
+#include "bsp_sys.h"
 #include "bsp_config.h"
 #include "ff.h"
 #include "mid_config.h"
@@ -104,6 +105,7 @@ int main(void)
     MX_SPI1_Init();
     MX_USART1_UART_Init();
     /* USER CODE BEGIN 2 */
+    sys_chip_init();
     bsp_init_hardware();
     mid_init_modules();
 
@@ -148,6 +150,8 @@ int main(void)
     // 第一个参数是文件指针，第二个参数是读取的数据，第三个参数是要读取的数据长度，第四个参数保存实际读取的数据长度
     f_read(&fil, readData, fSize, (UINT *)&read_count);
     if (read_count) {
+        /* FIXME: 对于 printf 的重定向失败了，但是直接使用 uart_send 可以 */
+        printf("Here\r\n");
         printf("read count: %u\r\n", read_count);
         printf("data:\r\n");
         printf("%s\r\n", readData);
@@ -281,8 +285,8 @@ void Error_Handler(void)
     /* 因为中断被禁了，所以只能用 cnt 的方式来实现粗糙的延时 */
     __disable_irq();
     while (1) {
-      if (++cnt % 5000000 == 0)
-        HAL_GPIO_TogglePin(USER_LED_PORT, USER_LED_PIN);
+        if (++cnt % 5000000 == 0)
+            HAL_GPIO_TogglePin(USER_LED_PORT, USER_LED_PIN);
     }
     /* USER CODE END Error_Handler_Debug */
 }

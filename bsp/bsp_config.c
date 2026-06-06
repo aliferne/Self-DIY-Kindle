@@ -19,7 +19,6 @@ SPI_Model_t tft_spi;
 GPIO_Model_t tft_dc;
 GPIO_Model_t tft_rst;
 GPIO_Model_t tft_blk;
-
 static void bsp_init_buttons(void);
 static void bsp_init_leds(void);
 static void bsp_init_tft(void);

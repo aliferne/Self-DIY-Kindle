@@ -9,6 +9,16 @@
 
 #define GIVEUP(x) (void)(x)
 
+/* 
+ * 初始化一些相关的系统外设，如调试串口等
+ * 
+ * \warning:
+ *  目前已使用外设:
+ *  - `huart1` 
+ *      用于重定向 printf 等函数，作为系统日志输出
+ */
+void sys_chip_init(void);
+
 uint32_t chip_get_tick(void);
 
 /* 以下的延时为阻塞式的 */
