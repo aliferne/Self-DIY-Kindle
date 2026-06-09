@@ -6,31 +6,6 @@
 
 #include <stdint.h>
 #include <stddef.h>
-/* 用于放弃某个变量，常用于带参函数的占位符 */
-#define GIVEUP(x) (void)(x)
-/* 断言宏，当条件不满足时执行 actions 操作 */
-#define ASSERT(cond, actions) \
-    if (!(cond)) { actions; }
-/* 设置状态宏，用于设置结构体中的状态位 */
-#define SET_STATE(state, bit) ((state) |= (1 << (bit)))
-/* 清除状态宏，用于清除结构体中的状态位 */
-#define CLEAR_STATE(state, bit) ((state) &= ~(1 << (bit)))
-
-#define ERROR_LOG(msg, errcode) \
-    "|- File %s -|- Line %d -|\tError: %s (errcode: %d)\n", __FILE__, __LINE__, msg, errcode
-/*
- * 错误处理宏，当 errcode 不等于 okcode 时，
- * use_errlog 决定是否打印错误日志，
- * 并根据是否出错而执行特定操作
- */
-#define HANDLE_ERROR(                                                 \
-    errcode, okcode, use_errlog, msg, acts_when_failed, acts_when_ok) \
-    if (errcode != okcode) {                                          \
-        if (use_errlog) printf(ERROR_LOG(msg, errcode));              \
-        acts_when_failed;                                             \
-    } else {                                                          \
-        acts_when_ok;                                                 \
-    }
 
 /*
  * 初始化一些相关的系统外设，如调试串口等
