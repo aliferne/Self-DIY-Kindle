@@ -39,6 +39,8 @@
  *   sdio_read_blocks(&sd, buf, 0, 1);  // 阻塞直到完成
  */
 
+/* TODO: SDIO 使用 DMA 时的四字节对齐问题可以参考安富莱电子的解决方案（即使用 FIFO） */
+
 #include <stdint.h>
 #include <stddef.h>
 
