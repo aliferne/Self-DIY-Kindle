@@ -112,10 +112,6 @@ int main(void)
 
     /* start testing signal */
     gpio_write(&usr_led, GPIO_Level_High);
-
-    /* 开灯 */
-    // TFT_TurnOff(&tft, 1);
-    // HAL_Delay(500);
     /* USER CODE END 2 */
 
     /* Call init function for freertos objects (in cmsis_os2.c) */

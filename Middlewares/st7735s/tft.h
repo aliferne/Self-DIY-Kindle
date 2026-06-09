@@ -33,10 +33,10 @@
  * ============================================================ */
 
 typedef struct {
-    SPI_Model_t  *spi;      /**< SPI 总线（软件或硬件均可） */
-    GPIO_Model_t *dc_pin;   /**< Data/Command 引脚 */
-    GPIO_Model_t *rst_pin;  /**< Reset 引脚 */
-    GPIO_Model_t *blk_pin;  /**< 背光引脚（无需控制可传 NULL） */
+    SPI_Model_t *spi;      /**< SPI 总线（软件或硬件均可） */
+    GPIO_Model_t *dc_pin;  /**< Data/Command 引脚 */
+    GPIO_Model_t *rst_pin; /**< Reset 引脚 */
+    GPIO_Model_t *blk_pin; /**< 背光引脚（无需控制可传 NULL） */
 } TFT_Model_t;
 
 /* ============================================================
@@ -65,25 +65,26 @@ typedef struct {
  * ============================================================ */
 
 /* ---- SPI 通信原语 ---- */
-void TFT_Init(TFT_Model_t *tft);                              /**< 初始化 TFT */
-void TFT_Reset(TFT_Model_t *tft);                             /**< 硬件复位 */
-void TFT_TurnOff(TFT_Model_t *tft, uint8_t io);               /**< 背光开关 0=关 1=开 */
-void TFT_SendIndex(TFT_Model_t *tft, uint8_t reg);            /**< 发送指令 */
-void TFT_SendData(TFT_Model_t *tft, uint8_t data);            /**< 发送 8 位数据 */
-void TFT_Send16Bit(TFT_Model_t *tft, uint16_t data);          /**< 发送 16 位数据 */
-void TFT_SendReg(TFT_Model_t *tft, uint8_t addr, uint8_t val);/**< 发送指令+数据 */
+void TFT_Init(TFT_Model_t *tft);                               /**< 初始化 TFT */
+void TFT_DeInit(TFT_Model_t *tft);                             /**< 去初始化 */
+void TFT_Reset(TFT_Model_t *tft);                              /**< 硬件复位 */
+void TFT_TurnOff(TFT_Model_t *tft, uint8_t io);                /**< 背光开关 0=关 1=开 */
+void TFT_SendIndex(TFT_Model_t *tft, uint8_t reg);             /**< 发送指令 */
+void TFT_SendData(TFT_Model_t *tft, uint8_t data);             /**< 发送 8 位数据 */
+void TFT_Send16Bit(TFT_Model_t *tft, uint16_t data);           /**< 发送 16 位数据 */
+void TFT_SendReg(TFT_Model_t *tft, uint8_t addr, uint8_t val); /**< 发送指令+数据 */
 
 /* ---- TFT 控制 ---- */
-void TFt_SpinScreen(TFT_Model_t *tft, uint8_t dir);           /**< 旋转方向 0-3 */
+void TFT_SpinScreen(TFT_Model_t *tft, uint8_t dir); /**< 旋转方向 0-3 */
 void TFT_SetCursor(TFT_Model_t *tft, uint16_t x, uint16_t y);
-void TFT_Clear(TFT_Model_t *tft, uint16_t color);             /**< 清屏 */
+void TFT_Clear(TFT_Model_t *tft, uint16_t color); /**< 清屏 */
 void TFT_SetRegion(TFT_Model_t *tft,
                    uint16_t x1, uint16_t y1,
-                   uint16_t x2, uint16_t y2);            /**< 选中区域 */
+                   uint16_t x2, uint16_t y2); /**< 选中区域 */
 void TFT_FullScreen(TFT_Model_t *tft,
                     uint16_t x1, uint16_t y1,
                     uint16_t x2, uint16_t y2,
-                    uint16_t color);                     /**< 区间填充 */
+                    uint16_t color); /**< 区间填充 */
 
 /* ---- 基本绘制 ---- */
 void TFT_DrawPoint(TFT_Model_t *tft, uint16_t x, uint16_t y, uint16_t color);

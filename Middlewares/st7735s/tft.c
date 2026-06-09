@@ -9,8 +9,9 @@
  * ============================================================
  */
 
+#include "bsp_gpio.h"
+#include "bsp_spi.h"
 #include "string.h"
-#include "math.h"
 #include "tft.h"
 #include "bsp_sys.h"
 #include "tft_font.h"
@@ -146,6 +147,16 @@ void TFT_Init(TFT_Model_t *tft)
     TFT_Clear(tft, TFT_BLACK);
 }
 
+/* ---------- 去初始化 ---------- */
+
+void TFT_DeInit(TFT_Model_t *tft)
+{
+    gpio_deinit(tft->blk_pin);
+    gpio_deinit(tft->dc_pin);
+    gpio_deinit(tft->rst_pin);
+    spi_deinit(tft->spi);
+}
+
 /* ---------- 复位 ---------- */
 
 void TFT_Reset(TFT_Model_t *tft)
@@ -207,7 +218,7 @@ void TFT_SendReg(TFT_Model_t *tft, uint8_t addr, uint8_t val)
 
 /* ---------- 方向 ---------- */
 
-void TFt_SpinScreen(TFT_Model_t *tft, uint8_t dir)
+void TFT_SpinScreen(TFT_Model_t *tft, uint8_t dir)
 {
     static const uint8_t vals[] = {0xC0, 0xA0, 0x00, 0x60};
 
