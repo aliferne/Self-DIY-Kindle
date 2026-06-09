@@ -104,10 +104,15 @@ SPI_Err_t spi_init(SPI_Model_t *m, SPI_Register_Cfg_t *reg_cfg, const SPI_Config
 
 SPI_Err_t spi_deinit(SPI_Model_t *m)
 {
-    gpio_deinit(&m->src.cs);
-    gpio_deinit(&m->src.sw.sclk);
-    gpio_deinit(&m->src.sw.mosi);
-    gpio_deinit(&m->src.sw.miso);
+    if (m->drv == SPI_Driver_SW) {
+        gpio_deinit(&m->src.cs);
+        gpio_deinit(&m->src.sw.sclk);
+        gpio_deinit(&m->src.sw.mosi);
+        gpio_deinit(&m->src.sw.miso);
+    } else {
+        HAL_SPI_MspDeInit((SPI_HandleTypeDef *)m->src.hw);
+    }
+
     m->busy = 0;
     return SPI_Err_OK;
 }
