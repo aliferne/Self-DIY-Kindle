@@ -41,9 +41,9 @@ StorageState_t storage_mkdir(Storage_t *s, const char *path)
 {
     ASSERT_FAIL(s != NULL && path != NULL, return Storage_InvalidParam);
     ASSERT_FAIL(s->is_initialized, return Storage_NotInitialized);
-
-    if ((strlen(path) + strlen(s->volume)) > STORAGE_MAX_PATH_LEN)
-        return Storage_MaxPathLenExceeded;
+    /* 算上开始时的分隔符 `/` */
+    ASSERT_FAIL((strlen(s->volume) + 1 + strlen(path) > STORAGE_MAX_PATH_LEN),
+                return Storage_MaxPathLenExceeded);
 
     char full[STORAGE_MAX_PATH_LEN];
     make_path(s, path, full, sizeof(full));

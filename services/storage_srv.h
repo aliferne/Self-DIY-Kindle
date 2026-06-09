@@ -63,3 +63,13 @@ static inline FRESULT storage_closedir(DIR *dp)
 {
     return f_closedir(dp);
 }
+
+static inline FSIZE_t storage_tell(FIL *fp)
+{
+    return f_tell(fp);
+}
+
+static inline FSIZE_t storage_size(FIL *fp)
+{
+    return f_size(fp);
+}
