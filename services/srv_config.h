@@ -4,6 +4,8 @@
  * services
  */
 
-#include <stdint.h>
+#include "storage_srv.h"
+
+extern Storage_t sdcard;
 
 void service_init(void);

@@ -32,18 +32,27 @@
 - [软件 I2C 原理](https://www.cnblogs.com/yxysuanfa/p/19106787)
 - [软件 SPI 原理](https://zhuanlan.zhihu.com/p/654500844)
 - [0.96 寸 OLED I2C 屏幕驱动](https://wiki.lckfb.com/zh-hans/tkx/tkx-stm32f407vxt6/module/screen/0-96-iic-single-screen.html)
+- [waveshare e-paper related docs](https://www.waveshare.net/wiki/4.2inch_e-Paper_Module_Manual)
+- [st7735s 超详细讲解+例程](https://blog.csdn.net/riversuer/article/details/145291688)
+- [野火 SDIO 示例程序](https://doc.embedfire.com/mcu/stm32/h743prov/hal/zh/latest/book/SDIO.html)
+- [FatFs 移植教程](https://www.cnblogs.com/star-light-glimmer/p/17983261)
+- [FatFs 官网](https://elm-chan.org/fsw/ff/)
+
+---
+
+下面的暂未使用
+
 - [I2S 原理讲解](https://zhuanlan.zhihu.com/p/678943329)
 - [STM32 I2S 代码示例](https://doc.embedfire.com/mcu/stm32/f429tiaozhanzhe/std/zh/latest/book/I2S.html)
 - [ESP32-with-arduino 驱动 PCM5102 模块代码示例](https://jishuzhan.net/article/1863030601469136897)
 - [TI PCM5102 数据手册](https://www.ti.com/product/PCM5102)
 - [LVGL 移植指南](https://blog.csdn.net/weixin_56167571/article/details/147879170)
 - [LVGL 生成中文字库指南](https://www.cnblogs.com/hwd00001/p/17393135.html)
-- [waveshare e-paper related docs](https://www.waveshare.net/wiki/4.2inch_e-Paper_Module_Manual)
-- [st7735s 超详细讲解+例程](https://blog.csdn.net/riversuer/article/details/145291688)
 
-## 书籍
+## 书籍, PDF 文档
 
 王利 —— 《嵌入式C语言自我修养：从芯片、编译器到操作系统》 [ Chapter 8 ~ 9 ]
+安富莱电子 —— 《安富莱_STM32-V6开发板_用户手册、含BSP驱动包设计》 [ Chapter 50 ]
 
 ## 代码
 

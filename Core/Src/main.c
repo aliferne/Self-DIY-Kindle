@@ -113,56 +113,9 @@ int main(void)
     /* start testing signal */
     gpio_write(&usr_led, GPIO_Level_High);
 
-    FATFS fs;
-    FIL fil;
-    FRESULT res;
-
-    char writeData[]    = "Hello, Sakura!";
-    char readData[100]  = {0};
-    uint32_t write_data = 0, read_count = 0;
-    uint32_t fSize = 0;
-
-    res = f_mount(&fs, "0:", 1);
-    if (res)
-        goto err_done;
-
-    res = f_open(&fil, "0:test.txt", FA_READ | FA_WRITE | FA_OPEN_ALWAYS);
-    if (res)
-        goto err_done;
-
-    // 写入数据
-    /* f_write 会先将 FA_DIRTY 置位，并不着急写入数据，实际上需要调用 f_sync 才能将数据写入文件(去找下相关资料和看代码验证想法) */
-    f_write(&fil, writeData, sizeof(writeData), (UINT *)&write_data);
-    // f_sync(&fil);
-
-    // 写完文件的读写指针已经到末尾，我们需要重新定位到文件开头
-    f_lseek(&fil, 0);
-
-    // 获取文件大小
-    fSize = f_size(&fil);
-
-    // 读取数据
-    // 第一个参数是文件指针，第二个参数是读取的数据，第三个参数是要读取的数据长度，第四个参数保存实际读取的数据长度
-    f_read(&fil, readData, fSize, (UINT *)&read_count);
-    if (read_count) {
-        /* FIXME: 对于 printf 的重定向失败了，但是直接使用 uart_send 可以 */
-        printf("Here\r\n");
-        printf("read count: %u\r\n", read_count);
-        printf("data:\r\n");
-        printf("%s\r\n", readData);
-    }
-
-    f_close(&fil);
-
-    gpio_write(&usr_led, GPIO_Level_Low);
-    for (;;);
-
-err_done:
-    gpio_write(&usr_led, GPIO_Level_High);
-    for (;;);
-
-    TFT_TurnOff(&tft, 1);
-    HAL_Delay(500);
+    /* 开灯 */
+    // TFT_TurnOff(&tft, 1);
+    // HAL_Delay(500);
     /* USER CODE END 2 */
 
     /* Call init function for freertos objects (in cmsis_os2.c) */
@@ -179,24 +132,6 @@ err_done:
         /* USER CODE END WHILE */
 
         /* USER CODE BEGIN 3 */
-        //     for (int i = 1; i < 5; i++) {
-        //         TFT_ShowChinese(&tft, 0, 0, colr[i - 1], TFT_BLACK, "Chinese sample:");
-        //         TFT_ShowChinese(&tft, 0, 16, colr[i], TFT_BLACK, "我是一只猫快乐的星猫从来没烦恼你快乐就好");
-        //         HAL_Delay(50);
-        //         TFT_Clear(&tft, TFT_BLACK);
-        //     }
-
-        //     TFT_ShowChinese(&tft, 0, 0, TFT_BLUE2, TFT_BLACK, "Mix sample");
-        //     TFT_ShowChinese(&tft, 0, 16, TFT_PURPLE, TFT_BLACK, "我是一只猫2525,快乐的星猫3434~从来没烦恼,你快乐就好!2233445,ahahahhahah");
-        //     HAL_Delay(700);
-
-        //     TFT_Clear(&tft, TFT_BLACK);
-        //     TFT_ShowChinese(&tft, 0, 0, TFT_PURPLE3, TFT_BLACK, "special_font");
-        //     TFT_ShowChinese(&tft, 0, 32, TFT_ORANGE, TFT_BLACK, "你是光");
-        //     TFT_ShowChinese(&tft, 0, 64, TFT_CYAN, TFT_BLACK, "你是电");
-        //     TFT_ShowChinese(&tft, 0, 96, TFT_PURPLE2, TFT_BLACK, "你是唯一的信仰");
-        //     HAL_Delay(1000);
-        //     TFT_Clear(&tft, TFT_BLACK);
     }
     /* USER CODE END 3 */
 }

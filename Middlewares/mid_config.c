@@ -1,7 +1,7 @@
 #include "mid_config.h"
 #include "bsp_config.h"
-#include "st7735s/tft.h"
-#include "bsp_sys.h"
+#include "tft.h"
+#include "bsp_handle.h"
 #include "pin_src.h"
 #include "epaper.h"
 

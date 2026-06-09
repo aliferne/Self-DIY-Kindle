@@ -1,3 +1,4 @@
+#include "bsp_handle.h"
 #include "bsp_sys.h"
 #include "bsp_uart.h"
 #include "cmsis_os.h"
