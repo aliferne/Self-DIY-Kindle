@@ -190,10 +190,59 @@ virtualFolder:
                     - path: Middlewares/lvgl/src/draw/lv_img_decoder.c
                     - path: Middlewares/lvgl/src/draw/arm2d/lv_gpu_arm2d.c
                     - path: Middlewares/lvgl/src/draw/stm32_dma2d/lv_gpu_stm32_dma2d.c
-                  folders: []
+                  folders:
+                    - name: sw
+                      files:
+                        - path: Middlewares/lvgl/src/draw/sw/lv_draw_sw_arc.c
+                        - path: Middlewares/lvgl/src/draw/sw/lv_draw_sw_blend.c
+                        - path: Middlewares/lvgl/src/draw/sw/lv_draw_sw_dither.c
+                        - path: Middlewares/lvgl/src/draw/sw/lv_draw_sw_gradient.c
+                        - path: Middlewares/lvgl/src/draw/sw/lv_draw_sw_img.c
+                        - path: Middlewares/lvgl/src/draw/sw/lv_draw_sw_layer.c
+                        - path: Middlewares/lvgl/src/draw/sw/lv_draw_sw_letter.c
+                        - path: Middlewares/lvgl/src/draw/sw/lv_draw_sw_line.c
+                        - path: Middlewares/lvgl/src/draw/sw/lv_draw_sw_polygon.c
+                        - path: Middlewares/lvgl/src/draw/sw/lv_draw_sw_rect.c
+                        - path: Middlewares/lvgl/src/draw/sw/lv_draw_sw_transform.c
+                        - path: Middlewares/lvgl/src/draw/sw/lv_draw_sw.c
+                      folders: []
                 - name: extra
-                  files: []
-                  folders: []
+                  files:
+                    - path: Middlewares/lvgl/src/extra/lv_extra.c
+                  folders:
+                    - name: theme
+                      files:
+                        - path: Middlewares/lvgl/src/extra/themes/mono/lv_theme_mono.c
+                        - path: Middlewares/lvgl/src/extra/themes/default/lv_theme_default.c
+                        - path: Middlewares/lvgl/src/extra/themes/basic/lv_theme_basic.c
+                      folders: []
+                    - name: widgets
+                      files:
+                        - path: Middlewares/lvgl/src/extra/widgets/animimg/lv_animimg.c
+                        - path: Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar_header_arrow.c
+                        - path: Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c
+                        - path: Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar_header_dropdown.c
+                        - path: Middlewares/lvgl/src/extra/widgets/chart/lv_chart.c
+                        - path: Middlewares/lvgl/src/extra/widgets/colorwheel/lv_colorwheel.c
+                        - path: Middlewares/lvgl/src/extra/widgets/imgbtn/lv_imgbtn.c
+                        - path: Middlewares/lvgl/src/extra/widgets/keyboard/lv_keyboard.c
+                        - path: Middlewares/lvgl/src/extra/widgets/led/lv_led.c
+                        - path: Middlewares/lvgl/src/extra/widgets/list/lv_list.c
+                        - path: Middlewares/lvgl/src/extra/widgets/menu/lv_menu.c
+                        - path: Middlewares/lvgl/src/extra/widgets/meter/lv_meter.c
+                        - path: Middlewares/lvgl/src/extra/widgets/msgbox/lv_msgbox.c
+                        - path: Middlewares/lvgl/src/extra/widgets/span/lv_span.c
+                        - path: Middlewares/lvgl/src/extra/widgets/spinbox/lv_spinbox.c
+                        - path: Middlewares/lvgl/src/extra/widgets/spinner/lv_spinner.c
+                        - path: Middlewares/lvgl/src/extra/widgets/tabview/lv_tabview.c
+                        - path: Middlewares/lvgl/src/extra/widgets/tileview/lv_tileview.c
+                        - path: Middlewares/lvgl/src/extra/widgets/win/lv_win.c
+                      folders: []
+                    - name: layouts
+                      files:
+                        - path: Middlewares/lvgl/src/extra/layouts/grid/lv_grid.c
+                        - path: Middlewares/lvgl/src/extra/layouts/flex/lv_flex.c
+                      folders: []
                 - name: font
                   files:
                     - path: Middlewares/lvgl/src/font/lv_font_dejavu_16_persian_hebrew.c
@@ -276,6 +325,16 @@ virtualFolder:
                     - path: Middlewares/lvgl/src/widgets/lv_switch.c
                     - path: Middlewares/lvgl/src/widgets/lv_table.c
                     - path: Middlewares/lvgl/src/widgets/lv_textarea.c
+                  folders: []
+            - name: demos
+              files: []
+              folders:
+                - name: widgets
+                  files:
+                    - path: Middlewares/lvgl/demos/widgets/lv_demo_widgets.c
+                    - path: Middlewares/lvgl/demos/widgets/assets/img_clothes.c
+                    - path: Middlewares/lvgl/demos/widgets/assets/img_demo_widgets_avatar.c
+                    - path: Middlewares/lvgl/demos/widgets/assets/img_lvgl_logo.c
                   folders: []
         - name: st7735s
           files:
@@ -375,6 +434,9 @@ targets:
         - Middlewares/lvgl/src/misc
         - Middlewares/epaper/test
         - Middlewares/st7735s
+        - Middlewares/lvgl/src/draw
+        - Middlewares/lvgl/src/draw/stm32_dma2d
+        - Middlewares/lvgl/src/draw/sw
       libList: []
     excludeList:
       - <virtual_root>/Application/MDK-ARM/startup_stm32f407xx.s

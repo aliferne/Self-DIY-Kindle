@@ -27,6 +27,8 @@
       "-IMiddlewares",
       "-IMiddlewares/lvgl",
       "-IMiddlewares/lvgl/demos",
+      "-IMiddlewares/lvgl/draw/sw",
+      "-IMiddlewares/lvgl/draw/stm32_dma2d",
       "-IMiddlewares/lvgl/porting",
       "-IMiddlewares/lvgl/src/core",
       "-IMiddlewares/lvgl/src/font",
