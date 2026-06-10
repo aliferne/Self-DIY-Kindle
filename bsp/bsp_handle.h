@@ -1,35 +1,39 @@
 #pragma once
 
+#include <stdint.h>
+#include <stdbool.h>
+
 /*
  * 用于错误处理，断言语句等比较常用的操作
  */
 
-#define LEN(arr) (sizeof(arr) / sizeof((arr)[0]))
+/* 设置 bit 宏 */
+#define SET_REG(reg, bit) ((reg) |= (bit))
+/* 清除 bit 宏 */
+#define CLEAR_REG(reg, bit) ((reg) &= ~(bit))
+/* 此 bit 是否被设置 */
+#define IS_REG_SET(reg, bit) ((reg) & (bit))
+
+#define LEN(arr)             (sizeof(arr) / sizeof((arr)[0]))
 
 /* 错误处理相关 ------------------------------------- */
 
 /* 用于放弃某个变量，常用于带参函数的占位符 */
 #define GIVEUP(x) (void)(x)
-/* 成功断言宏，当条件满足时执行 actions 操作 */
+/* 成功断言宏，断言 cond 一定为真，否则执行 actions 操作 */
 #define ASSERT(cond, actions) \
     do {                      \
-        if ((cond)) {         \
+        if (!(cond)) {        \
             actions;          \
         }                     \
     } while (0)
-/* 失败断言宏，当条件不满足时执行 actions 操作 */
+/* 失败断言宏，断言 cond 一定为假，否则执行 actions 操作 */
 #define ASSERT_FAIL(cond, actions) \
     do {                           \
-        if (!(cond)) {             \
+        if ((cond)) {              \
             actions;               \
         }                          \
     } while (0)
-/* 设置状态宏，用于设置结构体中的状态位 */
-#define SET_STATE(val, bit) ((val) |= (1 << (bit)))
-/* 清除状态宏，用于清除结构体中的状态位 */
-#define CLEAR_STATE(val, bit) ((val) &= ~(1 << (bit)))
-/* 检验是否为此状态 */
-#define IS_STATE(val, bit) ((val) & (1 << (bit)))
 
 /* 是否打印日志 */
 #define USE_ERR_LOG 0
