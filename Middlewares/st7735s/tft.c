@@ -1,22 +1,34 @@
 /*
  * ============================================================
- * St7735tft.c — ST7735S TFT 驱动
+ * ST7735S TFT 驱动
  *
  * 使用项目 bsp_spi / bsp_gpio 抽象层取代直接寄存器操作。
- *
- * 对外接口所有函数增加 TFT_t *tft 参数，
- * 模块内部通过 g_tft 全局指针供高层绘图函数查找上下文。
  * ============================================================
  */
 
 #include "bsp_gpio.h"
+#include "bsp_handle.h"
 #include "bsp_spi.h"
 #include "string.h"
 #include "tft.h"
 #include "bsp_sys.h"
 #include "tft_font.h"
 
-#define TFT_DELAY_MS(ms) chip_delay_ms(ms)
+/*
+ * ST7735S 支持分配 RGB bit 的占比，对应的颜色分辨率也会有所不同
+ * RGB 4-4-4-bit (4k 颜色) => 0x3A = 0x03
+ * RGB 5-6-5-bit (65k 颜色) => 0x3A = 0x05
+ * RGB 6-6-6-bit (262k 颜色) => 0x3A = 0x06
+ *
+ * 由于这里需要考虑 LVGL 支持的颜色深度显示模式，故选择 565 作为显示方式
+ * 若移除 LVGL，则可以从 444, 565, 666 中任选
+ *
+ * \ref ST7735S 数据手册, lv_conf.h
+ */
+#define TFT_RGB_BIT_INPUT     565
+
+#define TFT_DELAY_MS(ms)      chip_delay_ms(ms)
+#define TFT_HANDLE_NOT_INIT() ASSERT_FAIL(tft->is_initialized != 1, return)
 
 /* ============================================================
  * SPI 通信原语
@@ -27,8 +39,8 @@
 
 static void tft_spi_write(TFT_Model_t *tft, const uint8_t *data, uint16_t len)
 {
-    if (tft == NULL || tft->spi == NULL)
-        return;
+    ASSERT_FAIL(tft == NULL || tft->spi == NULL, return);
+    TFT_HANDLE_NOT_INIT();
 
     spi_cs_select(tft->spi);
     spi_write(tft->spi, data, len);
@@ -43,6 +55,12 @@ static void tft_spi_write(TFT_Model_t *tft, const uint8_t *data, uint16_t len)
 
 void TFT_Init(TFT_Model_t *tft)
 {
+    ASSERT_FAIL(tft == NULL, return);
+    /* 避免重复初始化 */
+    ASSERT_FAIL(tft->is_initialized != 0, return);
+
+    tft->is_initialized = 1;
+
     TFT_Reset(tft);
 
     TFT_SendIndex(tft, 0x11); // 唤醒
@@ -52,7 +70,16 @@ void TFT_Init(TFT_Model_t *tft)
     TFT_SendIndex(tft, 0x36);
     TFT_SendData(tft, 0x00);
     TFT_SendIndex(tft, 0x3A);
-    TFT_SendData(tft, 0x05); // 16bit
+
+#if TFT_RGB_BIT_INPUT == 444
+    uint8_t color_depth = 0x03;
+#elif TFT_RGB_BIT_INPUT == 666
+    uint8_t color_depth = 0x06;
+#else /* 默认为 565 */
+    uint8_t color_depth = 0x05;
+#endif
+
+    TFT_SendData(tft, color_depth);
 
     // 帧率
     TFT_SendIndex(tft, 0xB1);
@@ -151,18 +178,24 @@ void TFT_Init(TFT_Model_t *tft)
 
 void TFT_DeInit(TFT_Model_t *tft)
 {
+    ASSERT_FAIL(tft == NULL, return);
+    /* 避免重复去初始化 */
+    ASSERT_FAIL(tft->is_initialized == 0, return);
+
     gpio_deinit(tft->blk_pin);
     gpio_deinit(tft->dc_pin);
     gpio_deinit(tft->rst_pin);
     spi_deinit(tft->spi);
+
+    tft->is_initialized = 0;
 }
 
 /* ---------- 复位 ---------- */
 
 void TFT_Reset(TFT_Model_t *tft)
 {
-    if (tft == NULL || tft->rst_pin == NULL)
-        return;
+    ASSERT_FAIL(tft == NULL || tft->rst_pin == NULL, return);
+    TFT_HANDLE_NOT_INIT();
 
     gpio_write(tft->rst_pin, GPIO_Level_Low);
     TFT_DELAY_MS(100);
@@ -174,8 +207,8 @@ void TFT_Reset(TFT_Model_t *tft)
 
 void TFT_TurnOff(TFT_Model_t *tft, uint8_t io)
 {
-    if (tft == NULL || tft->blk_pin == NULL)
-        return;
+    ASSERT_FAIL(tft == NULL || tft->blk_pin == NULL, return);
+    TFT_HANDLE_NOT_INIT();
 
     gpio_write(tft->blk_pin, io ? GPIO_Level_High : GPIO_Level_Low);
 }
@@ -184,26 +217,30 @@ void TFT_TurnOff(TFT_Model_t *tft, uint8_t io)
 
 void TFT_SendIndex(TFT_Model_t *tft, uint8_t reg)
 {
-    if (tft->dc_pin)
-        gpio_write(tft->dc_pin, GPIO_Level_Low); // DC=低 → 指令
+    ASSERT_FAIL(tft == NULL || tft->dc_pin == NULL, return);
 
+    gpio_write(tft->dc_pin, GPIO_Level_Low); // DC=低 → 指令
     tft_spi_write(tft, &reg, 1);
 }
 
 void TFT_SendData(TFT_Model_t *tft, uint8_t data)
 {
-    if (tft->dc_pin)
-        gpio_write(tft->dc_pin, GPIO_Level_High); // DC=高 → 数据
+    ASSERT_FAIL(tft == NULL || tft->dc_pin == NULL, return);
+    TFT_HANDLE_NOT_INIT();
+
+    gpio_write(tft->dc_pin, GPIO_Level_High); // DC=高 → 数据
 
     tft_spi_write(tft, &data, 1);
 }
 
 void TFT_Send16Bit(TFT_Model_t *tft, uint16_t data)
 {
+    ASSERT_FAIL(tft == NULL || tft->dc_pin == NULL, return);
+    TFT_HANDLE_NOT_INIT();
+
     uint8_t buf[1] = {(uint8_t)(data >> 8)};
 
-    if (tft->dc_pin)
-        gpio_write(tft->dc_pin, GPIO_Level_High);
+    gpio_write(tft->dc_pin, GPIO_Level_High);
 
     tft_spi_write(tft, buf, 1);
     buf[0] = (uint8_t)(data & 0xFF);
@@ -212,6 +249,8 @@ void TFT_Send16Bit(TFT_Model_t *tft, uint16_t data)
 
 void TFT_SendReg(TFT_Model_t *tft, uint8_t addr, uint8_t val)
 {
+    TFT_HANDLE_NOT_INIT();
+
     TFT_SendIndex(tft, addr);
     TFT_SendData(tft, val);
 }
@@ -220,6 +259,8 @@ void TFT_SendReg(TFT_Model_t *tft, uint8_t addr, uint8_t val)
 
 void TFT_SpinScreen(TFT_Model_t *tft, uint8_t dir)
 {
+    TFT_HANDLE_NOT_INIT();
+
     static const uint8_t vals[] = {0xC0, 0xA0, 0x00, 0x60};
 
     if (dir > 3) dir = 0;
@@ -234,6 +275,8 @@ void TFT_SetRegion(TFT_Model_t *tft,
                    uint16_t x1, uint16_t y1,
                    uint16_t x2, uint16_t y2)
 {
+    TFT_HANDLE_NOT_INIT();
+
     TFT_SendIndex(tft, 0x2A);
     TFT_SendData(tft, 0x00);
     TFT_SendData(tft, x1);
@@ -253,6 +296,8 @@ void TFT_SetRegion(TFT_Model_t *tft,
 
 void TFT_Clear(TFT_Model_t *tft, uint16_t color)
 {
+    TFT_HANDLE_NOT_INIT();
+
     TFT_SetRegion(tft, 0, 0, 127, 159);
     TFT_SendIndex(tft, 0x2C);
 
@@ -268,6 +313,8 @@ void TFT_FullScreen(TFT_Model_t *tft,
                     uint16_t x2, uint16_t y2,
                     uint16_t color)
 {
+    TFT_HANDLE_NOT_INIT();
+
     int count = (x2 - x1 + 1) * (y2 - y1 + 1);
 
     TFT_SetRegion(tft, x1, y1, x2, y2);
@@ -282,6 +329,7 @@ void TFT_FullScreen(TFT_Model_t *tft,
 
 void TFT_SetCursor(TFT_Model_t *tft, uint16_t x, uint16_t y)
 {
+    TFT_HANDLE_NOT_INIT();
     TFT_SetRegion(tft, x, y, x, y);
 }
 
@@ -289,6 +337,7 @@ void TFT_SetCursor(TFT_Model_t *tft, uint16_t x, uint16_t y)
 
 void TFT_DrawPoint(TFT_Model_t *tft, uint16_t x, uint16_t y, uint16_t color)
 {
+    TFT_HANDLE_NOT_INIT();
     TFT_SetCursor(tft, x, y);
     TFT_Send16Bit(tft, color);
 }
@@ -299,6 +348,7 @@ void TFT_DrawCircle(TFT_Model_t *tft,
                     uint16_t cx, uint16_t cy,
                     uint16_t r, uint16_t color)
 {
+    TFT_HANDLE_NOT_INIT();
     int16_t a = 0, b = (int16_t)r;
     int16_t c = 3 - 2 * (int16_t)r;
 
@@ -338,6 +388,7 @@ void TFT_DrawLine(TFT_Model_t *tft,
                   uint16_t x1, uint16_t y1,
                   uint16_t color)
 {
+    TFT_HANDLE_NOT_INIT();
     int16_t dx    = (int16_t)x1 - (int16_t)x0;
     int16_t dy    = (int16_t)y1 - (int16_t)y0;
     int16_t x_inc = (dx >= 0) ? 1 : -1;
@@ -382,6 +433,7 @@ void TFT_box(TFT_Model_t *tft,
              uint16_t w, uint16_t h,
              uint16_t color)
 {
+    TFT_HANDLE_NOT_INIT();
     TFT_DrawLine(tft, x, y, x + w, y, color);
     TFT_DrawLine(tft, x + w, y, x + w, y + h, color);
     TFT_DrawLine(tft, x, y + h, x + w, y + h, color);
@@ -395,6 +447,7 @@ void TFT_box2(TFT_Model_t *tft,
               uint16_t w, uint16_t h,
               uint8_t mode)
 {
+    TFT_HANDLE_NOT_INIT();
     switch (mode) {
         case 1:
             TFT_DrawLine(tft, x, y, x + w, y, TFT_GRAY0);
@@ -430,6 +483,7 @@ void ButtonDown(TFT_Model_t *tft,
                 uint16_t x1, uint16_t y1,
                 uint16_t x2, uint16_t y2)
 {
+    TFT_HANDLE_NOT_INIT();
     TFT_DrawLine(tft, x1, y1, x2, y1, TFT_GRAY2);
     TFT_DrawLine(tft, x1, y1, x2, y1, TFT_GRAY1);
     TFT_DrawLine(tft, x1, y1, x1, y2, TFT_GRAY2);
@@ -442,6 +496,7 @@ void ButtonUp(TFT_Model_t *tft,
               uint16_t x1, uint16_t y1,
               uint16_t x2, uint16_t y2)
 {
+    TFT_HANDLE_NOT_INIT();
     TFT_DrawLine(tft, x1, y1, x2, y1, TFT_WHITE);
     TFT_DrawLine(tft, x1, y1, x1, y2, TFT_WHITE);
     TFT_DrawLine(tft, x1, y2, x2, y2, TFT_GRAY1);
@@ -457,6 +512,7 @@ void TFT_ShowImage(TFT_Model_t *tft,
                    uint16_t length, uint16_t width,
                    const unsigned char *p)
 {
+    TFT_HANDLE_NOT_INIT();
     TFT_SetRegion(tft, x, y, x + length - 1, y + width - 1);
 
     if (tft->dc_pin) gpio_write(tft->dc_pin, GPIO_Level_High);
@@ -478,6 +534,7 @@ void TFT_ShowChar(TFT_Model_t *tft,
                   uint8_t x, uint8_t y,
                   uint16_t fc, uint16_t bc, char c)
 {
+    TFT_HANDLE_NOT_INIT();
     int k = (c - 32) * 16;
     for (int i = 0; i < 16; i++) {
         for (int j = 0; j < 8; j++) {
@@ -495,6 +552,7 @@ void TFT_ShowString(TFT_Model_t *tft,
                     uint8_t x, uint8_t y,
                     uint16_t fc, uint16_t bc, char *c)
 {
+    TFT_HANDLE_NOT_INIT();
     int t = strlen(c);
     for (int i = 0; i < t; i++) {
         if (x >= 128) {
@@ -513,6 +571,7 @@ void TFT_ShowNumber(TFT_Model_t *tft,
                     uint16_t fc, uint16_t bc,
                     long long num)
 {
+    TFT_HANDLE_NOT_INIT();
     uint8_t k = 0;
     char s[20];
     long long t = num;
@@ -543,6 +602,7 @@ void TFT_ShowChinese(TFT_Model_t *tft,
                      uint8_t x, uint8_t y,
                      uint16_t fc, uint16_t bc, char *c)
 {
+    TFT_HANDLE_NOT_INIT();
     int t = strlen(c);
     for (int n = 0; n < t; n++) {
         if (c[n] > 31 && c[n] < 127) {

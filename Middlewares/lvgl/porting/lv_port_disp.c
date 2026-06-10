@@ -4,17 +4,23 @@
  */
 
 /*Copy this file as "lv_port_disp.c" and set this value to "1" to enable content*/
-#if 0
+#if 1
 
 /*********************
  *      INCLUDES
  *********************/
-#include "lv_port_disp_template.h"
+#include "lv_port_disp.h"
+#include "lv_hal_disp.h"
 #include <stdbool.h>
 
 /*********************
  *      DEFINES
  *********************/
+
+/* redefinition of lvgl display macro */
+#define MY_DISP_HOR_RES 128
+#define MY_DISP_VER_RES 160
+
 #ifndef MY_DISP_HOR_RES
     #warning Please define or replace the macro MY_DISP_HOR_RES with the actual screen width, default value 320 is used for now.
     #define MY_DISP_HOR_RES    320

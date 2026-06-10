@@ -1,12 +1,16 @@
 #include "mid_config.h"
 #include "bsp_config.h"
+#include "lv_color.h"
+#include "lv_hal_disp.h"
 #include "tft.h"
 #include "bsp_handle.h"
 #include "pin_src.h"
 #include "epaper.h"
+#include "lvgl.h"
 
 static void mid_init_epaper(void);
 static void mid_init_tft(void);
+static void mid_init_epaper(void);
 
 TFT_Model_t tft = {
     .blk_pin = &tft_blk,
@@ -19,12 +23,15 @@ void mid_init_modules(void)
 {
     // mid_init_epaper();
     mid_init_tft();
+    mid_init_epaper();
 }
 
 static void mid_init_tft(void)
 {
     /* hspi 已经由 CubeMX 代码自动 init */
     TFT_Init(&tft);
+    /* 开灯 */
+    TFT_TurnOff(&tft, 1);
 }
 
 static void mid_init_epaper(void)

@@ -33,32 +33,33 @@
  * ============================================================ */
 
 typedef struct {
-    SPI_Model_t *spi;      /**< SPI 总线（软件或硬件均可） */
-    GPIO_Model_t *dc_pin;  /**< Data/Command 引脚 */
-    GPIO_Model_t *rst_pin; /**< Reset 引脚 */
-    GPIO_Model_t *blk_pin; /**< 背光引脚（无需控制可传 NULL） */
+    uint8_t is_initialized; /**< 是否已经初始化 */
+    SPI_Model_t *spi;       /**< SPI 总线（软件或硬件均可） */
+    GPIO_Model_t *dc_pin;   /**< Data/Command 引脚 */
+    GPIO_Model_t *rst_pin;  /**< Reset 引脚 */
+    GPIO_Model_t *blk_pin;  /**< 背光引脚（无需控制可传 NULL） */
 } TFT_Model_t;
 
 /* ============================================================
  * 常用颜色
  * ============================================================ */
 
-#define TFT_RED     0xf800
-#define TFT_GREEN   0x07e0
-#define TFT_BLUE    0x001f
-#define TFT_BLUE2   0x1c9f
-#define TFT_PINK    0xd8a7
-#define TFT_ORANGE  0xfa20
-#define TFT_WHITE   0xffff
-#define TFT_BLACK   0x0000
-#define TFT_YELLOW  0xFFE0
-#define TFT_CYAN    0x07ff
-#define TFT_PURPLE  0xf81f
-#define TFT_PURPLE2 0xdb92
-#define TFT_PURPLE3 0x8811
-#define TFT_GRAY0   0xEF7D
-#define TFT_GRAY1   0x8410
-#define TFT_GRAY2   0x4208
+#define TFT_RED           0xf800
+#define TFT_GREEN         0x07e0
+#define TFT_BLUE          0x001f
+#define TFT_BLUE2         0x1c9f
+#define TFT_PINK          0xd8a7
+#define TFT_ORANGE        0xfa20
+#define TFT_WHITE         0xffff
+#define TFT_BLACK         0x0000
+#define TFT_YELLOW        0xFFE0
+#define TFT_CYAN          0x07ff
+#define TFT_PURPLE        0xf81f
+#define TFT_PURPLE2       0xdb92
+#define TFT_PURPLE3       0x8811
+#define TFT_GRAY0         0xEF7D
+#define TFT_GRAY1         0x8410
+#define TFT_GRAY2         0x4208
 
 /* ============================================================
  * API
