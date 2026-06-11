@@ -215,8 +215,8 @@ void display_backlight_off(Disp_Drv_t *drv)
 
 /* 设置显示区域 */
 void display_set_region(Disp_Drv_t *drv,
-                           uint32_t x_start, uint32_t y_start,
-                           uint32_t x_end, uint32_t y_end)
+                        uint32_t x_start, uint32_t y_start,
+                        uint32_t x_end, uint32_t y_end)
 {
     ASSERT_FAIL(drv == NULL || drv->src == NULL, return);
     Disp_Src_t *tft = (Disp_Src_t *)drv->src;
@@ -252,9 +252,9 @@ void display_clean_screen(Disp_Drv_t *drv, uint16_t color)
 
 /* 填充屏幕 */
 void display_fill_screen(Disp_Drv_t *drv,
-                            uint32_t x_start, uint32_t y_start,
-                            uint32_t x_end, uint32_t y_end,
-                            uint16_t color)
+                         uint32_t x_start, uint32_t y_start,
+                         uint32_t x_end, uint32_t y_end,
+                         uint16_t color)
 {
     ASSERT_FAIL(drv == NULL || drv->src == NULL, return);
 
@@ -298,9 +298,9 @@ void display_set_cursor(Disp_Drv_t *drv, uint32_t x, uint32_t y)
 
 /* 绘制连续的像素点(每个 pixel 均对应一个颜色) */
 void display_write_pixels(Disp_Drv_t *drv,
-                             uint32_t x, uint32_t y,
-                             uint32_t w, uint32_t h,
-                             const uint16_t *pixels)
+                          uint32_t x, uint32_t y,
+                          uint32_t w, uint32_t h,
+                          const uint16_t *pixels)
 {
     ASSERT_FAIL(drv == NULL || drv->src == NULL || pixels == NULL, return);
     Disp_Src_t *tft = (Disp_Src_t *)drv->src;
@@ -317,7 +317,7 @@ void display_write_pixels(Disp_Drv_t *drv,
 
 /* 绘制点 */
 void display_draw_point(Disp_Drv_t *drv,
-                           uint32_t x, uint32_t y, uint16_t color)
+                        uint32_t x, uint32_t y, uint16_t color)
 {
     ASSERT_FAIL(drv == NULL || drv->src == NULL, return);
 
@@ -327,8 +327,8 @@ void display_draw_point(Disp_Drv_t *drv,
 
 /* 绘制直线 */
 void display_draw_line(Disp_Drv_t *drv,
-                          uint32_t x0, uint32_t y0,
-                          uint32_t x1, uint32_t y1, uint16_t color)
+                       uint32_t x0, uint32_t y0,
+                       uint32_t x1, uint32_t y1, uint16_t color)
 {
     ASSERT_FAIL(drv == NULL || drv->src == NULL, return);
 
@@ -370,8 +370,8 @@ void display_draw_line(Disp_Drv_t *drv,
 
 /* 绘制圆 */
 void display_draw_circle(Disp_Drv_t *drv,
-                            uint32_t x, uint32_t y,
-                            uint32_t r, uint16_t color)
+                         uint32_t x, uint32_t y,
+                         uint32_t r, uint16_t color)
 {
     ASSERT_FAIL(drv == NULL || drv->src == NULL, return);
 
@@ -410,8 +410,8 @@ void display_draw_circle(Disp_Drv_t *drv,
 
 /* 绘制矩形 */
 void display_draw_rect(Disp_Drv_t *drv,
-                          uint32_t x, uint32_t y,
-                          uint32_t w, uint32_t h, uint16_t color)
+                       uint32_t x, uint32_t y,
+                       uint32_t w, uint32_t h, uint16_t color)
 {
     ASSERT_FAIL(drv == NULL || drv->src == NULL, return);
     display_draw_line(drv, x, y, x + w, y, color);
@@ -422,9 +422,9 @@ void display_draw_rect(Disp_Drv_t *drv,
 
 /* 绘制字符串 */
 void display_draw_string(Disp_Drv_t *drv,
-                            uint32_t x, uint32_t y,
-                            uint16_t fc, uint16_t bc,
-                            const char *str)
+                         uint32_t x, uint32_t y,
+                         uint16_t fc, uint16_t bc,
+                         const char *str)
 {
     ASSERT_FAIL(drv == NULL || drv->src == NULL || str == NULL, return);
     uint32_t sx = x, sy = y;
@@ -496,9 +496,9 @@ void display_draw_string(Disp_Drv_t *drv,
 
 /* 绘制数字 */
 void display_draw_number(Disp_Drv_t *drv,
-                            uint32_t x, uint32_t y,
-                            uint16_t fc, uint16_t bc,
-                            int num)
+                         uint32_t x, uint32_t y,
+                         uint16_t fc, uint16_t bc,
+                         int num)
 {
     ASSERT_FAIL(drv == NULL || drv->src == NULL, return);
 
