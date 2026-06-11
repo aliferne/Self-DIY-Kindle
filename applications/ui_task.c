@@ -49,6 +49,8 @@ void StartUITask(void const *argument)
 
     lv_obj_t *label = lv_label_create(obj);
     lv_label_set_text(label, buf);
+    /* FIXME: 无法显示中文 */
+    // lv_label_set_text(label, "确认");
 
     for (;;) {
         if (res == LV_FS_RES_OK)

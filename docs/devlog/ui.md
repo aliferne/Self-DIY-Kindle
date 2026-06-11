@@ -89,6 +89,8 @@ static void disp_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_
 
 SPI + DMA 还没改，现在已经很好用了，后面再说
 
+此外突然发现 LVGL 好像暂时无法显示中文，会显示成方块字，亟待解决
+
 # 遇到的神人问题
 
 ui_task 疑似炸堆栈了，检查 HFSR 等寄存器发现触发总线错误，STKERR 被置 1
