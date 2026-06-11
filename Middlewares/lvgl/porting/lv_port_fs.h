@@ -3,6 +3,9 @@
  *
  */
 
+/* 
+ * 走自己的 storage_srv 层，不使用 LVGL 附带的
+ */
 #if 0
 
 #ifndef LV_PORT_FS_H
