@@ -307,12 +307,14 @@ void disp_write_pixels(Disp_Drv_t *drv,
     ASSERT_FAIL(drv == NULL || drv->src == NULL || pixels == NULL, return);
     TFT_Model_t *tft = (TFT_Model_t *)drv->src;
 
-    disp_set_cursor(drv, x, y);
+    disp_set_region(drv, x, y, x + w - 1, y + h - 1);
 
     gpio_write(tft->dc_pin, GPIO_Level_High);
     spi_cs_select(tft->spi);
     spi_write(tft->spi, (const uint8_t *)pixels, w * h * sizeof(uint16_t));
     spi_cs_deselect(tft->spi);
+
+    disp_set_region(drv, 0, 0, drv->width - 1, drv->height - 1);
 }
 
 /* 绘制点 */
