@@ -1,37 +1,35 @@
 #include "mid_config.h"
 #include "bsp_config.h"
-#include "lv_color.h"
-#include "lv_hal_disp.h"
-#include "tft.h"
+#include "disp_drv.h"
+#include "display_drv/st7735s/tft.h"
 #include "bsp_handle.h"
 #include "pin_src.h"
 #include "epaper.h"
-#include "lvgl.h"
 
 static void mid_init_epaper(void);
 static void mid_init_tft(void);
 static void mid_init_epaper(void);
 
-TFT_Model_t tft = {
+static TFT_Model_t tft = {
     .blk_pin = &tft_blk,
     .dc_pin  = &tft_dc,
     .rst_pin = &tft_rst,
     .spi     = &tft_spi,
 };
 
+Disp_Drv_t display;
+
 void mid_init_modules(void)
 {
-    // mid_init_epaper();
     mid_init_tft();
-    mid_init_epaper();
+    // mid_init_epaper();
 }
 
 static void mid_init_tft(void)
 {
-    /* hspi 已经由 CubeMX 代码自动 init */
-    TFT_Init(&tft);
-    /* 开灯 */
-    TFT_TurnOff(&tft, 1);
+    display.src = &tft;
+    display_init(&display);
+    disp_backlight_on(&display);
 }
 
 static void mid_init_epaper(void)

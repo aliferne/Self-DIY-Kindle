@@ -11,8 +11,8 @@
  *********************/
 #include "lv_port_disp.h"
 #include "lv_hal_disp.h"
-#include "tft.h"
 #include "mid_config.h"
+#include "disp_drv.h"
 #include <stdbool.h>
 
 /*********************
@@ -176,21 +176,19 @@ void disp_disable_update(void)
 static void disp_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *color_p)
 {
     if (disp_flush_enabled) {
-        /*The most simple case (but also the slowest) to put all pixels to the screen one-by-one*/
-
-        /* TODO: 可以想想如何优化速度 */
-        int32_t x;
-        int32_t y;
-        for (y = area->y1; y <= area->y2; y++) {
-            for (x = area->x1; x <= area->x2; x++) {
-                /*Put a pixel to the display. For example:*/
-                /*put_px(x, y, *color_p)*/
-                TFT_DrawPoint(&tft, x, y, color_p->full);
-                color_p++;
-            }
-        }
+        /* 
+         * 这种刷新方法确实速度快了不少，
+         * 不过需要启用 `LV_COLOR_16_SWAP = 1`，
+         * 一般 `lv_color_t` 似乎是小端序的，需要反向，
+         * 之后可以考虑启用 SPI DMA
+         */
+        int32_t w = area->x2 - area->x1 + 1;
+        int32_t h = area->y2 - area->y1 + 1;
+        
+        disp_write_pixels(
+            &display, area->x1, area->y1, w, h,
+            (const uint16_t *)color_p);
     }
-
     /*IMPORTANT!!!
      *Inform the graphics library that you are ready with the flushing*/
     lv_disp_flush_ready(disp_drv);

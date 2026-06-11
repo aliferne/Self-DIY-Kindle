@@ -108,36 +108,6 @@ virtualFolder:
           files:
             - path: Middlewares/miniz/miniz.c
           folders: []
-        - name: EPaper
-          files:
-            - path: Middlewares/epaper/epaper.c
-          folders:
-            - name: drv
-              files:
-                - path: Middlewares/epaper/drv/epd_4in2_v2.c
-              folders: []
-            - name: config
-              files:
-                - path: Middlewares/epaper/config/DEV_Config.c
-              folders: []
-            - name: gui
-              files:
-                - path: Middlewares/epaper/gui/gui_paint.c
-              folders: []
-            - name: fonts
-              files:
-                - path: Middlewares/epaper/fonts/font8.c
-                - path: Middlewares/epaper/fonts/font12.c
-                - path: Middlewares/epaper/fonts/font12CN.c
-                - path: Middlewares/epaper/fonts/font16.c
-                - path: Middlewares/epaper/fonts/font20.c
-                - path: Middlewares/epaper/fonts/font24.c
-                - path: Middlewares/epaper/fonts/font24CN.c
-              folders: []
-            - name: test
-              files:
-                - path: Middlewares/epaper/test/ImageData.c
-              folders: []
         - name: lvgl
           files: []
           folders:
@@ -336,10 +306,47 @@ virtualFolder:
                     - path: Middlewares/lvgl/demos/widgets/assets/img_demo_widgets_avatar.c
                     - path: Middlewares/lvgl/demos/widgets/assets/img_lvgl_logo.c
                   folders: []
-        - name: st7735s
-          files:
-            - path: Middlewares/st7735s/tft.c
-          folders: []
+        - name: display_drv
+          files: []
+          folders:
+            - name: epaper
+              files:
+                - path: Middlewares/display_drv/epaper/test/ImageData.c
+                - path: Middlewares/display_drv/epaper/epaper.c
+              folders:
+                - name: config
+                  files:
+                    - path: Middlewares/display_drv/epaper/config/DEV_Config.c
+                  folders: []
+                - name: test
+                  files: []
+                  folders: []
+                - name: fonts
+                  files:
+                    - path: Middlewares/display_drv/epaper/fonts/font8.c
+                    - path: Middlewares/display_drv/epaper/fonts/font12.c
+                    - path: Middlewares/display_drv/epaper/fonts/font12CN.c
+                    - path: Middlewares/display_drv/epaper/fonts/font16.c
+                    - path: Middlewares/display_drv/epaper/fonts/font20.c
+                    - path: Middlewares/display_drv/epaper/fonts/font24.c
+                    - path: Middlewares/display_drv/epaper/fonts/font24CN.c
+                  folders: []
+                - name: gui
+                  files:
+                    - path: Middlewares/display_drv/epaper/gui/gui_paint.c
+                  folders: []
+                - name: drv
+                  files:
+                    - path: Middlewares/display_drv/epaper/drv/epd_4in2_v2.c
+                  folders: []
+            - name: st7735s
+              files:
+                - path: Middlewares/display_drv/st7735s/tft.c
+                - path: Middlewares/display_drv/st7735s/st7735s.c
+              folders: []
+            - name: st7796
+              files: []
+              folders: []
     - name: BSP
       files:
         - path: bsp/bsp_config.c
@@ -418,11 +425,11 @@ targets:
         - .
         - chip/stm32f4
         - Middlewares
-        - Middlewares/epaper
-        - Middlewares/epaper/config
-        - Middlewares/epaper/drv
-        - Middlewares/epaper/fonts
-        - Middlewares/epaper/gui
+        - Middlewares/display_drv/epaper
+        - Middlewares/display_drv/epaper/config
+        - Middlewares/display_drv/epaper/drv
+        - Middlewares/display_drv/epaper/fonts
+        - Middlewares/display_drv/epaper/gui
         - Middlewares/lvgl
         - Middlewares/lvgl/demos
         - Middlewares/lvgl/porting
@@ -432,15 +439,18 @@ targets:
         - Middlewares/lvgl/src/hal
         - Middlewares/lvgl/src/widgets
         - Middlewares/lvgl/src/misc
-        - Middlewares/epaper/test
-        - Middlewares/st7735s
+        - Middlewares/display_drv/epaper/test
+        - Middlewares/display_drv/st7735s
         - Middlewares/lvgl/src/draw
         - Middlewares/lvgl/src/draw/stm32_dma2d
         - Middlewares/lvgl/src/draw/sw
+        - Middlewares/display_drv
       libList: []
     excludeList:
       - <virtual_root>/Application/MDK-ARM/startup_stm32f407xx.s
       - <virtual_root>/Application/User/FATFS
+      - <virtual_root>/Middlewares/display_drv/epaper
+      - <virtual_root>/Middlewares/display_drv/st7735s/tft.c
     settings:
       debugger: cortex-debug
     toolchain: GCC

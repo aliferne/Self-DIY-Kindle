@@ -117,6 +117,8 @@ SPI_Err_t spi_deinit(SPI_Model_t *m)
     return SPI_Err_OK;
 }
 
+/* TODO: 硬件 SPI 可以提供更多的发送方式（IT、DMA等） */
+
 static SPI_Err_t spi_hw_read(SPI_Model_t *m, uint8_t *rx, uint16_t len)
 {
     SPI_HandleTypeDef *hspi = (SPI_HandleTypeDef *)m->src.hw;

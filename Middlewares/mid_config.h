@@ -4,8 +4,8 @@
  * 中间层配置相关
  */
 
-#include "st7735s/tft.h"
+#include "display_drv/disp_drv.h"
 
-extern TFT_Model_t tft;
+extern Disp_Drv_t display;
 
 void mid_init_modules(void);
