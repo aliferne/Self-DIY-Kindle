@@ -1,5 +1,4 @@
 #include "disp_drv.h"
-#include "tft.h"
 #include "bsp_spi.h"
 #include "bsp_gpio.h"
 #include "bsp_sys.h"
@@ -9,8 +8,6 @@
 #include <string.h>
 
 /*
- * 这里需要根据你自己的需要去自定义
- *
  * ST7735S 支持分配 RGB bit 的占比，对应的颜色分辨率也会有所不同
  * RGB 4-4-4-bit (4k 颜色) => 0x3A = 0x03
  * RGB 5-6-5-bit (65k 颜色) => 0x3A = 0x05
@@ -21,39 +18,39 @@
  *
  * \ref ST7735S 数据手册, lv_conf.h
  */
-#define DISP_RGB_BIT_INPUT (0x05)
+#define DISP_RGB_BIT_INPUT     (0x05)
 
-#define disp_delay_ms(ms)  chip_delay_ms(ms)
+#define disp_delay_ms(drv, ms) (drv->delay_cb)(ms)
 
 /* ============================================================
  * SPI 批量写原语
  * ============================================================ */
 
-static void tft_write_cmd_bulk(TFT_Model_t *tft, const uint8_t *data, uint32_t len)
+static void tft_write_cmd_bulk(Disp_Src_t *src, const uint8_t *data, uint32_t len)
 {
-    ASSERT_FAIL(tft == NULL || tft->dc_pin == NULL || data == NULL, return);
+    ASSERT_FAIL(src == NULL || src->dc_pin == NULL || data == NULL, return);
     // DC=低 → 指令
-    gpio_write(tft->dc_pin, GPIO_Level_Low);
+    gpio_write(src->dc_pin, GPIO_Level_Low);
 
-    spi_cs_select(tft->spi);
-    spi_write(tft->spi, data, len);
-    spi_cs_deselect(tft->spi);
+    spi_cs_select(src->spi);
+    spi_write(src->spi, data, len);
+    spi_cs_deselect(src->spi);
 }
 
-static void tft_write_data_bulk(TFT_Model_t *tft, const uint8_t *data, uint32_t len)
+static void tft_write_data_bulk(Disp_Src_t *src, const uint8_t *data, uint32_t len)
 {
-    ASSERT_FAIL(tft == NULL || tft->dc_pin == NULL || data == NULL, return);
+    ASSERT_FAIL(src == NULL || src->dc_pin == NULL || data == NULL, return);
     // DC=高 → 数据
-    gpio_write(tft->dc_pin, GPIO_Level_High);
+    gpio_write(src->dc_pin, GPIO_Level_High);
 
-    spi_cs_select(tft->spi);
-    spi_write(tft->spi, data, len);
-    spi_cs_deselect(tft->spi);
+    spi_cs_select(src->spi);
+    spi_write(src->spi, data, len);
+    spi_cs_deselect(src->spi);
 }
 
-static void tft_write_index(TFT_Model_t *tft, uint8_t cmd)
+static void tft_write_index(Disp_Src_t *src, uint8_t cmd)
 {
-    tft_write_cmd_bulk(tft, &cmd, 1);
+    tft_write_cmd_bulk(src, &cmd, 1);
 }
 
 /* ============================================================
@@ -64,15 +61,16 @@ static void tft_write_index(TFT_Model_t *tft, uint8_t cmd)
 void display_init(Disp_Drv_t *drv)
 {
     ASSERT_FAIL(drv == NULL || drv->src == NULL, return);
-    TFT_Model_t *tft = (TFT_Model_t *)drv->src;
-    ASSERT_FAIL(tft->is_initialized != 0, return);
-    tft->is_initialized = 1;
+    Disp_Src_t *tft = (Disp_Src_t *)drv->src;
+
+    /* 设置延时回调 */
+    disp_set_delay_cb(drv, chip_delay_ms);
 
     /* 硬件复位 */
     disp_rst(drv);
 
     tft_write_index(tft, 0x11); // 唤醒
-    disp_delay_ms(120);
+    disp_delay_ms(drv, 120);
 
     // ---- 基本配置 ----
     tft_write_index(tft, 0x36);
@@ -142,27 +140,27 @@ void display_init(Disp_Drv_t *drv)
 void disp_deinit(Disp_Drv_t *drv)
 {
     ASSERT_FAIL(drv == NULL || drv->src == NULL, return);
-    TFT_Model_t *tft = (TFT_Model_t *)drv->src;
+    Disp_Src_t *tft = (Disp_Src_t *)drv->src;
 
     gpio_deinit(tft->blk_pin);
     gpio_deinit(tft->dc_pin);
     gpio_deinit(tft->rst_pin);
     spi_deinit(tft->spi);
 
-    tft->is_initialized = 0;
+    drv->is_initialized = 0;
 }
 
 /* 复位屏幕 */
 void disp_rst(Disp_Drv_t *drv)
 {
     ASSERT_FAIL(drv == NULL || drv->src == NULL, return);
-    TFT_Model_t *tft = (TFT_Model_t *)drv->src;
+    Disp_Src_t *tft = (Disp_Src_t *)drv->src;
     ASSERT_FAIL(tft->rst_pin == NULL, return);
 
     gpio_write(tft->rst_pin, GPIO_Level_Low);
-    disp_delay_ms(100);
+    disp_delay_ms(drv, 100);
     gpio_write(tft->rst_pin, GPIO_Level_High);
-    disp_delay_ms(50);
+    disp_delay_ms(drv, 50);
 }
 
 /* 写入 16 位数据 */
@@ -170,8 +168,8 @@ void disp_write_16bit(Disp_Drv_t *drv, uint16_t data)
 {
     ASSERT_FAIL(drv == NULL || drv->src == NULL, return);
 
-    TFT_Model_t *tft = (TFT_Model_t *)drv->src;
-    uint8_t buf[2]   = {(uint8_t)(data >> 8), (uint8_t)(data & 0xFF)};
+    Disp_Src_t *tft = (Disp_Src_t *)drv->src;
+    uint8_t buf[2]  = {(uint8_t)(data >> 8), (uint8_t)(data & 0xFF)};
     tft_write_data_bulk(tft, buf, 2);
 }
 
@@ -180,7 +178,7 @@ void disp_write_cmd(Disp_Drv_t *drv, uint8_t *data, uint32_t len)
 {
     ASSERT_FAIL(drv == NULL || drv->src == NULL, return);
 
-    tft_write_cmd_bulk((TFT_Model_t *)drv->src, data, len);
+    tft_write_cmd_bulk((Disp_Src_t *)drv->src, data, len);
 }
 
 /* 写入数据 */
@@ -188,7 +186,7 @@ void disp_write_data(Disp_Drv_t *drv, uint8_t *data, uint32_t len)
 {
     ASSERT_FAIL(drv == NULL || drv->src == NULL, return);
 
-    tft_write_data_bulk((TFT_Model_t *)drv->src, data, len);
+    tft_write_data_bulk((Disp_Src_t *)drv->src, data, len);
 }
 
 /* 开启背光 */
@@ -196,7 +194,7 @@ void disp_backlight_on(Disp_Drv_t *drv)
 {
     ASSERT_FAIL(drv == NULL || drv->src == NULL, return);
 
-    TFT_Model_t *tft = (TFT_Model_t *)drv->src;
+    Disp_Src_t *tft = (Disp_Src_t *)drv->src;
 
     ASSERT_FAIL(tft->blk_pin == NULL, return);
 
@@ -208,7 +206,7 @@ void disp_backlight_off(Disp_Drv_t *drv)
 {
     ASSERT_FAIL(drv == NULL || drv->src == NULL, return);
 
-    TFT_Model_t *tft = (TFT_Model_t *)drv->src;
+    Disp_Src_t *tft = (Disp_Src_t *)drv->src;
 
     ASSERT_FAIL(tft->blk_pin == NULL, return);
 
@@ -221,7 +219,7 @@ void disp_set_region(Disp_Drv_t *drv,
                      uint32_t x_end, uint32_t y_end)
 {
     ASSERT_FAIL(drv == NULL || drv->src == NULL, return);
-    TFT_Model_t *tft = (TFT_Model_t *)drv->src;
+    Disp_Src_t *tft = (Disp_Src_t *)drv->src;
 
     uint8_t col_data[] = {0x00, (uint8_t)x_start, 0x00, (uint8_t)x_end};
     uint8_t row_data[] = {0x00, (uint8_t)y_start, 0x00, (uint8_t)y_end};
@@ -242,8 +240,8 @@ void disp_spin_screen(Disp_Drv_t *drv, uint8_t dir)
     static const uint8_t vals[] = {0xC0, 0xA0, 0x00, 0x60};
     if (dir > 3) dir = 0;
 
-    tft_write_index((TFT_Model_t *)drv->src, 0x36);
-    tft_write_data_bulk((TFT_Model_t *)drv->src, &vals[dir], 1);
+    tft_write_index((Disp_Src_t *)drv->src, 0x36);
+    tft_write_data_bulk((Disp_Src_t *)drv->src, &vals[dir], 1);
 }
 
 /* 清除屏幕 */
@@ -260,10 +258,10 @@ void disp_fill_screen(Disp_Drv_t *drv,
 {
     ASSERT_FAIL(drv == NULL || drv->src == NULL, return);
 
-    TFT_Model_t *tft = (TFT_Model_t *)drv->src;
-    uint32_t w       = x_end - x_start + 1;
-    uint32_t h       = y_end - y_start + 1;
-    uint32_t total   = w * h;
+    Disp_Src_t *tft = (Disp_Src_t *)drv->src;
+    uint32_t w      = x_end - x_start + 1;
+    uint32_t h      = y_end - y_start + 1;
+    uint32_t total  = w * h;
 
     disp_set_region(drv, x_start, y_start, x_end, y_end);
     gpio_write(tft->dc_pin, GPIO_Level_High);
@@ -305,14 +303,16 @@ void disp_write_pixels(Disp_Drv_t *drv,
                        const uint16_t *pixels)
 {
     ASSERT_FAIL(drv == NULL || drv->src == NULL || pixels == NULL, return);
-    TFT_Model_t *tft = (TFT_Model_t *)drv->src;
+    Disp_Src_t *tft = (Disp_Src_t *)drv->src;
 
-    disp_set_cursor(drv, x, y);
+    disp_set_region(drv, x, y, x + w - 1, y + h - 1);
 
     gpio_write(tft->dc_pin, GPIO_Level_High);
     spi_cs_select(tft->spi);
     spi_write(tft->spi, (const uint8_t *)pixels, w * h * sizeof(uint16_t));
     spi_cs_deselect(tft->spi);
+
+    disp_set_region(drv, 0, 0, drv->width - 1, drv->height - 1);
 }
 
 /* 绘制点 */
@@ -527,7 +527,7 @@ void disp_draw_number(Disp_Drv_t *drv,
     disp_draw_string(drv, x, y, fc, bc, &buf[pos]);
 }
 
-void disp_test(Disp_Drv_t *display)
+void disp_test(Disp_Drv_t *drv)
 {
     uint16_t colors[] = {
         DISP_RED,
@@ -540,34 +540,34 @@ void disp_test(Disp_Drv_t *display)
         DISP_PURPLE2,
     };
 
-    disp_backlight_on(display);
-    disp_draw_string(display, 0, 0, DISP_PINK, DISP_BLACK, "Chinese sample:");
+    disp_backlight_on(drv);
+    disp_draw_string(drv, 0, 0, DISP_PINK, DISP_BLACK, "Chinese sample:");
 
     for (;;) {
         int n = sizeof(colors) / sizeof(colors[0]);
 
         for (int i = 0; i < n; i++) {
-            disp_clean_screen(display, DISP_BLACK);
-            disp_draw_string(display, 0, 0, colors[i], DISP_BLACK, "Chinese sample:");
-            disp_draw_string(display, 0, 16, colors[(i + 1) % n], DISP_BLACK,
+            disp_clean_screen(drv, DISP_BLACK);
+            disp_draw_string(drv, 0, 0, colors[i], DISP_BLACK, "Chinese sample:");
+            disp_draw_string(drv, 0, 16, colors[(i + 1) % n], DISP_BLACK,
                              "我是一只猫快乐的星猫从来没烦恼你快乐就好");
-            chip_delay_ms(50);
+            disp_delay_ms(drv, 50);
         }
 
-        disp_clean_screen(display, DISP_BLACK);
-        disp_draw_string(display, 0, 0, DISP_BLUE2, DISP_BLACK, "Mix sample");
-        disp_draw_string(display, 0, 16, DISP_PURPLE, DISP_BLACK,
+        disp_clean_screen(drv, DISP_BLACK);
+        disp_draw_string(drv, 0, 0, DISP_BLUE2, DISP_BLACK, "Mix sample");
+        disp_draw_string(drv, 0, 16, DISP_PURPLE, DISP_BLACK,
                          "我是一只猫2525,快乐的星猫3434~从来没烦恼,你快乐就好!2233445,ahahahhahah");
-        chip_delay_ms(700);
+        disp_delay_ms(drv, 700);
 
-        disp_clean_screen(display, DISP_BLACK);
-        disp_draw_string(display, 0, 0, DISP_PURPLE3, DISP_BLACK, "special_font");
-        disp_draw_string(display, 0, 32, DISP_ORANGE, DISP_BLACK, "你是光");
-        disp_draw_string(display, 0, 64, DISP_CYAN, DISP_BLACK, "你是电");
-        disp_draw_string(display, 0, 96, DISP_PURPLE2, DISP_BLACK, "你是唯一的信仰");
-        chip_delay_ms(1000);
-        disp_clean_screen(display, DISP_BLACK);
+        disp_clean_screen(drv, DISP_BLACK);
+        disp_draw_string(drv, 0, 0, DISP_PURPLE3, DISP_BLACK, "special_font");
+        disp_draw_string(drv, 0, 32, DISP_ORANGE, DISP_BLACK, "你是光");
+        disp_draw_string(drv, 0, 64, DISP_CYAN, DISP_BLACK, "你是电");
+        disp_draw_string(drv, 0, 96, DISP_PURPLE2, DISP_BLACK, "你是唯一的信仰");
+        disp_delay_ms(drv, 1000);
+        disp_clean_screen(drv, DISP_BLACK);
 
-        chip_delay_ms(5);
+        disp_delay_ms(drv, 5);
     }
 }

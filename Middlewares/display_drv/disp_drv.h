@@ -1,9 +1,29 @@
 #pragma once
 
 #include <stdint.h>
+#include "bsp_spi.h"
+#include "bsp_gpio.h"
 
 /*
  * 提供统一的显示屏驱动 API
+ *
+ * 使用方式：
+ *   1. 调用方自行初始化 SPI_Model_t 和 GPIO_Model_t（DC/RST/BLK）
+ *   2. 填充 TFT_t 上下文
+ *   3. 调用 TFT_Init(&tft)
+ *
+ *   示例：
+ *     SPI_Model_t lcd_spi = { ... };    // 已初始化
+ *     GPIO_Model_t lcd_dc  = { ... };
+ *     GPIO_Model_t lcd_rst = { ... };
+ *
+ *     TFT_t tft = {
+ *         .spi     = &lcd_spi,
+ *         .dc_pin  = &lcd_dc,
+ *         .rst_pin = &lcd_rst,
+ *         .blk_pin = NULL,               // 不使用背光控制
+ *     };
+ *     TFT_Init(&tft);
  */
 
 #define DISP_RED     0xF800
@@ -23,13 +43,28 @@
 #define DISP_GRAY1   0x8410
 #define DISP_GRAY2   0x4208
 
+/* 显示屏硬件资源，假定使用 SPI 作为通信协议 */
+typedef struct {
+    SPI_Model_t *spi;      /**< SPI 总线（软件或硬件均可） */
+    GPIO_Model_t *dc_pin;  /**< Data/Command 引脚 */
+    GPIO_Model_t *rst_pin; /**< Reset 引脚 */
+    GPIO_Model_t *blk_pin; /**< 背光引脚（无需控制可传 NULL） */
+} Disp_Src_t;
+
 /* 显示驱动 */
 typedef struct _disp_drv {
-    void *src; /**< 底层驱动资源 */
+    Disp_Src_t *src; /**< 底层驱动资源 */
     uint8_t is_initialized : 1;
     uint32_t width;
     uint32_t height;
+    /* 延时函数指针 */
+    void (*delay_cb)(uint32_t ms);
 } Disp_Drv_t;
+
+static inline void disp_set_delay_cb(Disp_Drv_t *drv, void (*cb)(uint32_t ms))
+{
+    drv->delay_cb = cb;
+}
 
 void display_init(Disp_Drv_t *drv); /**< 和 LVGL 的 disp_init 区分开 */
 void disp_deinit(Disp_Drv_t *drv);

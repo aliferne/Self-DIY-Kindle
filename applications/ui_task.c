@@ -9,8 +9,12 @@
 
 void StartUITask(void const *argument)
 {
+    lv_init();
+    lv_port_disp_init();
+    lv_demo_widgets();
+
     for (;;) {
-        disp_test(&display);
+        lv_timer_handler();
         os_delay_ms(5);
     }
 }
