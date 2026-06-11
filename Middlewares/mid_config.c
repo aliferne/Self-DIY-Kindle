@@ -28,7 +28,7 @@ static void mid_init_tft(void)
 {
     display.src = &tft;
     display_init(&display);
-    disp_backlight_on(&display);
+    display_backlight_on(&display);
 }
 
 __NOT_USED static void mid_init_epaper(void)

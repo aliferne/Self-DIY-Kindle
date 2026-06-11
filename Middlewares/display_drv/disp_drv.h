@@ -9,23 +9,29 @@
  *
  * 使用方式：
  *   1. 调用方自行初始化 SPI_Model_t 和 GPIO_Model_t（DC/RST/BLK）
- *   2. 填充 TFT_t 上下文
- *   3. 调用 TFT_Init(&tft)
+ *   2. 填充 Disp_Src_t 上下文 (tft)
+ *   3. 提供 Disp_Drv_t 结构体 (disp)
+ *   4. 令 disp.src = &tft;
+ *   5. 调用 display_init(&disp)
  *
  *   示例：
  *     SPI_Model_t lcd_spi = { ... };    // 已初始化
  *     GPIO_Model_t lcd_dc  = { ... };
  *     GPIO_Model_t lcd_rst = { ... };
  *
- *     TFT_t tft = {
+ *     Disp_Src_t tft = {
  *         .spi     = &lcd_spi,
  *         .dc_pin  = &lcd_dc,
  *         .rst_pin = &lcd_rst,
  *         .blk_pin = NULL,               // 不使用背光控制
  *     };
- *     TFT_Init(&tft);
+ *    Disp_Drv_t disp = {
+ *         .src = &tft,
+ *    };
+ *    display_init(&disp);
  */
 
+/* 这个颜色对应是 RGB565 模式下的颜色 */
 #define DISP_RED     0xF800
 #define DISP_GREEN   0x07E0
 #define DISP_BLUE    0x001F
@@ -61,52 +67,52 @@ typedef struct _disp_drv {
     void (*delay_cb)(uint32_t ms);
 } Disp_Drv_t;
 
-static inline void disp_set_delay_cb(Disp_Drv_t *drv, void (*cb)(uint32_t ms))
+static inline void display_set_delay_cb(Disp_Drv_t *drv, void (*cb)(uint32_t ms))
 {
     drv->delay_cb = cb;
 }
 
 void display_init(Disp_Drv_t *drv); /**< 和 LVGL 的 disp_init 区分开 */
-void disp_deinit(Disp_Drv_t *drv);
-void disp_rst(Disp_Drv_t *drv);
+void display_deinit(Disp_Drv_t *drv);
+void display_rst(Disp_Drv_t *drv);
 
-void disp_backlight_on(Disp_Drv_t *drv);
-void disp_backlight_off(Disp_Drv_t *drv);
-void disp_set_region(Disp_Drv_t *drv,
-                     uint32_t x_start, uint32_t y_start,
-                     uint32_t x_end, uint32_t y_end);
-void disp_spin_screen(Disp_Drv_t *drv, uint8_t dir);
+void display_backlight_on(Disp_Drv_t *drv);
+void display_backlight_off(Disp_Drv_t *drv);
+void display_set_region(Disp_Drv_t *drv,
+                           uint32_t x_start, uint32_t y_start,
+                           uint32_t x_end, uint32_t y_end);
+void display_spin_screen(Disp_Drv_t *drv, uint8_t dir);
 
-void disp_clean_screen(Disp_Drv_t *drv, uint16_t color);
-void disp_fill_screen(Disp_Drv_t *drv,
-                      uint32_t x_start, uint32_t y_start,
-                      uint32_t x_end, uint32_t y_end,
-                      uint16_t color);
+void display_clean_screen(Disp_Drv_t *drv, uint16_t color);
+void display_fill_screen(Disp_Drv_t *drv,
+                            uint32_t x_start, uint32_t y_start,
+                            uint32_t x_end, uint32_t y_end,
+                            uint16_t color);
 
-void disp_set_cursor(Disp_Drv_t *drv, uint32_t x, uint32_t y);
-void disp_write_pixels(Disp_Drv_t *drv,
+void display_set_cursor(Disp_Drv_t *drv, uint32_t x, uint32_t y);
+void display_write_pixels(Disp_Drv_t *drv,
+                          uint32_t x, uint32_t y,
+                          uint32_t w, uint32_t h,
+                          const uint16_t *pixels);
+void display_draw_point(Disp_Drv_t *drv,
+                        uint32_t x, uint32_t y, uint16_t color);
+void display_draw_line(Disp_Drv_t *drv,
+                       uint32_t x0, uint32_t y0,
+                       uint32_t x1, uint32_t y1, uint16_t color);
+void display_draw_circle(Disp_Drv_t *drv,
+                         uint32_t x, uint32_t y,
+                         uint32_t r, uint16_t color);
+void display_draw_rect(Disp_Drv_t *drv,
                        uint32_t x, uint32_t y,
-                       uint32_t w, uint32_t h,
-                       const uint16_t *pixels);
-void disp_draw_point(Disp_Drv_t *drv,
-                     uint32_t x, uint32_t y, uint16_t color);
-void disp_draw_line(Disp_Drv_t *drv,
-                    uint32_t x0, uint32_t y0,
-                    uint32_t x1, uint32_t y1, uint16_t color);
-void disp_draw_circle(Disp_Drv_t *drv,
-                      uint32_t x, uint32_t y,
-                      uint32_t r, uint16_t color);
-void disp_draw_rect(Disp_Drv_t *drv,
-                    uint32_t x, uint32_t y,
-                    uint32_t w, uint32_t h, uint16_t color);
-void disp_draw_string(Disp_Drv_t *drv,
-                      uint32_t x, uint32_t y,
-                      uint16_t fc, uint16_t bc,
-                      const char *str);
-void disp_draw_number(Disp_Drv_t *drv,
-                      uint32_t x, uint32_t y,
-                      uint16_t fc, uint16_t bc,
-                      int num);
+                       uint32_t w, uint32_t h, uint16_t color);
+void display_draw_string(Disp_Drv_t *drv,
+                         uint32_t x, uint32_t y,
+                         uint16_t fc, uint16_t bc,
+                         const char *str);
+void display_draw_number(Disp_Drv_t *drv,
+                         uint32_t x, uint32_t y,
+                         uint16_t fc, uint16_t bc,
+                         int num);
 
 /* 测试显示效果，可以不实现 */
-void disp_test(Disp_Drv_t *display);
+void display_test(Disp_Drv_t *display);

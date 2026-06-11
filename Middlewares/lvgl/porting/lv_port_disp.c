@@ -176,7 +176,7 @@ void disp_disable_update(void)
 static void disp_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *color_p)
 {
     if (disp_flush_enabled) {
-        /* 
+        /*
          * 这种刷新方法确实速度快了不少，
          * 不过需要启用 `LV_COLOR_16_SWAP = 1`，
          * 一般 `lv_color_t` 似乎是小端序的，需要反向，
@@ -184,8 +184,8 @@ static void disp_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_
          */
         int32_t w = area->x2 - area->x1 + 1;
         int32_t h = area->y2 - area->y1 + 1;
-        
-        disp_write_pixels(
+
+        display_write_pixels(
             &display, area->x1, area->y1, w, h,
             (const uint16_t *)color_p);
     }
