@@ -27,7 +27,7 @@ static void make_path(Storage_t *s, const char *path, char *out, size_t sz)
 
 StorageState_t storage_init(Storage_t *s)
 {
-    ASSERT_FAIL(s != NULL, return Storage_InvalidParam);
+    ASSERT_FAIL(s == NULL, return Storage_InvalidParam);
     ASSERT_FAIL(s->is_initialized == 1, return Storage_Ok);
 
     s->is_initialized = 1;
@@ -43,7 +43,7 @@ StorageState_t storage_init(Storage_t *s)
 
 StorageState_t storage_deinit(Storage_t *s)
 {
-    ASSERT_FAIL(s != NULL, return Storage_InvalidParam);
+    ASSERT_FAIL(s == NULL, return Storage_InvalidParam);
     ASSERT_FAIL(s->is_initialized == 0, return Storage_Ok);
 
     s->is_initialized = 0;
@@ -53,7 +53,7 @@ StorageState_t storage_deinit(Storage_t *s)
 
 StorageState_t storage_mkdir(Storage_t *s, const char *path)
 {
-    ASSERT_FAIL(s != NULL && path != NULL, return Storage_InvalidParam);
+    ASSERT_FAIL(s == NULL && path != NULL, return Storage_InvalidParam);
     ASSERT_FAIL(s->is_initialized, return Storage_NotInitialized);
     /* 算上开始时的分隔符 `/` */
     ASSERT_FAIL((strlen(s->volume) + 1 + strlen(path) > STORAGE_MAX_PATH_LEN),

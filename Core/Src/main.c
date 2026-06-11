@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "bsp_gpio.h"
 #include "cmsis_os.h"
 #include "dma.h"
 #include "sdio.h"

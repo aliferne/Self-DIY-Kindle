@@ -33,6 +33,7 @@
 /**********************
  *  STATIC PROTOTYPES
  **********************/
+static void fs_init(void);
 static bool fs_ready(lv_fs_drv_t *drv);
 static void *fs_open(lv_fs_drv_t *drv, const char *path, lv_fs_mode_t mode);
 static lv_fs_res_t fs_close(lv_fs_drv_t *drv, void *file_p);
@@ -146,6 +147,11 @@ static BYTE map_open_mode(lv_fs_mode_t mode)
 
 void lv_port_fs_init(void)
 {
+    /*
+     * init fs
+     */
+    fs_init();
+
     /*---------------------------------------------------
      * Register the file system interface in LVGL
      *--------------------------------------------------*/
@@ -176,6 +182,14 @@ void lv_port_fs_init(void)
 /**********************
  *   STATIC FUNCTIONS
  **********************/
+
+/**
+ * @brief 文件系统初始化
+ */
+static void fs_init(void)
+{
+    storage_init(&sdcard);
+}
 
 /**
  * @brief 检查存储设备是否就绪
