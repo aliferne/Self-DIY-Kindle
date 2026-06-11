@@ -7,13 +7,13 @@
  * 自动 f_sync（断电保护）及统一错误处理。
  */
 
-#include "bsp_handle.h"
-#if 1
+#if 0
 
 /*********************
  *      INCLUDES
  *********************/
-#include "lv_port_fs.h"
+ #include "lv_port_fs.h"
+ #include "bsp_handle.h"
 #include "../../../services/srv_config.h"
 #include "storage_srv.h"
 #include "ff.h"

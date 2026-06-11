@@ -3,7 +3,7 @@
  *
  */
 
-#if 1
+#if 0
 
 #ifndef LV_PORT_FS_H
 #define LV_PORT_FS_H
