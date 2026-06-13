@@ -306,6 +306,12 @@ virtualFolder:
                     - path: Middlewares/lvgl/demos/widgets/assets/img_demo_widgets_avatar.c
                     - path: Middlewares/lvgl/demos/widgets/assets/img_lvgl_logo.c
                   folders: []
+            - name: fonts
+              files:
+                - path: Middlewares/lvgl/fonts/simhei_size14.c
+                - path: Middlewares/lvgl/fonts/simhei_size16.c
+                - path: Middlewares/lvgl/fonts/simhei_size18.c
+              folders: []
         - name: display_drv
           files: []
           folders:
@@ -356,7 +362,6 @@ virtualFolder:
       folders: []
     - name: Services
       files:
-        - path: services/display_srv.c
         - path: services/ebook_srv.c
         - path: services/music_srv.c
         - path: services/net_srv.c
@@ -451,6 +456,7 @@ targets:
       - <virtual_root>/Application/User/FATFS
       - <virtual_root>/Middlewares/display_drv/epaper
       - <virtual_root>/Middlewares/display_drv/st7735s/tft.c
+      - <virtual_root>/Middlewares/lvgl/fonts
     settings:
       debugger: cortex-debug
     toolchain: GCC

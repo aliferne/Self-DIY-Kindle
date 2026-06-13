@@ -18,6 +18,14 @@ typedef struct {
     FATFS fs;
 } Storage_t;
 
+#define storage_eof(fp)       f_eof(fp)
+#define storage_err(fp)       f_error(fp)
+#define storage_tell(fp)      f_tell(fp)
+#define storage_size(fp)      f_size(fp)
+#define storage_rewind(fp)    f_rewind(fp)
+#define storage_rewinddir(dp) f_rewinddir(dp)
+#define storage_rmdir(path)   f_rmdir(path)
+
 StorageState_t storage_init(Storage_t *s);
 StorageState_t storage_deinit(Storage_t *s);
 StorageState_t storage_mkdir(Storage_t *s, const char *path);
@@ -68,14 +76,4 @@ static inline FRESULT storage_readdir(DIR *dp, FILINFO *fno)
 static inline FRESULT storage_closedir(DIR *dp)
 {
     return f_closedir(dp);
-}
-
-static inline FSIZE_t storage_tell(FIL *fp)
-{
-    return f_tell(fp);
-}
-
-static inline FSIZE_t storage_size(FIL *fp)
-{
-    return f_size(fp);
 }

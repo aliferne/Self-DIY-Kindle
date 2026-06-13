@@ -207,13 +207,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 void Error_Handler(void)
 {
     /* USER CODE BEGIN Error_Handler_Debug */
-    static uint32_t cnt = 0;
     /* User can add his own implementation to report the HAL error return state */
     /* 因为中断被禁了，所以只能用 cnt 的方式来实现粗糙的延时 */
     __disable_irq();
+    gpio_write(&usr_led, GPIO_Level_Low);
     while (1) {
-        if (++cnt % 5000000 == 0)
-            HAL_GPIO_TogglePin(USER_LED_PORT, USER_LED_PIN);
     }
     /* USER CODE END Error_Handler_Debug */
 }

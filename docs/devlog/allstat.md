@@ -27,7 +27,6 @@
 
 ## 博客
 
-- [事件驱动模型](https://blog.csdn.net/sinat_36817189/article/details/106205029)
 - [天空星开发板原理图和 PCB](https://oshwhub.com/li-chuang-kai-fa-ban/li-chuang-liang-shan-pai-tian-kong-xing-kai-fa-ban)
 - [软件 I2C 原理](https://www.cnblogs.com/yxysuanfa/p/19106787)
 - [软件 SPI 原理](https://zhuanlan.zhihu.com/p/654500844)
@@ -37,17 +36,28 @@
 - [野火 SDIO 示例程序](https://doc.embedfire.com/mcu/stm32/h743prov/hal/zh/latest/book/SDIO.html)
 - [FatFs 移植教程](https://www.cnblogs.com/star-light-glimmer/p/17983261)
 - [FatFs 官网](https://elm-chan.org/fsw/ff/)
+- [LVGL 移植指南](https://lvgl.100ask.net/8.3/porting/index.html)
+- [LVGL 显示中文](https://www.cnblogs.com/shumei52/p/18595202)
+- [LVGL 转换自定义字体教程](https://www.cnblogs.com/hwd00001/p/17393135.html)
+- [LVGL Font Tool 下载](http://dz.lfly.xyz/forum.php?mod=viewthread&tid=24&extra=page=1)
 
 ---
 
 下面的暂未使用
 
+- [事件驱动模型](https://blog.csdn.net/sinat_36817189/article/details/106205029)
 - [I2S 原理讲解](https://zhuanlan.zhihu.com/p/678943329)
 - [STM32 I2S 代码示例](https://doc.embedfire.com/mcu/stm32/f429tiaozhanzhe/std/zh/latest/book/I2S.html)
 - [ESP32-with-arduino 驱动 PCM5102 模块代码示例](https://jishuzhan.net/article/1863030601469136897)
 - [TI PCM5102 数据手册](https://www.ti.com/product/PCM5102)
-- [LVGL 移植指南](https://lvgl.100ask.net/8.3/porting/index.html)
-- [LVGL 生成中文字库指南](https://www.cnblogs.com/hwd00001/p/17393135.html)
+
+--- 
+
+这部分则是因为烧写到外部 Flash 实在太麻烦了于是懒得搞，
+反正都有 FS 了我直接做个缓冲区然后用 FS 去加载就完事了，全存 SD 卡就没那么多屁事了
+
+- [JLink 烧写 SPI Flash](https://zhuanlan.zhihu.com/p/54729190)
+- [MCU 如何将资源烧写至外部 Flash](https://www.cnblogs.com/skullboyer/p/13812510.html)
 
 ## 书籍, PDF 文档
 

@@ -8,13 +8,13 @@
  */
 
 /* 设置 bit 宏 */
-#define SET_REG(reg, bit) ((reg) |= (bit))
+#define BIT_ON(reg, bit) ((reg) |= (bit))
 /* 清除 bit 宏 */
-#define CLEAR_REG(reg, bit) ((reg) &= ~(bit))
+#define BIT_OFF(reg, bit) ((reg) &= ~(bit))
 /* 此 bit 是否被设置 */
-#define IS_REG_SET(reg, bit) ((reg) & (bit))
+#define IS_BIT_ON(reg, bit) ((reg) & (bit))
 
-#define LEN(arr)             (sizeof(arr) / sizeof((arr)[0]))
+#define LEN(arr)            (sizeof(arr) / sizeof((arr)[0]))
 
 /* 错误处理相关 ------------------------------------- */
 

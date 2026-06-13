@@ -10,7 +10,9 @@
 
 
 #include "lvgl.h"
-
+/* 用于调用 fs 相关操作 */
+#include "srv_config.h"
+#include "storage_srv.h" 
 
 typedef struct{
     uint16_t min;
@@ -38,13 +40,15 @@ static x_header_t __g_xbf_hd = {
 };
 
 
-//static uint8_t __g_font_buf[112];//如bin文件存在SPI FLASH可使用此buff
+static uint8_t __g_font_buf[112];//如bin文件存在SPI FLASH可使用此buff
 
 
 static uint8_t *__user_font_getdata(int offset, int size){
     //如字模保存在SPI FLASH, SPIFLASH_Read(__g_font_buf,offset,size);
     //如字模已加载到SDRAM,直接返回偏移地址即可如:return (uint8_t*)(sdram_fontddr+offset);
-    return __g_font_buf;
+    FIL fp;
+    const char* path = "";
+    storage_open(&sdcard, &fp, , BYTE mode);
 }
 
 
