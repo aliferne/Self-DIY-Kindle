@@ -10,14 +10,14 @@
 #include "lv_timer.h"
 #include "lv_port_disp.h"
 
-char buf[256];
+static FIL fp;
+static char buf[256];
 
 void StartUITask(void const *argument)
 {
     lv_init();
     lv_port_disp_init();
 
-    FIL fp;
     FRESULT res = storage_open(&sdcard, &fp, "test.txt", FA_READ | FA_OPEN_EXISTING);
     UINT fnum   = 0;
     ASSERT_FAIL(res != FR_OK,
