@@ -22,13 +22,12 @@ void StartUITask(void const *argument)
     UINT fnum   = 0;
     ASSERT_FAIL(res != FR_OK,
                 storage_close(&fp);
-                for (;;));
+                for (;;) { os_delay_ms(1000); });
     res = storage_read(&fp, buf, LEN(buf), &fnum);
     ASSERT_FAIL(res != FR_OK,
                 storage_close(&fp);
-                for (;;));
+                for (;;) { os_delay_ms(1000); });
     storage_close(&fp);
-    storage_deinit(&sdcard);
 
     static lv_style_t style;
     lv_style_init(&style);
