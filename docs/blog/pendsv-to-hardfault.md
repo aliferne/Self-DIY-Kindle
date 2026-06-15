@@ -4,7 +4,8 @@
 
 打完比赛之后感到无事可做，因此最近正在自己 DIY 一个掌上阅读器，为了更好地~~折磨~~提升自己，决定引入一堆自己以前几乎从来没学过的东西，并且还尝试学 Linux 驱动代码的风格去做一个芯片无关的 BSP 层，不过这些不会是这篇文章的重点，等这个项目完工之后应该会整理文档并发博客，不过那都是后话了。
 
-想造芯片无关的 BSP 层主要是因为我现在手头上并没有 STM32F411CEU6 这个芯片的开发板，之前 DIY MP3 因为种种原因没继续下去，其实也有点想再把这个坑填上，而之前的选型就是这个芯片，手头上也还有这个芯片的存货，就想着先用 F407 先搓个原型验证一下，后面简单修改下配置啥的就可以无痛迁移到其他芯片上，不知道自己造一个芯片无关 BSP 层的想法会不会比较理想化了。
+想造芯片无关的 BSP 层主要是因为我现在手头上并没有 STM32F411CEU6 这个芯片的开发板，之前 DIY MP3
+因为种种原因没继续下去，其实也有点想再把这个坑填上，而之前的选型就是这个芯片，手头上也还有这个芯片的存货，就想着先用 F407VET6 先搓个原型验证一下，后面简单修改下配置啥的就可以无痛迁移到其他芯片上，不知道自己造一个芯片无关 BSP 层的想法会不会比较理想化了。
 
 那么就先介绍下这个问题的背景吧，由于掌上阅读器肯定需要 UI 和 SD 卡，所以我就**引入了 LVGL 和 FatFs**，而因为我雄心相对较大（这不完全只是一个掌上阅读器），所以还**引入了 FreeRTOS**，不过我的水平只局限于能创建一些任务，这个项目也顺带附带着我学习高级用法的想法。
 
@@ -83,7 +84,14 @@ void StartUITask(void const *argument)
     } while (0)
 ```
 
-相信一看代码，老手基本就知道是什么情况了，**确实就是栈分配得不够**，不过鉴于我还是个初学者，这里就卖点小关子，先不给你们看任务创建函数，而是看我的一整套 Debug 流程，做一个抛砖引玉的作用，希望能够得到高人的指导，比如更快定位问题的方法，一些 Debug 的方法论等等，在此谢谢大家了。
+而任务创建函数则为：
+
+```c
+osThreadDef(UITask, StartUITask, osPriorityNormal, 0, 512);
+UITaskHandle = osThreadCreate(osThread(UITask), NULL);
+```
+
+相信一看代码，老手基本就知道是什么情况了，**确实就是栈分配得不够**，不过还是想请你们看我的一整套 Debug 流程，做一个抛砖引玉的作用，希望能够得到高人的指导，比如更快定位问题的方法，一些 Debug 的方法论等等，在此谢谢大家了。
 
 ## 事故现场复现
 
@@ -138,9 +146,33 @@ PendSV_Handler@0x080075a0 (/home/ferne/code/self-proj/Self-DIY-Kindle/Middleware
 
 TODO:
 
-### PendSV 讲解
+### OS、SVC 与 PendSV
 
 TODO:
+
+#### 什么是 OS，什么是 RTOS
+
+这部分是我个人比较浅薄的理解，有错误的话还请不吝赐教。
+
+OS，按照教科书上的定义，指的是管理计算机硬件与软件资源的程序。打个比方，就好比你去餐厅吃饭，跟服务员点菜，服务员负责把订单交给厨师，此外服务员同时负责维持餐厅的秩序，这里服务员就承担着类似于 OS 的角色，服务员既要和厨师（底层硬件）交流，又要负责安排客人入座，维持现场秩序（管理各种资源）。
+
+而 RTOS 则相对而言更加简化一些，它依然需要管理各种资源，也依然需要和底层硬件沟通，但是 RTOS 则更加侧重于 RT (Real-Time)，就好比一个火爆的大餐厅，服务员不一定顾得上你，而一个苍蝇馆子，服务员则更能快速给你上菜。
+
+广义上来说，一个 OS 可以分为三个组成部分：内核、 Shell，和一些杂七杂八的软件。但对于一个 OS 来说，**最核心的概念实际上是内核**，也就是**负责线程/进程/任务管理、内存管理、驱动管理等的程序**。这也是为什么 Linux 有那么多发行版，但它们仍然是 Linux； 各种 RTOS 虽然复杂程度不一（FreeRTOS 只有非常轻量的内核，RTT 和 Zephyr 可以有宛如 Linux 般的 dts 等复杂驱动适配），但它们都提供了任务创建、调度、信号量、各种锁，因为 OS 的核心与灵魂就是内核，或者往窄了说就是任务调度，如果没有“做完你的做你的”的任务调度和驱动适配， OS 就不是 OS 了，而成了一个没意义的 `while` 循环了。
+
+因此理解 OS 的内核在干些什么，就理解了 OS 在干什么。
+
+我们以 FreeRTOS 举例
+
+TODO: 以自己的理解复述一下 FreeRTOS 文档
+
+此外推荐一下[这篇文章][深入理解操作系统的概念及定位]，由于我这个重点不在于讲 OS，因此不会特别详细，[这篇文章][深入理解操作系统的概念及定位]写得确实很好， FreeRTOS 官网[对 RTOS 的解析][RTOS 基础知识]也很不错，也可以看看。
+
+#### SVC
+
+#### 什么是 PendSV
+
+#### FreeRTOS 内的 PendSV_Handler 实现
 
 ```c
 void xPortPendSVHandler( void )
@@ -200,6 +232,52 @@ void xPortPendSVHandler( void )
 }
 ```
 
+### 一种更快的方法
+
+上面那套又看堆栈又看寄存器的，还要对 Cortex 内核有一定了解的，说实话还是很吃操作和时间，需要被自动化掉，而我闲着无聊在翻 FreeRTOS 的文档的时候偶然发现人家已经提供了[一套更快的 DEBUG 流程][FreeRTOS 堆栈使用和堆栈溢出检查]了
+
+简单总结一下就是人家提供了 `configCHECK_FOR_STACK_OVERFLOW` 宏的配置（CubeMX 有这个配置选项，不过默认是 Disable，所以我看 config 文件的时候一直以为没有对应的调试方法，还是得多看文档啊），通过定义为不同的数值来对应设置如何检查堆栈溢出情况，并通过如下钩子函数：
+
+```c
+void vApplicationStackOverflowHook( TaskHandle_t xTask,
+                                    char *pcTaskName );
+```
+
+来执行你自定义的调试信息。
+
+我给这个宏设置为了 1, 则对应应该是这段代码被启用：
+
+```c
+#if( ( configCHECK_FOR_STACK_OVERFLOW == 1 ) && ( portSTACK_GROWTH < 0 ) )
+
+	/* Only the current stack state is to be checked. */
+	#define taskCHECK_FOR_STACK_OVERFLOW()																\
+	{																									\
+		/* Is the currently saved stack pointer within the stack limit? */								\
+		if( pxCurrentTCB->pxTopOfStack <= pxCurrentTCB->pxStack )										\
+		{																								\
+			vApplicationStackOverflowHook( ( TaskHandle_t ) pxCurrentTCB, pxCurrentTCB->pcTaskName );	\
+		}																								\
+	}
+
+#endif /* configCHECK_FOR_STACK_OVERFLOW == 1 */
+```
+
+然后自定义逻辑则为：
+
+```c
+void vApplicationStackOverflowHook(TaskHandle_t xTask,
+                                   char *pcTaskName)
+{
+    printf("Stack Overflow! %s\n", pcTaskName);
+    if (strcmp(pcTaskName, "UITask") == 0) {
+        gpio_write(&usr_led, GPIO_Level_High);
+    }
+}
+```
+
+串口便确实能打印出这个信息，而 LED 也如预想中亮起了（缺省行为是熄灭的）。
+
 ## 解决方案
 
 TODO:
@@ -208,9 +286,14 @@ TODO:
 
 TODO:
 
-## 参考资料
+这次其实确确实实暴露了我对 FreeRTOS 了解不深的严重问题，也正好和我的初心相符了，算是一种求锤得锤吧（笑）。**如果遇到了什么玄学问题，首先看下堆栈啥的正不正常，这也许是各种 RTOS 在调试时先要确认的一步吧**！此外还因为这个 BUG 而被迫看了 FreeRTOS 的代码，说实话写得还真的非常漂亮，仿佛在欣赏一件艺术品，已严肃偷师（笑）。
 
-- [STM32 Cortex M4 编程手册](https://www.st.com/content/ccc/resource/technical/document/programming_manual/6c/3a/cb/e7/e4/ea/44/9b/DM00046982.pdf/files/DM00046982.pdf/jcr:content/translations/en.DM00046982.pdf)
-- [Cortex-M 异常处理的 C 实现、栈帧以及 EXC_RETURN](https://zhuanlan.zhihu.com/p/1924962149312226892)
-- [ARM CM3/4 异常进入与返回的过程](https://shequ.stmicroelectronics.cn/thread-604515-1-1.html)
-- [Cortex-M3 异常返回值 EXC_RETURN](https://www.cnblogs.com/utank/p/11263073.html)
+---
+
+[STM32 Cortex M4 编程手册]: https://www.st.com/content/ccc/resource/technical/document/programming_manual/6c/3a/cb/e7/e4/ea/44/9b/DM00046982.pdf/files/DM00046982.pdf/jcr:content/translations/en.DM00046982.pdf
+[Cortex-M 异常处理的 C 实现、栈帧以及 EXC_RETURN]: https://zhuanlan.zhihu.com/p/1924962149312226892
+[ARM CM3/4 异常进入与返回的过程]: https://shequ.stmicroelectronics.cn/thread-604515-1-1.html
+[Cortex-M3 异常返回值 EXC_RETURN]: https://www.cnblogs.com/utank/p/11263073.html
+[RTOS 基础知识]: https://wwww.freertos.org/zh-cn-cmn-s/Documentation/01-FreeRTOS-quick-start/01-Beginners-guide/01-RTOS-fundamentals
+[深入理解操作系统的概念及定位]: https://www.cnblogs.com/kevinbee/p/18678187
+[FreeRTOS 堆栈使用和堆栈溢出检查]: https://w.freertos.org/zh-cn-cmn-s/Documentation/02-Kernel/02-Kernel-features/09-Memory-management/02-Stack-usage-and-stack-overflow-checking
