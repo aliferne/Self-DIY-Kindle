@@ -10,23 +10,48 @@
 #include "lv_timer.h"
 #include "lv_port_disp.h"
 
-static FIL fp;
 static char buf[256];
+
+#include "FreeRTOS.h"
+#include "task.h"
+#include "cmsis_gcc.h"
+/* 临时暴露 TCB 结构体定义以访问栈指针 */
+struct tskTaskControlBlock {
+    volatile StackType_t *pxTopOfStack;
+    ListItem_t xStateListItem;
+    ListItem_t xEventListItem;
+    UBaseType_t uxPriority;
+    StackType_t *pxStack;
+};
+#include "stdio.h"
+void vApplicationStackOverflowHook(TaskHandle_t xTask,
+                                   char *pcTaskName)
+{
+    printf("Stack overflow in task %s\r\n"
+           "=> [pxTopOfStack: %p]\r\n"
+           "=> [pxStack: %p]\r\n"
+           "=> [PSP: %p]\r\n"
+           "=> [MSP: %p]\r\n"
+           "=======================\r\n",
+           pcTaskName, xTask->pxTopOfStack, xTask->pxStack,
+           __get_PSP(), __get_MSP());
+
+    if (strcmp(pcTaskName, "UITask") == 0) {
+        gpio_write(&usr_led, GPIO_Level_High);
+    }
+}
 
 void StartUITask(void const *argument)
 {
     lv_init();
     lv_port_disp_init();
 
+    FIL fp;
     FRESULT res = storage_open(&sdcard, &fp, "test.txt", FA_READ | FA_OPEN_EXISTING);
     UINT fnum   = 0;
-    ASSERT_FAIL(res != FR_OK,
-                storage_close(&fp);
-                for (;;) { os_delay_ms(1000); });
+    ASSERT_FAIL(res != FR_OK, storage_close(&fp); for (;;) { os_delay_ms(1000); });
     res = storage_read(&fp, buf, LEN(buf), &fnum);
-    ASSERT_FAIL(res != FR_OK,
-                storage_close(&fp);
-                for (;;) { os_delay_ms(1000); });
+    ASSERT_FAIL(res != FR_OK, storage_close(&fp); for (;;) { os_delay_ms(1000); });
     storage_close(&fp);
 
     static lv_style_t style;

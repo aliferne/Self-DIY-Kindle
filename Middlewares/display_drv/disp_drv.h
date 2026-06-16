@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include "bsp_i2c.h"
 #include "bsp_spi.h"
 #include "bsp_gpio.h"
 
@@ -49,6 +50,9 @@
 #define DISP_GRAY1   0x8410
 #define DISP_GRAY2   0x4208
 
+/* 显示屏是否具有触控功能 */
+#define DISP_HAS_TOUCH (1)
+
 /* 显示屏硬件资源，假定使用 SPI 作为通信协议 */
 typedef struct {
     SPI_Model_t *spi;      /**< SPI 总线（软件或硬件均可） */
@@ -57,9 +61,21 @@ typedef struct {
     GPIO_Model_t *blk_pin; /**< 背光引脚（无需控制可传 NULL） */
 } Disp_Src_t;
 
+#if DISP_HAS_TOUCH == 1
+/* 显示屏触摸硬件资源，假定使用 I2C 作为通信协议 */
+typedef struct {
+    I2C_Model_t *i2c;  /**< I2C 总线 */
+    GPIO_Model_t *it;  /**< 中断引脚 */
+    GPIO_Model_t *rst; /**< 复位引脚 */
+} Disp_Touch_Src_t;
+#endif
+
 /* 显示驱动 */
 typedef struct _disp_drv {
     Disp_Src_t *src; /**< 底层驱动资源 */
+#if DISP_HAS_TOUCH == 1
+    Disp_Touch_Src_t *touch;
+#endif
     uint8_t is_initialized : 1;
     uint32_t width;
     uint32_t height;
@@ -79,15 +95,15 @@ void display_rst(Disp_Drv_t *drv);
 void display_backlight_on(Disp_Drv_t *drv);
 void display_backlight_off(Disp_Drv_t *drv);
 void display_set_region(Disp_Drv_t *drv,
-                           uint32_t x_start, uint32_t y_start,
-                           uint32_t x_end, uint32_t y_end);
+                        uint32_t x_start, uint32_t y_start,
+                        uint32_t x_end, uint32_t y_end);
 void display_spin_screen(Disp_Drv_t *drv, uint8_t dir);
 
 void display_clean_screen(Disp_Drv_t *drv, uint16_t color);
 void display_fill_screen(Disp_Drv_t *drv,
-                            uint32_t x_start, uint32_t y_start,
-                            uint32_t x_end, uint32_t y_end,
-                            uint16_t color);
+                         uint32_t x_start, uint32_t y_start,
+                         uint32_t x_end, uint32_t y_end,
+                         uint16_t color);
 
 void display_set_cursor(Disp_Drv_t *drv, uint32_t x, uint32_t y);
 void display_write_pixels(Disp_Drv_t *drv,

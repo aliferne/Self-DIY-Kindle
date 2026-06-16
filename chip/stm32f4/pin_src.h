@@ -98,3 +98,16 @@
 
 #define EPAPER_BUSY_PORT GPIOE
 #define EPAPER_BUSY_PIN  GPIO_PIN_14
+
+/*
+ * 触摸屏 (FT6336 电容触摸 I2C)
+ * TODO: 根据实际硬件接线填充引脚
+ */
+#define TOUCH_SDA_PORT
+#define TOUCH_SDA_PIN
+#define TOUCH_SCL_PORT
+#define TOUCH_SCL_PIN
+#define TOUCH_INT_PORT
+#define TOUCH_INT_PIN
+#define TOUCH_RST_PORT
+#define TOUCH_RST_PIN

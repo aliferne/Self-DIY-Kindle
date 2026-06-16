@@ -54,6 +54,7 @@
 #endif
 #define configENABLE_FPU                         0
 #define configENABLE_MPU                         0
+#define configCHECK_FOR_STACK_OVERFLOW                1
 
 #define configUSE_PREEMPTION                     1
 #define configSUPPORT_STATIC_ALLOCATION          1

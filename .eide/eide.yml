@@ -350,8 +350,12 @@ virtualFolder:
                 - path: Middlewares/display_drv/st7735s/tft.c
                 - path: Middlewares/display_drv/st7735s/st7735s.c
               folders: []
-            - name: st7796
-              files: []
+            - name: st7796-with-touch
+              files:
+                - path: Middlewares/display_drv/st7796-with-touch/LCD/LCD.c
+                - path: Middlewares/display_drv/st7796-with-touch/TOUCH/ctp.c
+                - path: Middlewares/display_drv/st7796-with-touch/TOUCH/touch.c
+                - path: Middlewares/display_drv/st7796-with-touch/display_drv.c
               folders: []
     - name: BSP
       files:
@@ -450,6 +454,9 @@ targets:
         - Middlewares/lvgl/src/draw/stm32_dma2d
         - Middlewares/lvgl/src/draw/sw
         - Middlewares/display_drv
+        - Middlewares/display_drv/st7796-with-touch
+        - Middlewares/display_drv/st7796-with-touch/LCD
+        - Middlewares/display_drv/st7796-with-touch/TOUCH
       libList: []
     excludeList:
       - <virtual_root>/Application/MDK-ARM/startup_stm32f407xx.s
@@ -625,4 +632,4 @@ targets:
         resetMode: default
         runAfterProgram: true
         speed: 4000
-    uploader: JLink
+    uploader: OpenOCD

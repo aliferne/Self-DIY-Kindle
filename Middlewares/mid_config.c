@@ -16,6 +16,21 @@ static Disp_Src_t tft = {
     .spi     = &tft_spi,
 };
 
+/* TODO: 启用触摸时，取消注释以下资源，并在 bsp_config 中初始化 I2C/GPIO
+#include "bsp_i2c.h"
+#include "bsp_gpio.h"
+
+static I2C_Model_t touch_i2c;
+static GPIO_Model_t touch_int;
+static GPIO_Model_t touch_rst;
+
+static Disp_Touch_Src_t touch = {
+    .i2c = &touch_i2c,
+    .it  = &touch_int,
+    .rst = &touch_rst,
+};
+*/
+
 Disp_Drv_t display;
 
 void mid_init_modules(void)
@@ -27,6 +42,8 @@ void mid_init_modules(void)
 static void mid_init_tft(void)
 {
     display.src = &tft;
+    /* TODO: 启用触摸时，取消下行注释 */
+    // display.touch = &touch;
     display_init(&display);
     display_backlight_on(&display);
 }
