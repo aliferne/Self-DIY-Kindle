@@ -28,11 +28,14 @@ void display_init(Disp_Drv_t *drv)
     lcd_assign_src(drv->src);
     lcd_assign_delay(drv->delay_cb);
 
-    LCD_Init();
-    LCD_Display_Dir(0);  /* 默认竖屏 */
+    /* [DI] 将 lcd_dev 注册为 Disp_Drv_t 的 priv */
+    drv->priv = lcd_get_dev();
 
-    drv->width  = lcddev.width;
-    drv->height = lcddev.height;
+    LCD_Init();
+    LCD_Display_Dir(0); /* 默认竖屏 */
+
+    drv->width  = ((lcd_dev_t *)drv->priv)->width;
+    drv->height = ((lcd_dev_t *)drv->priv)->height;
 
     /* [DI] 将 Disp_Touch_Src_t 注入到 ctp.c */
 #if DISP_HAS_TOUCH
@@ -155,7 +158,7 @@ void display_draw_point(Disp_Drv_t *drv,
                         uint32_t x, uint32_t y, uint16_t color)
 {
     GIVEUP(drv);
-    POINT_COLOR = color;
+    ((lcd_dev_t *)drv->priv)->fc = color;
     LCD_Fast_DrawPoint((uint16_t)x, (uint16_t)y, color);
 }
 
@@ -164,7 +167,7 @@ void display_draw_line(Disp_Drv_t *drv,
                        uint32_t x1, uint32_t y1, uint16_t color)
 {
     GIVEUP(drv);
-    POINT_COLOR = color;
+    ((lcd_dev_t *)drv->priv)->fc = color;
     LCD_DrawLine((uint16_t)x0, (uint16_t)y0,
                  (uint16_t)x1, (uint16_t)y1);
 }
@@ -174,7 +177,7 @@ void display_draw_circle(Disp_Drv_t *drv,
                          uint32_t r, uint16_t color)
 {
     GIVEUP(drv);
-    POINT_COLOR = color;
+    ((lcd_dev_t *)drv->priv)->fc = color;
     LCD_Draw_Circle((uint16_t)x, (uint16_t)y, (uint8_t)r);
 }
 
@@ -183,7 +186,7 @@ void display_draw_rect(Disp_Drv_t *drv,
                        uint32_t w, uint32_t h, uint16_t color)
 {
     GIVEUP(drv);
-    POINT_COLOR = color;
+    ((lcd_dev_t *)drv->priv)->fc = color;
     LCD_DrawRectangle((uint16_t)x, (uint16_t)y,
                       (uint16_t)(x + w - 1), (uint16_t)(y + h - 1));
 }
@@ -197,8 +200,8 @@ void display_draw_string(Disp_Drv_t *drv,
                          const char *str)
 {
     GIVEUP(drv);
-    POINT_COLOR = fc;
-    BACK_COLOR  = bc;
+    ((lcd_dev_t *)drv->priv)->fc = fc;
+    ((lcd_dev_t *)drv->priv)->bc = bc;
     LCD_ShowString((uint16_t)x, (uint16_t)y,
                    200, 200, 16, (uint8_t *)str);
 }
@@ -209,8 +212,8 @@ void display_draw_number(Disp_Drv_t *drv,
                          int num)
 {
     GIVEUP(drv);
-    POINT_COLOR = fc;
-    BACK_COLOR  = bc;
+    ((lcd_dev_t *)drv->priv)->fc = fc;
+    ((lcd_dev_t *)drv->priv)->bc = bc;
     LCD_ShowNum((uint16_t)x, (uint16_t)y, (uint32_t)num, 10, 16);
 }
 
@@ -229,6 +232,6 @@ void display_test(Disp_Drv_t *drv)
     LCD_Clear(WHITE);
     if (drv->delay_cb) drv->delay_cb(500);
 
-    POINT_COLOR = RED;
+    ((lcd_dev_t *)drv->priv)->fc = RED;
     LCD_ShowString(10, 10, 200, 200, 16, (uint8_t *)"ST7796 + Touch OK");
 }
