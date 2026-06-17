@@ -9,6 +9,7 @@
  *   3. delay 回调通过 display_set_delay_cb() 注入
  */
 
+#include "bsp_sys.h"
 #include "disp_drv.h"
 #include "bsp_handle.h"
 #include "LCD.h"
@@ -22,7 +23,7 @@ void display_init(Disp_Drv_t *drv)
 {
     ASSERT_FAIL(drv == NULL || drv->src == NULL, return);
 
-    display_set_delay_cb(drv, drv->delay_cb);
+    display_set_delay_cb(drv, chip_delay_ms);
 
     /* [DI] 将 Disp_Src_t 注入到 LCD.c */
     lcd_assign_src(drv->src);
