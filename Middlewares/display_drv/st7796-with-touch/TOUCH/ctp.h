@@ -6,21 +6,21 @@
 #include "bsp_gpio.h"
 
 // FT6336 部分寄存器定义
-#define FT_REG_NUM_FINGER       0x02    //触摸状态寄存器
+#define FT_REG_NUM_FINGER 0x02 // 触摸状态寄存器
 
-#define FT_TP1_REG              0x03    //第一个触摸点数据地址
-#define FT_TP2_REG              0x09    //第二个触摸点数据地址
-#define FT_TP3_REG              0x0F    //第三个触摸点数据地址
-#define FT_TP4_REG              0x15    //第四个触摸点数据地址
-#define FT_TP5_REG              0x1B    //第五个触摸点数据地址
+#define FT_TP1_REG        0x03 // 第一个触摸点数据地址
+#define FT_TP2_REG        0x09 // 第二个触摸点数据地址
+#define FT_TP3_REG        0x0F // 第三个触摸点数据地址
+#define FT_TP4_REG        0x15 // 第四个触摸点数据地址
+#define FT_TP5_REG        0x1B // 第五个触摸点数据地址
 
 uint8_t FT6336_WR_Reg(I2C_Model_t *i2c, uint16_t reg, uint8_t *buf, uint8_t len);
-void    FT6336_RD_Reg(I2C_Model_t *i2c, uint16_t reg, uint8_t *buf, uint8_t len);
-void    FT6336_Init(void);
+void FT6336_RD_Reg(I2C_Model_t *i2c, uint16_t reg, uint8_t *buf, uint8_t len);
+void FT6336_Init(void);
 uint8_t FT6336_Scan(uint8_t mode);
 
-void    ctp_assign_pins(GPIO_Model_t *rst, GPIO_Model_t *it);
-void    ctp_assign_i2c(I2C_Model_t *i2c);
-void    ctp_assign_delay(void (*cb)(uint32_t ms));
+void ctp_assign_pins(GPIO_Model_t *rst, GPIO_Model_t *it);
+void ctp_assign_i2c(I2C_Model_t *i2c);
+void ctp_assign_delay(void (*cb)(uint32_t ms));
 
 #endif

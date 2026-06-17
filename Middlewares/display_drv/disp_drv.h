@@ -50,11 +50,10 @@
 #define DISP_GRAY1   0x8410
 #define DISP_GRAY2   0x4208
 
-// FIXME: 这里设计得其实不是太好，
-// 假定了屏幕的实际情况，
-// 实际上应该在屏幕自己的驱动代码里面去定义，不能在这里定义
-// 可以考虑用 priv 结构体去设置
-/* 显示屏是否具有触控功能 */
+/*
+ * 显示屏是否具有触控功能
+ * 由于 disp_drv 同一时间只能选一个底层屏幕驱动，这个硬编码其实还行
+ */
 #define DISP_HAS_TOUCH (1)
 
 /* 显示屏硬件资源，假定使用 SPI 作为通信协议 */
@@ -80,13 +79,13 @@ typedef struct _disp_drv {
 #if DISP_HAS_TOUCH == 1
     Disp_Touch_Src_t *touch;
 #endif
-    /* 
+    /*
      * 私有变量，
      * 有些驱动会自带类似于 Disp_Drv_t 的结构体，
      * 此时可以把它纳入私有变量来，从而在底层驱动代码可以使用 disp->priv.xxx
      * 的方式来访问该结构体
      */
-    void *priv; 
+    void *priv;
     uint8_t is_initialized : 1;
     uint32_t width;
     uint32_t height;
@@ -143,3 +142,9 @@ void display_draw_number(Disp_Drv_t *drv,
 
 /* 测试显示效果，可以不实现 */
 void display_test(Disp_Drv_t *display);
+
+#if DISP_HAS_TOUCH == 1
+void display_touch_init(/* TODO: Args */);
+void display_touch_scan(/* TODO: Args */);
+void display_with_touch_test(/* TODO: Args */);
+#endif
