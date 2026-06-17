@@ -8,6 +8,9 @@
 #include "srv_config.h"
 #include "storage_srv.h"
 #include "lv_timer.h"
+/* FIXME: st7796 实际上没移植完，有些函数无法正常绘图 */
+#include "disp_drv.h"
+#include "mid_config.h"
 #include "lv_port_disp.h"
 
 static char buf[256];
@@ -43,6 +46,7 @@ void vApplicationStackOverflowHook(TaskHandle_t xTask,
 
 void StartUITask(void const *argument)
 {
+    // display_test(&display);
     lv_init();
     lv_port_disp_init();
 
