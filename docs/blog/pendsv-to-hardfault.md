@@ -99,8 +99,6 @@ UITaskHandle = osThreadCreate(osThread(UITask), NULL);
 
 这个名为 test.txt 的文件是存在的，因此不存在卡死在一开始的 `for` 循环的情况，而读取操作完全正常， 而 UI 界面可以显示文件内容，这就使我犯了难，至少表面上看起来不像是代码问题，不过还是得看下代码的。
 
-## 事故原因分析
-
 由于其他任务均为空实现，我因此最先怀疑的就是 ui_task 的代码问题，上面代码很明显可以分为两部分操作，一部分是文件 IO，另一部分是 UI 绘制，我在源代码上均做了标注，我的测试有三个步骤：
 
 1. 注释 *文件 IO* 和 *UI 绘制*, 烧录发现 LED 正常闪烁，进入 debug 发现上下文正常切换
@@ -126,9 +124,7 @@ PendSV_Handler@0x080075a0 (/home/ferne/code/self-proj/Self-DIY-Kindle/Middleware
 
 由于 BFARVALID = 1，我们还需要看一下 BFAR 的值是什么，查阅 Cortex M4 手册可以得知寄存器值为 0x20020000，也就是说 PC 访问了这个地址，然后触发了 PRECIS ERR 之后立马跳到 HardFault
 
-最后是 signal handler 返回的是 0xFFFFFFF1 （顺带说一句，正常情况下应当为 0xFFFFFFFD），对应 `EXC_RETURN` 的值为这个。
-
-信息收集够了，开始破案吧。
+最后是 signal handler 返回的是 0xFFFFFFF1 （顺带说一句，正常情况下应当为 0xFFFFFFFD，我们会在下文进行详细的讲解），对应 `EXC_RETURN` 的值为这个。
 
 ### F407 内存布局
 
@@ -140,17 +136,50 @@ PendSV_Handler@0x080075a0 (/home/ferne/code/self-proj/Self-DIY-Kindle/Middleware
 
 问题很明显，肯定是内存越界访问了，但这和之前提到的栈有什么关系？
 
-### `EXC_RETURN` 及 Cortex M4 异常处理机制讲解
+## Cortex-M4 编程模型及异常处理机制讲解
 
-在此之前我们先填一下上一篇文章没讲 `EXC_RETURN` 的坑。
+在此之前我们需要先简单了解一下 Cortex-M4 的内核设计和错误机制处理，这有助于我们展开接下来内容的讲解。
+
+以下内容均选自《Arm Cortex-M3 与 Cortex-M4 权威指南》，下称《权威指南》。
+
+### 编程模型
+
+M4 内核的编程模型是 “二二二” 模型：
+- 两种操作状态：调试状态；Thumb 状态
+- 两种模式：处理模式(Handler)；线程模式(Thread)
+- 两种权限：特权级；非特权级（下称用户级）
+
+![操作状态和模式](../images/操作状态和模式.png)
+
+这篇文章中我们重点关注模式和权限：
+
+线程模式是处理器正常执行代码时对应的模式，而处理模式是处理器进入异常/中断时的处理模式；处理器一般默认在特权级状态运行，但是当有 RTOS 时，执行任务则一般以用户级模式运行程序。
+
+软件可以把自身从特权级切换到用户级，但是要想切回来就必须借助异常机制。
+
+通过区分特权级和用户级，我们实际上可以实现对一些关键资源的保护，以及提供一个基本的安全模型。
+
+### 异常处理机制
+
+#### 什么是异常
+
+《权威指南》中对于异常的定义为：改变程序流的事件。当异常发生时，处理器会暂停当前任务，并转而去执行一段被称为异常处理的程序，在执行完毕之后回到之前的任务。
+
+其实从上面的叙述中，你已经可以把异常和中断画个约等号了（中断实际上就是异常的一种），我们在初学中断的时候也是这么一个定义方法，不过这段程序被称为中断服务程序(ISR).
+
+然而，我们常见~~且可恨~~的 `HardFault` 实际上不是中断，而是系统异常（《权威指南》 Chapter 4.5.1, P74）。而对应的 `Handler` 里面的程序是异常处理程序，而非 ISR。
+
+对于 Cortex-M3/4 内核来说，有几个异常为错误处理异常，处理器检测到错误时则会触发这些异常，比如 `HardFault`, `UsageFault`, `MemManageFault`, `BusFault`，然而我们总是见到 `HardFault` 的死循环，而不是其他的，这是为什么呢？实际上内核的缺省行为是只使能了 `HardFault`，从而其他所有的错误处理异常都会被重定向到 `HardFault` 中，而在内核中 `HardFault` 有一块专门的寄存器 `SCB->HFSR`，这个寄存器的第 31 位 (`FORCED`) 会告诉你 `HardFault` 是不是由其他错误重定向而来。基本上 75% 以上的情况，我们都能认为 `HardFault` 是被重定向而来的(其自身发生的概率仅为 25%，如果只算理论值的话)。
+
+### 异常处理流程
 
 TODO:
 
-### OS、SVC 与 PendSV
+## OS、SVC 与 PendSV
 
 TODO:
 
-#### 什么是 OS，什么是 RTOS
+### 什么是 OS，什么是 RTOS
 
 这部分是我个人比较浅薄的理解，有错误的话还请不吝赐教。
 
@@ -164,15 +193,11 @@ OS，按照教科书上的定义，指的是管理计算机硬件与软件资源
 
 我们以 FreeRTOS 举例
 
-TODO: 以自己的理解复述一下 FreeRTOS 文档
+### SVC
 
-此外推荐一下[这篇文章][深入理解操作系统的概念及定位]，由于我这个重点不在于讲 OS，因此不会特别详细，[这篇文章][深入理解操作系统的概念及定位]写得确实很好， FreeRTOS 官网[对 RTOS 的解析][RTOS 基础知识]也很不错，也可以看看。
+### 什么是 PendSV
 
-#### SVC
-
-#### 什么是 PendSV
-
-#### FreeRTOS 内的 PendSV_Handler 实现
+### FreeRTOS 内的 PendSV_Handler 实现
 
 ```c
 void xPortPendSVHandler( void )
@@ -291,9 +316,8 @@ TODO:
 ---
 
 [STM32 Cortex M4 编程手册]: https://www.st.com/content/ccc/resource/technical/document/programming_manual/6c/3a/cb/e7/e4/ea/44/9b/DM00046982.pdf/files/DM00046982.pdf/jcr:content/translations/en.DM00046982.pdf
-[Cortex-M 异常处理的 C 实现、栈帧以及 EXC_RETURN]: https://zhuanlan.zhihu.com/p/1924962149312226892
 [ARM CM3/4 异常进入与返回的过程]: https://shequ.stmicroelectronics.cn/thread-604515-1-1.html
-[Cortex-M3 异常返回值 EXC_RETURN]: https://www.cnblogs.com/utank/p/11263073.html
 [RTOS 基础知识]: https://wwww.freertos.org/zh-cn-cmn-s/Documentation/01-FreeRTOS-quick-start/01-Beginners-guide/01-RTOS-fundamentals
 [深入理解操作系统的概念及定位]: https://www.cnblogs.com/kevinbee/p/18678187
 [FreeRTOS 堆栈使用和堆栈溢出检查]: https://w.freertos.org/zh-cn-cmn-s/Documentation/02-Kernel/02-Kernel-features/09-Memory-management/02-Stack-usage-and-stack-overflow-checking
+[RTOS Ref]: https://www.zhihu.com/question/593816921/answer/1957909257069520682?share_code=14IBMqKlAx7yM&utm_psn=2050173737027236484
