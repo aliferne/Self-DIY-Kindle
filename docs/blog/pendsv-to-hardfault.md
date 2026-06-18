@@ -1,11 +1,24 @@
-# FreeRTOS 的上下文切换与栈溢出 —— 从 PendSV 到 HardFault 的调试全流程
+markdown 转微信公众号排版：https://markdown.gmlart.cn/
+
+上篇已经在微信公众号发表，但尚未在个人博客中发表
+
+# [FreeRTOS] 如何在 FreeRTOS 中高效调试栈溢出错误？
 
 ## 前言
 
 打完比赛之后感到无事可做，因此最近正在自己 DIY 一个掌上阅读器，为了更好地~~折磨~~提升自己，决定引入一堆自己以前几乎从来没学过的东西，并且还尝试学 Linux 驱动代码的风格去做一个芯片无关的 BSP 层，不过这些不会是这篇文章的重点，等这个项目完工之后应该会整理文档并发博客，不过那都是后话了。
 
-想造芯片无关的 BSP 层主要是因为我现在手头上并没有 STM32F411CEU6 这个芯片的开发板，之前 DIY MP3
-因为种种原因没继续下去，其实也有点想再把这个坑填上，而之前的选型就是这个芯片，手头上也还有这个芯片的存货，就想着先用 F407VET6 先搓个原型验证一下，后面简单修改下配置啥的就可以无痛迁移到其他芯片上，不知道自己造一个芯片无关 BSP 层的想法会不会比较理想化了。
+本文将分为上下两篇，上篇你会学到：
+
+1. 如何判断栈溢出、推算栈的占用情况
+2. 掌握 FreeRTOS 针对堆栈溢出检测的钩子函数
+
+而在下篇，我们则会聚焦于：
+
+1. Cortex-M4 内核的编程模型与错误处理机制
+2. FreeRTOS 的内核初始化与上下文切换逻辑
+
+本文的下篇同时可视为对之前 [STM32 搭建 Zig 开发环境](https://aliferne.github.io/2026/02/17/build-up-zig-dev-env-on-stm32g431/) 理论部分的详细补充。
 
 那么就先介绍下这个问题的背景吧，由于掌上阅读器肯定需要 UI 和 SD 卡，所以我就**引入了 LVGL 和 FatFs**，而因为我雄心相对较大（这不完全只是一个掌上阅读器），所以还**引入了 FreeRTOS**，不过我的水平只局限于能创建一些任务，这个项目也顺带附带着我学习高级用法的想法。
 
@@ -109,7 +122,127 @@ UITaskHandle = osThreadCreate(osThread(UITask), NULL);
 
 我的断点设置在两句 `ASSERT_FAIL` 处，以及最后 `for` 循环的三个函数内。逐步执行，两句宏的断言均通过，而最后在 `os_delay_ms(500)` 处，按步执行之后不再正常进入此任务，而正常来说应当会从 `gpio_toggle` 再度执行循环内函数。
 
-因此此时我按下暂停，发现居然进了 `HardFault_Handler`（我是先发现会进 HardFault 再做的三次测试），此时我开始观察栈调用情况：
+我们继续 debug，按下暂停，发现进了 `HardFault_Handler`，而 HardFault 一般都会跟内存访问，或者写了一些不该写的东西之类的有关，根据上面的测试情况，我们很容易想到注释一些东西之后执行的内容会变少，也就是栈空间占用变少，那么我们就来计算一下栈空间的使用情况吧。
+
+## 计算堆栈调用情况
+
+我们先来看这个 `FIL`，它是个结构体：
+
+```c
+typedef struct {
+	FFOBJID	obj;		/* Object identifier (must be the 1st member to detect invalid object pointer) */
+	BYTE	flag;		/* File status flags */
+	BYTE	err;		/* Abort flag (error code) */
+	FSIZE_t	fptr;		/* File read/write pointer (0 on open) */
+	DWORD	clust;		/* Current cluster of fptr (invalid when fptr is 0) */
+	LBA_t	sect;		/* Sector number appearing in buf[] (0:invalid) */
+#if !FF_FS_READONLY
+	LBA_t	dir_sect;	/* Sector number containing the directory entry (not used in exFAT) */
+	BYTE*	dir_ptr;	/* Pointer to the directory entry in the win[] (not used in exFAT) */
+#endif
+#if FF_USE_FASTSEEK
+	DWORD*	cltbl;		/* Pointer to the cluster link map table (nulled on open; set by application) */
+#endif
+#if !FF_FS_TINY
+	BYTE	buf[FF_MAX_SS];	/* File private data read/write window */
+#endif
+} FIL;
+```
+
+由于这里面的宏全都是满足条件的，即所有的变量都被启用了，我们需要全部计算：
+
+首先是第一部分：
+`BYTE + BYTE + DWORD + BYTE* + DWORD* + BYTE * FF_MAX_SS`
+
+32 位单片机的地址是 32 位的，所以是四个字节，那么对于第一部分就有：
+1 + 1 + 4 + 4 + 4 + 1 * 512 = 526
+
+然后第二部分：
+`FFOBJID + FSIZE_t + LBA_t + LBA_t`
+
+其中 `FFOBJID = FATFS* + WORD + BYTE + BYTE + DWORD + FSIZE_t + DWORD * 5` (我没启用 `FF_FS_LOCK` 宏)
+
+那么就是：
+(4 + 2 + 1 + 1 + 4 + 8 + 4 * 5) + 8 + 4 + 4 = 56
+
+两部分合起来为 582 Bytes，这是理论值，我们没考虑结构体对齐的问题，实际会更大些。
+如果你使用 Vscode + Clangd 插件的话，借助 `sizeof` 然后鼠标悬浮一下就可以看到值的大小，我这里显示为 600 Bytes.
+
+更加准确的做法是：
+
+```bash
+arm-none-eabi-objdump -d ./build/Self-DIY-Kindle/Self-DIY-Kindel.elf --disassemble=StartUITask
+```
+
+然后找到这一行：
+
+```asm
+0803067c <StartUITask>:
+ 803067c:	b530      	push	{r4, r5, lr}
+ 803067e:	f5ad 7d19 	sub.w	sp, sp, #612	@ 0x264
+```
+
+这里的 612 是实际占用堆栈的大小，注意汇编码为 `sub.w`，这表示它的单位是 Word。而 STM32CubeMX 分配这个是明确标注为 Words 的，而我们上面分配了 512 Words，换句话说我们通过反汇编看出来堆栈已经超了。
+
+剩下的是函数调用，实际上不好估算，根据函数调用堆栈的模型，我们需要找到调用链最深的，局部变量最多的，那个被调用的函数占用的栈帧空间 + 自身占用的栈帧空间就是整个栈会使用到的最大值，由于我们已经通过反汇编看出来了，所以就不估算了。
+
+## 解决方法
+
+很简单，只要把 `FIL` 变成全局变量，让它到 bss 段去占整个 Flash 的空间，别挤在栈里基本就差不多了，如果还不放心则可以给任务分配大点栈空间。
+
+## 简易方法实现栈溢出检测
+
+上面那一套算来算去还要看反汇编的太麻烦了，并且我还发现如果没有 `FIL` 这个变量，连 `sub.w sp` 这个操作都不会有，就会更难看出栈大小，而我闲着无聊翻 FreeRTOS 的文档的时候偶然发现一个[简便的方法][FreeRTOS 堆栈使用和堆栈溢出检查].
+
+简单总结一下就是人家提供了 `configCHECK_FOR_STACK_OVERFLOW` 宏的配置（CubeMX 有这个配置选项，不过默认是 Disable，所以我看 config 文件的时候一直以为没有对应的调试方法，还是得多看文档啊），通过定义为不同的数值来对应设置如何检查堆栈溢出情况，并通过如下钩子函数：
+
+```c
+void vApplicationStackOverflowHook( TaskHandle_t xTask,
+                                    char *pcTaskName );
+```
+
+来执行你自定义的调试信息。
+
+我给这个宏设置为了 1, 则对应应该是这段代码被启用：
+
+```c
+#if( ( configCHECK_FOR_STACK_OVERFLOW == 1 ) && ( portSTACK_GROWTH < 0 ) )
+
+	/* Only the current stack state is to be checked. */
+	#define taskCHECK_FOR_STACK_OVERFLOW()																\
+	{																									\
+		/* Is the currently saved stack pointer within the stack limit? */								\
+		if( pxCurrentTCB->pxTopOfStack <= pxCurrentTCB->pxStack )										\
+		{																								\
+			vApplicationStackOverflowHook( ( TaskHandle_t ) pxCurrentTCB, pxCurrentTCB->pcTaskName );	\
+		}																								\
+	}
+
+#endif /* configCHECK_FOR_STACK_OVERFLOW == 1 */
+```
+
+然后自定义逻辑则为：
+
+```c
+void vApplicationStackOverflowHook(TaskHandle_t xTask,
+                                   char *pcTaskName)
+{
+    printf("Stack Overflow! %s\n", pcTaskName);
+    if (strcmp(pcTaskName, "UITask") == 0) {
+        gpio_write(&usr_led, GPIO_Level_High);
+    }
+}
+```
+
+串口便确实能打印出这个信息，而 LED 也如预想中亮起了（缺省行为是熄灭的）。
+
+# [FreeRTOS] FreeRTOS 的上下文切换与栈溢出 —— 从 PendSV 到 HardFault 的调试全流程
+
+让我们书接上回。
+
+## 深挖栈溢出异常
+
+我们回到刚看到 `HardFault` 的时候，此时我们来观察调用堆栈：
 
 ```
 HardFault_Handler@0x080009e2 (/home/ferne/code/self-proj/Self-DIY-Kindle/Core/Src/stm32f4xx_it.c:95)
@@ -270,59 +403,7 @@ void xPortPendSVHandler( void )
 }
 ```
 
-### 一种更快的方法
-
-上面那套又看堆栈又看寄存器的，还要对 Cortex 内核有一定了解的，说实话还是很吃操作和时间，需要被自动化掉，而我闲着无聊在翻 FreeRTOS 的文档的时候偶然发现人家已经提供了[一套更快的 DEBUG 流程][FreeRTOS 堆栈使用和堆栈溢出检查]了
-
-简单总结一下就是人家提供了 `configCHECK_FOR_STACK_OVERFLOW` 宏的配置（CubeMX 有这个配置选项，不过默认是 Disable，所以我看 config 文件的时候一直以为没有对应的调试方法，还是得多看文档啊），通过定义为不同的数值来对应设置如何检查堆栈溢出情况，并通过如下钩子函数：
-
-```c
-void vApplicationStackOverflowHook( TaskHandle_t xTask,
-                                    char *pcTaskName );
-```
-
-来执行你自定义的调试信息。
-
-我给这个宏设置为了 1, 则对应应该是这段代码被启用：
-
-```c
-#if( ( configCHECK_FOR_STACK_OVERFLOW == 1 ) && ( portSTACK_GROWTH < 0 ) )
-
-	/* Only the current stack state is to be checked. */
-	#define taskCHECK_FOR_STACK_OVERFLOW()																\
-	{																									\
-		/* Is the currently saved stack pointer within the stack limit? */								\
-		if( pxCurrentTCB->pxTopOfStack <= pxCurrentTCB->pxStack )										\
-		{																								\
-			vApplicationStackOverflowHook( ( TaskHandle_t ) pxCurrentTCB, pxCurrentTCB->pcTaskName );	\
-		}																								\
-	}
-
-#endif /* configCHECK_FOR_STACK_OVERFLOW == 1 */
-```
-
-然后自定义逻辑则为：
-
-```c
-void vApplicationStackOverflowHook(TaskHandle_t xTask,
-                                   char *pcTaskName)
-{
-    printf("Stack Overflow! %s\n", pcTaskName);
-    if (strcmp(pcTaskName, "UITask") == 0) {
-        gpio_write(&usr_led, GPIO_Level_High);
-    }
-}
-```
-
-串口便确实能打印出这个信息，而 LED 也如预想中亮起了（缺省行为是熄灭的）。
-
-## 解决方案
-
-TODO:
-
 ## 总结
-
-TODO:
 
 这次其实确确实实暴露了我对 FreeRTOS 了解不深的严重问题，也正好和我的初心相符了，算是一种求锤得锤吧（笑）。**如果遇到了什么玄学问题，首先看下堆栈啥的正不正常，这也许是各种 RTOS 在调试时先要确认的一步吧**！此外还因为这个 BUG 而被迫看了 FreeRTOS 的代码，说实话写得还真的非常漂亮，仿佛在欣赏一件艺术品，已严肃偷师（笑）。
 

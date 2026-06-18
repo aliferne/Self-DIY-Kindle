@@ -48,13 +48,13 @@ void StartUITask(void const *argument)
     lv_init();
     lv_port_disp_init();
 
-    // FIL fp;
-    // FRESULT res = storage_open(&sdcard, &fp, "test.txt", FA_READ | FA_OPEN_EXISTING);
-    // UINT fnum   = 0;
-    // ASSERT_FAIL(res != FR_OK, storage_close(&fp); for (;;) { os_delay_ms(1000); });
-    // res = storage_read(&fp, buf, LEN(buf), &fnum);
-    // ASSERT_FAIL(res != FR_OK, storage_close(&fp); for (;;) { os_delay_ms(1000); });
-    // storage_close(&fp);
+    FIL fp;
+    FRESULT res = storage_open(&sdcard, &fp, "test.txt", FA_READ | FA_OPEN_EXISTING);
+    UINT fnum   = 0;
+    ASSERT_FAIL(res != FR_OK, storage_close(&fp); for (;;) { os_delay_ms(1000); });
+    res = storage_read(&fp, buf, LEN(buf), &fnum);
+    ASSERT_FAIL(res != FR_OK, storage_close(&fp); for (;;) { os_delay_ms(1000); });
+    storage_close(&fp);
 
     static lv_style_t style;
     lv_style_init(&style);
@@ -94,7 +94,5 @@ void StartUITask(void const *argument)
 
         lv_timer_handler();
         os_delay_ms(2000);
-        lv_disp_set_rotation(disp, i);
-        i = (i + 1) % 4;
     }
 }
