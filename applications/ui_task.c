@@ -3,11 +3,14 @@
 #include "bsp_gpio.h"
 #include "bsp_handle.h"
 #include "bsp_sys.h"
+#include "disp_drv.h"
 #include "ff.h"
+#include "lv_hal_disp.h"
 #include "srv_config.h"
 #include "storage_srv.h"
 #include "lv_timer.h"
 #include "lv_port_disp.h"
+#include "mid_config.h"
 
 static char buf[256];
 
@@ -45,13 +48,13 @@ void StartUITask(void const *argument)
     lv_init();
     lv_port_disp_init();
 
-    FIL fp;
-    FRESULT res = storage_open(&sdcard, &fp, "test.txt", FA_READ | FA_OPEN_EXISTING);
-    UINT fnum   = 0;
-    ASSERT_FAIL(res != FR_OK, storage_close(&fp); for (;;) { os_delay_ms(1000); });
-    res = storage_read(&fp, buf, LEN(buf), &fnum);
-    ASSERT_FAIL(res != FR_OK, storage_close(&fp); for (;;) { os_delay_ms(1000); });
-    storage_close(&fp);
+    // FIL fp;
+    // FRESULT res = storage_open(&sdcard, &fp, "test.txt", FA_READ | FA_OPEN_EXISTING);
+    // UINT fnum   = 0;
+    // ASSERT_FAIL(res != FR_OK, storage_close(&fp); for (;;) { os_delay_ms(1000); });
+    // res = storage_read(&fp, buf, LEN(buf), &fnum);
+    // ASSERT_FAIL(res != FR_OK, storage_close(&fp); for (;;) { os_delay_ms(1000); });
+    // storage_close(&fp);
 
     static lv_style_t style;
     lv_style_init(&style);
@@ -82,12 +85,16 @@ void StartUITask(void const *argument)
     if (buf[0] != 0)
         lv_label_set_text(label, buf);
     else
-        lv_label_set_text(label, "确认");
+        // lv_label_set_text(label, "确认");
+        lv_label_set_text(label, "Confirm");
 
+    uint8_t i = 1;
     for (;;) {
         gpio_toggle(&usr_led);
 
         lv_timer_handler();
-        os_delay_ms(500);
+        os_delay_ms(2000);
+        lv_disp_set_rotation(disp, i);
+        i = (i + 1) % 4;
     }
 }

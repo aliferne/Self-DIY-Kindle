@@ -56,6 +56,15 @@
  */
 #define DISP_HAS_TOUCH (1)
 
+/* 旋转方向 */
+#define DISP_NO_SPIN   0
+#define DISP_LSPIN_90  1
+#define DISP_LSPIN_180 2
+#define DISP_LSPIN_270 3
+#define DISP_RSPIN_90  DISP_LSPIN_270
+#define DISP_RSPIN_180 DISP_LSPIN_180
+#define DISP_RSPIN_270 DISP_LSPIN_90
+
 /* 显示屏硬件资源，假定使用 SPI 作为通信协议 */
 typedef struct {
     SPI_Model_t *spi;      /**< SPI 总线（软件或硬件均可） */
@@ -87,6 +96,7 @@ typedef struct _disp_drv {
      */
     void *priv;
     uint8_t is_initialized : 1;
+    uint8_t spin_dir; // 当前屏幕朝向
     uint32_t width;
     uint32_t height;
     /* 延时函数指针 */

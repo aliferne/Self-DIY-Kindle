@@ -12,26 +12,24 @@
 #include "lv_port_disp.h"
 #include "lv_hal_disp.h"
 #include "mid_config.h"
+#include "bsp_handle.h"
 #include "disp_drv.h"
 #include <stdbool.h>
+#include <stdlib.h>
 
 /*********************
  *      DEFINES
  *********************/
 
-/* redefinition of lvgl display macro */
-#define MY_DISP_HOR_RES 320
-#define MY_DISP_VER_RES 480
+// #ifndef MY_DISP_HOR_RES
+// #warning Please define or replace the macro MY_DISP_HOR_RES with the actual screen width, default value 320 is used for now.
+// #define MY_DISP_HOR_RES 320
+// #endif
 
-#ifndef MY_DISP_HOR_RES
-#warning Please define or replace the macro MY_DISP_HOR_RES with the actual screen width, default value 320 is used for now.
-#define MY_DISP_HOR_RES 320
-#endif
-
-#ifndef MY_DISP_VER_RES
-#warning Please define or replace the macro MY_DISP_HOR_RES with the actual screen height, default value 240 is used for now.
-#define MY_DISP_VER_RES 240
-#endif
+// #ifndef MY_DISP_VER_RES
+// #warning Please define or replace the macro MY_DISP_HOR_RES with the actual screen height, default value 240 is used for now.
+// #define MY_DISP_VER_RES 240
+// #endif
 
 /**********************
  *      TYPEDEFS
@@ -45,10 +43,17 @@ static void disp_init(void);
 static void disp_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *color_p);
 // static void gpu_fill(lv_disp_drv_t * disp_drv, lv_color_t * dest_buf, lv_coord_t dest_width,
 //         const lv_area_t * fill_area, lv_color_t color);
+//
+static void disp_drv_update_cb(lv_disp_drv_t *drv);
 
 /**********************
  *  STATIC VARIABLES
  **********************/
+lv_disp_t *disp;
+static uint32_t disp_hor_res = 0;
+static uint32_t disp_ver_res = 0;
+static lv_color_t *disp_buf1 = NULL;
+static lv_color_t *disp_buf2 = NULL;
 
 /**********************
  *      MACROS
@@ -97,9 +102,7 @@ void lv_port_disp_init(void)
 
     /* Example for 2) */
     static lv_disp_draw_buf_t draw_buf_dsc_2;
-    static lv_color_t buf_2_1[MY_DISP_HOR_RES * 10];                                /*A buffer for 10 rows*/
-    static lv_color_t buf_2_2[MY_DISP_HOR_RES * 10];                                /*An other buffer for 10 rows*/
-    lv_disp_draw_buf_init(&draw_buf_dsc_2, buf_2_1, buf_2_2, MY_DISP_HOR_RES * 10); /*Initialize the display buffer*/
+    lv_disp_draw_buf_init(&draw_buf_dsc_2, disp_buf1, disp_buf2, disp_hor_res * 10); /*Initialize the display buffer*/
 
     /* Example for 3) also set disp_drv.full_refresh = 1 below*/
     // static lv_disp_draw_buf_t draw_buf_dsc_3;
@@ -118,14 +121,17 @@ void lv_port_disp_init(void)
     /*Set up the functions to access to your display*/
 
     /*Set the resolution of the display*/
-    disp_drv.hor_res = MY_DISP_HOR_RES;
-    disp_drv.ver_res = MY_DISP_VER_RES;
+    disp_drv.hor_res = disp_hor_res;
+    disp_drv.ver_res = disp_ver_res;
 
     /*Used to copy the buffer's content to the display*/
     disp_drv.flush_cb = disp_flush;
 
     /*Set a display buffer*/
     disp_drv.draw_buf = &draw_buf_dsc_2;
+
+    /* 旋转屏幕时用于更新底层硬件 */
+    disp_drv.drv_update_cb = disp_drv_update_cb;
 
     /*Required for Example 3)*/
     // disp_drv.full_refresh = 1;
@@ -136,7 +142,7 @@ void lv_port_disp_init(void)
     // disp_drv.gpu_fill_cb = gpu_fill;
 
     /*Finally register the driver*/
-    lv_disp_drv_register(&disp_drv);
+    disp = lv_disp_drv_register(&disp_drv);
 }
 
 /**********************
@@ -148,10 +154,20 @@ static void disp_init(void)
 {
     /*You code here*/
     /*
-     * 我们不走这个链路，
      * 根据架构设计实际上屏幕硬件会在 bsp 层被初始化，
-     * 而软件则会在 middlewares 层被初始化
+     * 而软件则会在 middlewares 层被初始化，
+     * 这里会被用来设置动态更新屏幕的回调函数，并初始化屏幕长宽
      */
+    disp_hor_res = display.width;
+    disp_ver_res = display.height;
+
+    if (disp_buf1 == NULL)
+        disp_buf1 = malloc(sizeof(lv_color_t) * disp_hor_res * 10);
+
+    if (disp_buf2 == NULL)
+        disp_buf2 = malloc(sizeof(lv_color_t) * disp_hor_res * 10);
+
+    ASSERT_FAIL(disp_buf1 == NULL || disp_buf2 == NULL, return);
 }
 
 volatile bool disp_flush_enabled = true;
@@ -211,6 +227,14 @@ static void disp_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_
 //         dest_buf+=dest_width;    /*Go to the next line*/
 //     }
 // }
+
+/* 用于更新旋转后的底层硬件驱动 */
+static void disp_drv_update_cb(lv_disp_drv_t *drv)
+{
+    static const uint8_t lv_to_dir[] = {
+        DISP_NO_SPIN, DISP_LSPIN_90, DISP_LSPIN_180, DISP_LSPIN_270};
+    display_spin_screen(&display, lv_to_dir[drv->rotated]);
+}
 
 #else /*Enable this file at the top*/
 

@@ -7,7 +7,9 @@
 #include <stdint.h>
 #include <string.h>
 
-/*
+/**
+ * WARNING: 因架构调整，部分函数尚未完成移植
+ *
  * ST7735S 支持分配 RGB bit 的占比，对应的颜色分辨率也会有所不同
  * RGB 4-4-4-bit (4k 颜色) => 0x3A = 0x03
  * RGB 5-6-5-bit (65k 颜色) => 0x3A = 0x05

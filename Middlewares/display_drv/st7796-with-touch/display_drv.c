@@ -33,7 +33,7 @@ void display_init(Disp_Drv_t *drv)
     drv->priv = lcd_get_dev();
 
     LCD_Init();
-    LCD_Display_Dir(0); /* 默认竖屏 */
+    display_spin_screen(drv, DISP_NO_SPIN);
 
     drv->width  = ((lcd_dev_t *)drv->priv)->width;
     drv->height = ((lcd_dev_t *)drv->priv)->height;
@@ -108,8 +108,13 @@ void display_set_region(Disp_Drv_t *drv,
 
 void display_spin_screen(Disp_Drv_t *drv, uint8_t dir)
 {
-    GIVEUP(drv);
-    LCD_Display_Dir(dir);
+    drv->spin_dir = dir;
+
+    uint8_t dirs[4] = {1, 2, 0, 3};
+    LCD_Display_Dir(dirs[dir]);
+
+    drv->width  = ((lcd_dev_t *)(drv)->priv)->width;
+    drv->height = ((lcd_dev_t *)(drv)->priv)->height;
 }
 
 /* ============================================================

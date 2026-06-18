@@ -33,6 +33,8 @@ extern "C" {
 /**********************
  * GLOBAL PROTOTYPES
  **********************/
+extern lv_disp_t *disp;
+
 /* Initialize low level display driver */
 void lv_port_disp_init(void);
 
