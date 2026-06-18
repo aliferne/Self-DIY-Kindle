@@ -71,7 +71,7 @@ static void disp_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_
         /*
          * 这种刷新方法确实速度快了不少，
          * 不过需要启用 `LV_COLOR_16_SWAP = 1`，
-         * 一般 `lv_color_t` 似乎是小端序的，需要反向，
+         * 原因下面讲
          * 之后可以考虑启用 SPI DMA
          */
         int32_t w = area->x2 - area->x1 + 1;
@@ -86,6 +86,26 @@ static void disp_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_
     lv_disp_flush_ready(disp_drv);
 }
 ```
+
+由于批量刷新最省事的方法自然是直接把 `uint16_t *` 转成 `uint8_t *`，那么打个比方： `{0xABFF}`，就会变为 `{0xFF, 0xAB}`(因为 Cortex-M 是小端序的)，那么就会先发送低 8 位，然而驱动渲染颜色需要先发高八位，此时就会导致颜色不对头的问题，所以需要在 LVGL 里面开一下 SWAP 的宏调换一下顺序。
+
+```c
+// LCD写GRAM(批量)
+// RGB_Codes:颜色缓冲区
+// len:像素点数
+static void LCD_WriteMultiRAM(uint16_t *RGB_Codes, uint32_t len)
+{
+    ASSERT_FAIL(lcd_src == NULL || lcd_src->dc_pin == NULL, return);
+    gpio_write(lcd_src->dc_pin, GPIO_Level_High);
+    spi_cs_select(lcd_src->spi);
+    spi_write(lcd_src->spi, (uint8_t *)RGB_Codes, len * sizeof(RGB_Codes[0]));
+    spi_cs_deselect(lcd_src->spi);
+}
+```
+
+因为这里用了批量刷新会导致需要 SWAP，那么在没有 LVGL 支持的情况下也就不难想到到时候画图如果批量操作的话颜色肯定是不对的。
+
+不过我的评价是反正都移植 LVGL 了，那就这样吧，怎么方便怎么来
 
 SPI + DMA 还没改，现在已经很好用了，后面再说
 

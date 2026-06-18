@@ -232,7 +232,10 @@ void display_test(Disp_Drv_t *drv)
     if (drv->delay_cb) drv->delay_cb(500);
     LCD_Clear(WHITE);
     if (drv->delay_cb) drv->delay_cb(500);
+    LCD_Fill(0, 0, 310, 470, YELLOW);
+    if (drv->delay_cb) drv->delay_cb(500);
 
     ((lcd_dev_t *)drv->priv)->fc = RED;
+    ((lcd_dev_t *)drv->priv)->bc = WHITE;
     LCD_ShowString(10, 10, 200, 200, 16, (uint8_t *)"ST7796 + Touch OK");
 }
