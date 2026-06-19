@@ -1,22 +1,19 @@
 #include "ui_task.h"
 #include "bsp_config.h"
 #include "bsp_gpio.h"
-#include "bsp_handle.h"
 #include "bsp_sys.h"
-#include "disp_drv.h"
-#include "ff.h"
 #include "lv_hal_disp.h"
-#include "srv_config.h"
-#include "storage_srv.h"
+#include "lv_style.h"
 #include "lv_timer.h"
 #include "lv_port_disp.h"
-#include "mid_config.h"
+#include <stdio.h>
 
-static char buf[256];
+LV_FONT_DECLARE(simhei_size14)
+LV_FONT_DECLARE(simhei_size16)
+LV_FONT_DECLARE(simhei_size18)
 
 #include "FreeRTOS.h"
 #include "task.h"
-#include "cmsis_gcc.h"
 /* 临时暴露 TCB 结构体定义以访问栈指针 */
 struct tskTaskControlBlock {
     volatile StackType_t *pxTopOfStack;
@@ -25,18 +22,15 @@ struct tskTaskControlBlock {
     UBaseType_t uxPriority;
     StackType_t *pxStack;
 };
-#include "stdio.h"
+
 void vApplicationStackOverflowHook(TaskHandle_t xTask,
                                    char *pcTaskName)
 {
     printf("Stack overflow in task %s\r\n"
            "=> [pxTopOfStack: %p]\r\n"
            "=> [pxStack: %p]\r\n"
-           "=> [PSP: %p]\r\n"
-           "=> [MSP: %p]\r\n"
            "=======================\r\n",
-           pcTaskName, xTask->pxTopOfStack, xTask->pxStack,
-           __get_PSP(), __get_MSP());
+           pcTaskName, xTask->pxTopOfStack, xTask->pxStack);
 
     if (strcmp(pcTaskName, "UITask") == 0) {
         gpio_write(&usr_led, GPIO_Level_High);
@@ -47,14 +41,6 @@ void StartUITask(void const *argument)
 {
     lv_init();
     lv_port_disp_init();
-
-    FIL fp;
-    FRESULT res = storage_open(&sdcard, &fp, "test.txt", FA_READ | FA_OPEN_EXISTING);
-    UINT fnum   = 0;
-    ASSERT_FAIL(res != FR_OK, storage_close(&fp); for (;;) { os_delay_ms(1000); });
-    res = storage_read(&fp, buf, LEN(buf), &fnum);
-    ASSERT_FAIL(res != FR_OK, storage_close(&fp); for (;;) { os_delay_ms(1000); });
-    storage_close(&fp);
 
     static lv_style_t style;
     lv_style_init(&style);
@@ -75,18 +61,9 @@ void StartUITask(void const *argument)
     lv_obj_add_style(obj, &style, 0);
 
     lv_obj_t *label = lv_label_create(obj);
-    // lv_obj_set_style_text_font(label, &songti, 0);
-    // lv_label_set_text(label, "Confirm");
+    lv_obj_set_style_text_font(label, &simhei_size14, 0);
 
-    // lv_style_set_y(&style, 0 + LV_SIZE_CONTENT);
-    // lv_obj_add_style(obj, &style, 0);
-
-    /* FIXME: 无法显示中文 */
-    if (buf[0] != 0)
-        lv_label_set_text(label, buf);
-    else
-        // lv_label_set_text(label, "确认");
-        lv_label_set_text(label, "Confirm");
+    lv_label_set_text(label, "确认");
 
     uint8_t i = 1;
     for (;;) {
@@ -94,5 +71,7 @@ void StartUITask(void const *argument)
 
         lv_timer_handler();
         os_delay_ms(2000);
+        lv_disp_set_rotation(disp, i);
+        i = (i + 1) % 4;
     }
 }
