@@ -64,7 +64,7 @@ uint8_t FT6336_WR_Reg(I2C_Model_t *i2c, uint16_t reg, uint8_t *buf, uint8_t len)
         tmp[1 + i] = buf[i];
     }
 
-    ret = i2c_sw_write(i2c, FT6336_ADDR, tmp, 1 + len);
+    ret = i2c_write(i2c, FT6336_ADDR, tmp, 1 + len);
     return (ret == I2C_Err_OK) ? 0 : 1;
 }
 
@@ -76,7 +76,7 @@ void FT6336_RD_Reg(I2C_Model_t *i2c, uint16_t reg, uint8_t *buf, uint8_t len)
 {
     uint8_t reg_byte = reg & 0xFF;
 
-    i2c_sw_write_read(i2c, FT6336_ADDR, &reg_byte, 1, buf, len);
+    i2c_read_write(i2c, FT6336_ADDR, buf, len, &reg_byte, 1);
 }
 
 /* ============================================================

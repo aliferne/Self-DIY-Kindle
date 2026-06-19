@@ -463,7 +463,6 @@ targets:
       - <virtual_root>/Application/User/FATFS
       - <virtual_root>/Middlewares/display_drv/epaper
       - <virtual_root>/Middlewares/display_drv/st7735s/tft.c
-      - <virtual_root>/Middlewares/lvgl/fonts
       - <virtual_root>/Middlewares/display_drv/st7735s
     settings:
       debugger: cortex-debug

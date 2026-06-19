@@ -146,13 +146,13 @@ GPIO_Err_t gpio_attach_irq(GPIO_Model_t *m, const GPIO_IRQ_Config_t *irq_cfg);
 GPIO_Err_t gpio_detach_irq(GPIO_Model_t *m);
 
 /** ISR 中调用，置 irq_flag（由芯片中断处理函数调用） */
-inline void gpio_set_irq_flag(GPIO_Model_t *m)
+static inline void gpio_set_irq_flag(GPIO_Model_t *m)
 {
     m->irq_flag = 1;
 }
 
 /** 应用层调用，清除 irq_flag */
-inline void gpio_clear_irq_flag(GPIO_Model_t *m)
+static inline void gpio_clear_irq_flag(GPIO_Model_t *m)
 {
     m->irq_flag = 0;
 }

@@ -30,8 +30,8 @@ static SPI_Err_t spi_hw_read(SPI_Model_t *m,
                              uint8_t *rx, uint16_t len);
 
 /*
- * 以下三个函数实现在 bsp_spi.c 中，标记为 static。
- * chip 层通过函数指针引用，此处用 extern  声明以通过编译。
+ * 以下三个函数实现在 bsp_spi.c 中，但不通过 bsp_spi.h 暴露出来。
+ * chip 层通过函数指针引用，此处用 extern 声明以通过编译。
  */
 extern SPI_Err_t spi_sw_write_read(SPI_Model_t *m,
                                    const uint8_t *tx, uint8_t *rx, uint16_t len);

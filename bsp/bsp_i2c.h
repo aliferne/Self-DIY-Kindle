@@ -76,13 +76,21 @@ typedef union {
 /*
  * I2C_Model_t — 运行时模型
  */
-typedef struct {
+typedef struct i2c_model {
     union {
         I2C_SW_Model_t sw; /**< 软件 I2C: 两个 GPIO 引脚 */
         /* TODO: hw_i2c 外设 */
     } src;
     I2C_Config_t config; /**< 配置快照 */
     volatile uint8_t busy : 1;
+
+    I2C_Err_t (*write)(struct i2c_model *m, uint8_t dev_addr,
+                       const uint8_t *data, uint16_t len);
+    I2C_Err_t (*read)(struct i2c_model *m, uint8_t dev_addr,
+                      uint8_t *data, uint16_t len);
+    I2C_Err_t (*read_write)(struct i2c_model *m, uint8_t dev_addr,
+                            uint8_t *rx_buf, uint16_t rx_len,
+                            const uint8_t *tx_buf, uint16_t tx_len);
 } I2C_Model_t;
 
 /* ============================================================
@@ -95,39 +103,14 @@ I2C_Err_t i2c_init(I2C_Model_t *m,
                    const I2C_Config_t *cfg);
 I2C_Err_t i2c_deinit(I2C_Model_t *m);
 
-I2C_Err_t i2c_hw_write(I2C_Model_t *m, uint8_t dev_addr,
-                       const uint8_t *data, uint16_t len);
-
-I2C_Err_t i2c_hw_read(I2C_Model_t *m, uint8_t dev_addr,
-                      uint8_t *buf, uint16_t len);
-
 /* ============================================================
  * 外部函数，软件 I2C 可在 BSP 层直接实现
  * ============================================================ */
 
-I2C_Err_t i2c_sw_write(I2C_Model_t *m, uint8_t dev_addr,
-                       const uint8_t *data, uint16_t len);
-
-I2C_Err_t i2c_sw_read(I2C_Model_t *m, uint8_t dev_addr,
-                      uint8_t *buf, uint16_t len);
-
-I2C_Err_t i2c_sw_write_read(I2C_Model_t *m, uint8_t dev_addr,
-                            const uint8_t *tx_data, uint16_t tx_len,
-                            uint8_t *rx_buf, uint16_t rx_len);
-
-/* ============================================================
- * 芯片级原语
- *
- * 直接操作 GPIO.
- * ============================================================ */
-
-void i2c_sw_sda_high(I2C_Model_t *m);
-void i2c_sw_sda_low(I2C_Model_t *m);
-GPIO_Level_t i2c_sw_get_sda(I2C_Model_t *m);
-void i2c_sw_scl_high(I2C_Model_t *m);
-void i2c_sw_scl_low(I2C_Model_t *m);
-void i2c_sw_start(I2C_Model_t *m);
-void i2c_sw_stop(I2C_Model_t *m);
-uint8_t i2c_sw_send_byte(I2C_Model_t *m, uint8_t byte);
-uint8_t i2c_sw_recv_byte(I2C_Model_t *m, uint8_t ack);
-uint8_t send_addr(I2C_Model_t *m, uint8_t dev_addr, I2C_RW_t rw);
+I2C_Err_t i2c_write(I2C_Model_t *m, uint8_t dev_addr,
+                    const uint8_t *data, uint16_t len);
+I2C_Err_t i2c_read(I2C_Model_t *m, uint8_t dev_addr,
+                   uint8_t *buf, uint16_t len);
+I2C_Err_t i2c_read_write(I2C_Model_t *m, uint8_t dev_addr,
+                         uint8_t *rx_buf, uint16_t rx_len,
+                         const uint8_t *tx_buf, uint16_t tx_len);

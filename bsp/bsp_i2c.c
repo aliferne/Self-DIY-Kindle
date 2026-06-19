@@ -4,6 +4,36 @@
 /* I2C 延时函数 */
 #define I2C_DELAY(delay) dwt_delay_us(delay)
 
+void i2c_sw_sda_high(I2C_Model_t *m);
+void i2c_sw_sda_low(I2C_Model_t *m);
+GPIO_Level_t i2c_sw_get_sda(I2C_Model_t *m);
+void i2c_sw_scl_high(I2C_Model_t *m);
+void i2c_sw_scl_low(I2C_Model_t *m);
+void i2c_sw_start(I2C_Model_t *m);
+void i2c_sw_stop(I2C_Model_t *m);
+uint8_t i2c_sw_send_byte(I2C_Model_t *m, uint8_t byte);
+uint8_t i2c_sw_recv_byte(I2C_Model_t *m, uint8_t ack);
+uint8_t send_addr(I2C_Model_t *m, uint8_t dev_addr, I2C_RW_t rw);
+
+I2C_Err_t i2c_write(I2C_Model_t *m, uint8_t dev_addr,
+                    const uint8_t *data, uint16_t len)
+{
+    return m->write(m, dev_addr, data, len);
+}
+
+I2C_Err_t i2c_read(I2C_Model_t *m, uint8_t dev_addr,
+                   uint8_t *buf, uint16_t len)
+{
+    return m->read(m, dev_addr, buf, len);
+}
+
+I2C_Err_t i2c_read_write(I2C_Model_t *m, uint8_t dev_addr,
+                         uint8_t *rx_buf, uint16_t rx_len,
+                         const uint8_t *tx_buf, uint16_t tx_len)
+{
+    return m->read_write(m, dev_addr, rx_buf, rx_len, tx_buf, tx_len);
+}
+
 /* ============================================================
  * 外部函数，软件 I2C 可在 BSP 层直接实现
  * ============================================================ */
@@ -67,9 +97,9 @@ I2C_Err_t i2c_sw_read(I2C_Model_t *m, uint8_t dev_addr,
  *
  * 典型场景：先写寄存器地址，后读数据。
  */
-I2C_Err_t i2c_sw_write_read(I2C_Model_t *m, uint8_t dev_addr,
-                            const uint8_t *tx_data, uint16_t tx_len,
-                            uint8_t *rx_buf, uint16_t rx_len)
+I2C_Err_t i2c_sw_read_write(I2C_Model_t *m, uint8_t dev_addr,
+                            uint8_t *rx_buf, uint16_t rx_len,
+                            const uint8_t *tx_data, uint16_t tx_len)
 {
     if (rx_len == 0)
         return I2C_Err_OK;
