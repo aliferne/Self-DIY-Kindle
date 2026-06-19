@@ -1,46 +1,40 @@
 #include "input_srv.h"
 #include "bsp_config.h"
+#include "bsp_handle.h"
 
-static void handle_button_press(InputEvent_t *btn_event);
+static void handle_button_press(InputEvent_t *e);
 
 InputEvent_t btn_event = {
-    .type                  = InputEventType_BtnPress,
-    .data.btn_press.btn_id = Btn_ID_None,
+    .event_type = Button_Input,
+    .event_id   = NONE,
 };
 
-void handle_input_events(InputEvent_t *event)
+InputEventId_t get_input_event_id(InputEvent_t *e)
 {
-    switch (event->type) {
-        case InputEventType_BtnPress:
-            handle_button_press(event);
-            break;
-        case InputEventType_KeyPress:
-            break;
-        default:
-            break;
-    }
+    ASSERT_FAIL(e == NULL, return NONE);
+
+    if (e->event_type == Button_Input) 
+        handle_button_press(e);
+    
+    return e->event_id;
 }
 
-static void handle_button_press(InputEvent_t *btn_event)
+static void handle_button_press(InputEvent_t *e)
 {
     if (pgup_btn.irq_flag) {
         gpio_clear_irq_flag(&pgup_btn);
-        btn_event->data.btn_press.btn_id = Btn_ID_PageUp;
+        e->event_id = PAGEUP;
     } else if (pgdown_btn.irq_flag) {
         gpio_clear_irq_flag(&pgdown_btn);
-        btn_event->data.btn_press.btn_id = Btn_ID_PageDown;
+        e->event_id = PAGEDOWN;
     } else if (back_btn.irq_flag) {
         gpio_clear_irq_flag(&back_btn);
-        btn_event->data.btn_press.btn_id = Btn_ID_Back;
+        e->event_id = BACK;
     } else if (home_btn.irq_flag) {
         gpio_clear_irq_flag(&home_btn);
-        btn_event->data.btn_press.btn_id = Btn_ID_Home;
+        e->event_id = HOME;
     } else if (confirm_btn.irq_flag) {
         gpio_clear_irq_flag(&confirm_btn);
-        btn_event->data.btn_press.btn_id = Btn_ID_Confirm;
-    } else {
-        /* 无按键事件 */
-        btn_event->data.btn_press.btn_id = Btn_ID_None;
-        return;
+        e->event_id = CONFIRM;
     }
 }
