@@ -37,6 +37,8 @@ void vApplicationStackOverflowHook(TaskHandle_t xTask,
     }
 }
 
+uint8_t turn_screen = 0;
+
 void StartUITask(void const *argument)
 {
     lv_init();
@@ -67,11 +69,14 @@ void StartUITask(void const *argument)
 
     uint8_t i = 1;
     for (;;) {
-        gpio_toggle(&usr_led);
-
         lv_timer_handler();
         os_delay_ms(2000);
-        lv_disp_set_rotation(disp, i);
-        i = (i + 1) % 4;
+        lv_disp_set_rotation(disp, 0);
+
+        if (turn_screen == 1) {
+            turn_screen = 0;
+            i = (i + 1) % 4;
+            gpio_toggle(&usr_led);
+        }
     }
 }

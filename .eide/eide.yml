@@ -357,6 +357,10 @@ virtualFolder:
                 - path: Middlewares/display_drv/st7796-with-touch/TOUCH/touch.c
                 - path: Middlewares/display_drv/st7796-with-touch/display_drv.c
               folders: []
+        - name: algorithm
+          files:
+            - path: Middlewares/algorithm/fifo.c
+          folders: []
     - name: BSP
       files:
         - path: bsp/bsp_config.c
@@ -457,6 +461,7 @@ targets:
         - Middlewares/display_drv/st7796-with-touch
         - Middlewares/display_drv/st7796-with-touch/LCD
         - Middlewares/display_drv/st7796-with-touch/TOUCH
+        - Middlewares/algorithm
       libList: []
     excludeList:
       - <virtual_root>/Application/MDK-ARM/startup_stm32f407xx.s
@@ -632,4 +637,4 @@ targets:
         resetMode: default
         runAfterProgram: true
         speed: 4000
-    uploader: OpenOCD
+    uploader: JLink

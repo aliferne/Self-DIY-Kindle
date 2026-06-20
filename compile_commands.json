@@ -25,6 +25,7 @@
       "-Ichip/stm32f4",
       "-Ibsp",
       "-IMiddlewares",
+      "-IMiddlewares/algorithm",
       "-IMiddlewares/lvgl",
       "-IMiddlewares/lvgl/demos",
       "-IMiddlewares/lvgl/draw/sw",
