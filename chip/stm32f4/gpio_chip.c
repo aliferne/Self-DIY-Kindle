@@ -11,6 +11,7 @@
 #include "stm32f4xx_hal.h"
 #include "stm32f4xx_hal_gpio.h"
 #include "stm32f4xx_hal_rcc.h"
+#include <stdint.h>
 
 /* ============================================================
  * 中断模型表
@@ -22,68 +23,18 @@ GPIO_Model_t *gpio_irq_models[GPIO_MAX_PIN] = {NULL};
 
 static uint32_t mode_to_hal(GPIO_Mode_t m)
 {
-    switch (m) {
-        case GPIO_Mode_Input:
-            return GPIO_MODE_INPUT;
-        case GPIO_Mode_Output_PP:
-            return GPIO_MODE_OUTPUT_PP;
-        case GPIO_Mode_Output_OD:
-            return GPIO_MODE_OUTPUT_OD;
-        case GPIO_Mode_AF_PP:
-            return GPIO_MODE_AF_PP;
-        case GPIO_Mode_AF_OD:
-            return GPIO_MODE_AF_OD;
-        case GPIO_Mode_Analog:
-            return GPIO_MODE_ANALOG;
-        case GPIO_Mode_IT_Rising:
-            return GPIO_MODE_IT_RISING;
-        case GPIO_Mode_IT_Falling:
-            return GPIO_MODE_IT_FALLING;
-        case GPIO_Mode_IT_Rising_Falling:
-            return GPIO_MODE_IT_RISING_FALLING;
-        default:
-            return GPIO_MODE_INPUT;
-    }
-}
-
-static uint32_t pull_to_hal(GPIO_Pull_t p)
-{
-    switch (p) {
-        case GPIO_Pull_None:
-            return GPIO_NOPULL;
-        case GPIO_Pull_Up:
-            return GPIO_PULLUP;
-        case GPIO_Pull_Down:
-            return GPIO_PULLDOWN;
-        default:
-            return GPIO_NOPULL;
-    }
-}
-
-static uint32_t speed_to_hal(GPIO_Speed_t s)
-{
-    switch (s) {
-        case GPIO_Speed_Low:
-            return GPIO_SPEED_FREQ_LOW;
-        case GPIO_Speed_Medium:
-            return GPIO_SPEED_FREQ_MEDIUM;
-        case GPIO_Speed_High:
-            return GPIO_SPEED_FREQ_HIGH;
-        case GPIO_Speed_Very_High:
-            return GPIO_SPEED_FREQ_VERY_HIGH;
-        default:
-            return GPIO_SPEED_FREQ_LOW;
-    }
-}
-
-static GPIO_PinState level_to_hal(GPIO_Level_t l)
-{
-    return (l == GPIO_Level_High) ? GPIO_PIN_SET : GPIO_PIN_RESET;
-}
-
-static GPIO_Level_t level_from_hal(GPIO_PinState s)
-{
-    return (s == GPIO_PIN_SET) ? GPIO_Level_High : GPIO_Level_Low;
+    uint32_t modes[] = {
+        GPIO_MODE_INPUT,
+        GPIO_MODE_OUTPUT_PP,
+        GPIO_MODE_OUTPUT_OD,
+        GPIO_MODE_AF_PP,
+        GPIO_MODE_AF_OD,
+        GPIO_MODE_ANALOG,
+        GPIO_MODE_IT_RISING,
+        GPIO_MODE_IT_FALLING,
+        GPIO_MODE_IT_RISING_FALLING,
+    };
+    return modes[m];
 }
 
 /* ============================================================
@@ -162,7 +113,7 @@ GPIO_Err_t gpio_init(GPIO_Model_t *m, GPIO_Port_t port, GPIO_Pin_t pin, const GP
 
     m->src.port = port;
     m->src.pin  = pin;
-    m->use_irq = 0;
+    m->use_irq  = 0;
     m->irq_flag = 0;
 
     GPIO_TypeDef *gpiox = (GPIO_TypeDef *)port;
@@ -172,13 +123,14 @@ GPIO_Err_t gpio_init(GPIO_Model_t *m, GPIO_Port_t port, GPIO_Pin_t pin, const GP
     GPIO_InitTypeDef init = {
         .Pin       = pin,
         .Mode      = mode_to_hal(cfg->mode),
-        .Pull      = pull_to_hal(cfg->pull),
-        .Speed     = speed_to_hal(cfg->speed),
+        .Pull      = (uint32_t)(cfg->pull),
+        .Speed     = (uint32_t)(cfg->speed),
         .Alternate = cfg->alternate,
     };
     m->config = *cfg;
 
     HAL_GPIO_Init(gpiox, &init);
+
     return GPIO_Err_OK;
 }
 
@@ -193,14 +145,15 @@ GPIO_Err_t gpio_write(GPIO_Model_t *m, GPIO_Level_t level)
     if (m->use_irq)
         return GPIO_Err_Call_Write_When_Using_IRQ;
 
-    HAL_GPIO_WritePin((GPIO_TypeDef *)m->src.port, m->src.pin, level_to_hal(level));
+    HAL_GPIO_WritePin((GPIO_TypeDef *)m->src.port, m->src.pin,
+                      (GPIO_PinState)(level));
 
     return GPIO_Err_OK;
 }
 
 GPIO_Level_t gpio_read(GPIO_Model_t *m)
 {
-    return level_from_hal(HAL_GPIO_ReadPin((GPIO_TypeDef *)m->src.port, m->src.pin));
+    return (GPIO_Level_t)(HAL_GPIO_ReadPin((GPIO_TypeDef *)m->src.port, m->src.pin));
 }
 
 GPIO_Err_t gpio_toggle(GPIO_Model_t *m)
@@ -215,16 +168,15 @@ GPIO_Err_t gpio_toggle(GPIO_Model_t *m)
 
 GPIO_Err_t gpio_attach_irq(GPIO_Model_t *m, const GPIO_IRQ_Config_t *irq_cfg)
 {
-    GPIO_TypeDef *gpiox = (GPIO_TypeDef *)m->src.port;
-
     GPIO_InitTypeDef init = {
         .Pin       = m->src.pin,
         .Mode      = mode_to_hal(irq_cfg->trigger_edge),
-        .Pull      = pull_to_hal(m->config.pull),
-        .Speed     = speed_to_hal(m->config.speed),
+        .Pull      = (uint32_t)(m->config.pull),
+        .Speed     = (uint32_t)(m->config.speed),
         .Alternate = m->config.alternate,
     };
-
+    
+    HAL_GPIO_Init((GPIO_TypeDef *)m->src.port, &init);
 
     m->irq_config = *irq_cfg;
     m->irq_flag   = 0;
@@ -267,8 +219,8 @@ GPIO_Err_t gpio_detach_irq(GPIO_Model_t *m)
     GPIO_InitTypeDef init = {
         .Pin       = m->src.pin,
         .Mode      = mode_to_hal(m->config.mode),
-        .Pull      = pull_to_hal(m->config.pull),
-        .Speed     = speed_to_hal(m->config.speed),
+        .Pull      = (uint32_t)(m->config.pull),
+        .Speed     = (uint32_t)(m->config.speed),
         .Alternate = m->config.alternate,
     };
 

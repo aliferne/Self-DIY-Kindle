@@ -16,7 +16,7 @@ typedef struct {
     /* 数据缓冲区，可以是任意数据，最大到 MAX_FIFO_SIZE */
     void *buffer;
     /* 缓冲区大小，超出 MAX_FIFO_SIZE 时会强制令其为 MAX_FIFO_SIZE */
-    uint8_t size;
+    uint8_t buffer_size;
     /* 数据大小 */
     size_t elem_size;
     /*

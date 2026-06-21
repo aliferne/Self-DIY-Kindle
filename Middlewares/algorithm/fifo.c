@@ -11,7 +11,7 @@ void fifo_init(fifo_t *fifo, void *buffer, uint8_t buffer_size, size_t elem_size
     memset(fifo, 0, sizeof(fifo_t));
 
     fifo->buffer    = buffer;
-    fifo->size      = buffer_size >= MAX_FIFO_SIZE ? MAX_FIFO_SIZE : buffer_size;
+    fifo->buffer_size      = buffer_size >= MAX_FIFO_SIZE ? MAX_FIFO_SIZE : buffer_size;
     fifo->elem_size = elem_size;
 }
 
@@ -23,7 +23,7 @@ void fifo_push(fifo_t *fifo, void *data, bool forced)
         /* 等价于 buffer[write_index] */
         memcpy(fifo->buffer + fifo->write_index * fifo->elem_size,
                data, fifo->elem_size);
-        fifo->write_index = (fifo->write_index + 1) % fifo->size;
+        fifo->write_index = (fifo->write_index + 1) % fifo->buffer_size;
     }
 }
 
@@ -36,7 +36,7 @@ void fifo_pop(fifo_t *fifo, void *data)
                /* 等价于 buffer[write_index] */
                fifo->buffer + fifo->read_index * fifo->elem_size,
                fifo->elem_size);
-        fifo->read_index = (fifo->read_index + 1) % fifo->size;
+        fifo->read_index = (fifo->read_index + 1) % fifo->buffer_size;
     }
 }
 
@@ -59,5 +59,5 @@ bool fifo_is_full(fifo_t *fifo)
 {
     if (fifo == NULL) return true;
 
-    return (fifo->write_index + 1) % fifo->size == fifo->read_index;
+    return (fifo->write_index + 1) % fifo->buffer_size == fifo->read_index;
 }
