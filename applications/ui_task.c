@@ -39,11 +39,36 @@ void vApplicationStackOverflowHook(TaskHandle_t xTask,
 
 uint8_t turn_screen = 0;
 
+#include "ff.h"
+#include "storage_srv.h"
+#include "srv_config.h"
+#include "bsp_handle.h"
+char buf[256];
+
+#include "cmsis_os.h"
+
 void StartUITask(void const *argument)
 {
     lv_init();
     lv_port_disp_init();
 
+    /* 文件操作部分 ------------------------- */
+    FIL fp;
+    /* 本质是 f_open */
+    FRESULT res = storage_open(&sdcard, &fp, "test.txt", FA_READ | FA_OPEN_EXISTING);
+    UINT fnum   = 0;
+    ASSERT_FAIL(res != FR_OK,
+                /* 本质是 f_close */
+                storage_close(&fp);
+                /* 本质是 vTaskDelay(1000); */
+                for (;;) { os_delay_ms(1000); });
+    /* 本质是 f_read */
+    res = storage_read(&fp, buf, LEN(buf), &fnum);
+    ASSERT_FAIL(res != FR_OK, storage_close(&fp); for (;;) { os_delay_ms(1000); });
+    storage_close(&fp);
+    /* 文件操作部分 End ------------------------- */
+
+    /* UI 部分 ------------------------- */
     static lv_style_t style;
     lv_style_init(&style);
     lv_style_set_radius(&style, 5);
@@ -63,20 +88,18 @@ void StartUITask(void const *argument)
     lv_obj_add_style(obj, &style, 0);
 
     lv_obj_t *label = lv_label_create(obj);
-    lv_obj_set_style_text_font(label, &simhei_size14, 0);
 
-    lv_label_set_text(label, "确认");
+    if (buf[0] != 0)
+        lv_label_set_text(label, buf);
+    else
+        lv_label_set_text(label, "确认");
+    /* UI 部分 End ------------------------- */
 
-    uint8_t i = 1;
     for (;;) {
-        lv_timer_handler();
-        os_delay_ms(2000);
-        lv_disp_set_rotation(disp, 0);
+        /* 以约 500ms 的周期闪烁 LED */
+        gpio_toggle(&usr_led);
 
-        if (turn_screen == 1) {
-            turn_screen = 0;
-            i = (i + 1) % 4;
-            gpio_toggle(&usr_led);
-        }
+        lv_timer_handler();
+        os_delay_ms(500);
     }
 }

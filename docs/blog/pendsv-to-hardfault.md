@@ -245,29 +245,18 @@ void vApplicationStackOverflowHook(TaskHandle_t xTask,
 我们回到刚看到 `HardFault` 的时候，此时我们来观察调用堆栈：
 
 ```
-HardFault_Handler@0x080009e2 (/home/ferne/code/self-proj/Self-DIY-Kindle/Core/Src/stm32f4xx_it.c:95)
+HardFault_Handler@0x080009ec (/home/ferne/code/self-proj/Self-DIY-Kindle/Core/Src/stm32f4xx_it.c:95)
 <signal handler called>@0xfffffff1 (未知源:0)
-PendSV_Handler@0x080075a0 (/home/ferne/code/self-proj/Self-DIY-Kindle/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c:435)
+PendSV_Handler@0x0800774e (/home/ferne/code/self-proj/Self-DIY-Kindle/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c:443)
 ```
 
 得，一个 PendSV，一个 HardFault，还有个不知道什么情况的 signal handler 返回码，准备翻手册吧。
 由于有 [上一篇文章](https://aliferne.github.io/2026/02/17/build-up-zig-dev-env-on-stm32g431/) 的经验，查手册还是非常轻车熟路的。
 
-首先看 0xE000ED2C，先确认一下 HFSR 是个什么情况，看到值又是 0x40000000，依然非常熟悉的 FORCED 置位，说明真凶另有他人，接下来让我们看到 CFSR(0xE000ED28)，发现值为 0x00008200，将该值与 (1 << 9) 到 (1 << 15) 做与运算，发现分别为 bit 9 和 bit 15 被置位，对应为 PRECIS ERR 和 BFARVALID.
-
-由于 BFARVALID = 1，我们还需要看一下 BFAR 的值是什么，查阅 Cortex M4 手册可以得知寄存器值为 0x20020000，也就是说 PC 访问了这个地址，然后触发了 PRECIS ERR 之后立马跳到 HardFault
+首先看 0xE000ED2C，先确认一下 HFSR 是个什么情况，看到值又是 0x40000000，依然非常熟悉的 FORCED 置位，说明真凶另有他人，接下来让我们看到 CFSR(0xE000ED28)，
+发现值为 0x0100 0000，查阅内核手册即可得知对应 Bit 24 被置位（即 UNALIGNED 标志位），这说明以未对齐的方式访问了内存。
 
 最后是 signal handler 返回的是 0xFFFFFFF1 （顺带说一句，正常情况下应当为 0xFFFFFFFD，我们会在下文进行详细的讲解），对应 `EXC_RETURN` 的值为这个。
-
-### F407 内存布局
-
-每次和内核有关的错误基本应该都要先查下内存问题了，看下是不是越界访问啥的，或者是栈错误等各种神奇但又比较常见的原因。
-
-直接去立创商城搜 F407VET6 就能找到数据手册，然后找到内存映射相关的章节，发现如图所示：
-
-![图片](../images/BFAR-VALUE.png)
-
-问题很明显，肯定是内存越界访问了，但这和之前提到的栈有什么关系？
 
 ## Cortex-M4 编程模型及异常处理机制讲解
 
@@ -343,9 +332,111 @@ SVC 又叫做请求管理调用，
 
 ### 什么是 PendSV
 
-### FreeRTOS 内的 PendSV_Handler 实现
+PendSV 中文名为可挂起的系统调用，其挂起状态可以在更高优先级的异常处理内设置，并且还会在高优先级处理完之后才执行，也就是说，只要将这玩意的优先级设置为最低，就可以让 PendSV 在其他中断任务搞定之后再执行，由于此特性，该异常对于上下文切换十分有用，这也是嵌入式 OS 设计的关键所在。
+
+由于上下文切换属于任务调度，而任务调度属于 OS 内核，那么就得说下内核是个什么情况。
+
+OS 内核的执行可由下面条件触发：
+- 应用任务中 SVC 指令的执行（当应用在等一批数据或因为一些情况被耽搁，可以调用系统服务以向内核申请切换任务）
+- 周期性的 SysTick 异常
+
+一般来说， OS 会在 SysTick 触发时决定要换到什么任务去，但是如果此时发生了中断请求（IRQ），则 OS 不应当执行上下文切换，否则会导致 IRQ 处理延迟。
+
+那么可以设想一下如果没有 PendSV 会是个什么情况：
+
+没有 PendSV，那么就意味着发生 IRQ 时，你必须要优先处理 IRQ，且避免上下文切换，这看起来似乎很容易就解决了，然而当 IRQ 和 SysTick 发生频率相近呢？此时就会导致这两个中断“共振”——本来我在 SysTick 要换任务的，给你一搞结果啥都干不了。这会影响系统的性能。
+
+然而，有了 PendSV 之后，我大可以在 PendSV 里面去处理，如果发生了 IRQ，那就先处理 IRQ，处理到最后再执行 PendSV， 这就保证了上下文虽然可能比较晚切换，但是一定能切换。
+
+![PendSV-IRQ 上下文切换示例](../images/PendSV-IRQ上下文切换示例.png)
+
+由于 PendSV 负责切换上下文，那么就必然涉及到任务的上下文保存和上下文加载，也就是说，对于准备切换的任务 A， PendSV 需要将它的寄存器值保存下来，而对于即将运行的任务 B，PendSV 需要恢复它的寄存器值，保存什么，恢复什么，都遵循 AAPCS 规范。
+
+因此 PendSV 要做的事情简单点说就可以概括为四步：
+
+1. 保存任务 A 的上下文（压栈）
+2. 决定要切换成哪个任务（这里假定为任务 B）
+3. 找到任务 B 的栈
+4. 加载任务 B 的上下文（出栈）
+
+然后把主动权还给任务 B 即可 (`bx r14`)。
+
+![PendSV 上下文切换](../images/PendSV上下文切换.png)
+
+因此我们来看看 FreeRTOS 内的代码
+
+### FreeRTOS 内的 PendSV 实现
+
+让我们定位到 port.c 的这个函数：
 
 ```c
+void xPortPendSVHandler( void )
+```
+
+其中：
+
+```c
+void xPortPendSVHandler( void ) __attribute__ (( naked ));
+```
+
+需要注意，宏定义里面加入了 `__attribute__((naked))`， 这说明该函数是裸函数，只能内联汇编。
+
+由于 FreeRTOS 这部分的实现还涉及到一些不相关的内容（比如 `isb`, `dsb`），这些感兴趣的自行查阅，我们只抽出最重要的部分，此外让我们假设我们不使用 FPU （~~从而又能少讲几条指令，好耶！~~）
+
+#### 保存任务 A 的上下文（压栈）
+
+下面这部分代码就是保存任务 A 上下文的代码：
+
+```asm
+mrs r0, psp
+
+ldr r3, pxCurrentTCBConst
+ldr r2, [r3]
+
+stmdb r0!, {r4-r11, r14}
+str r0, [r2]
+
+```
+
+#### 切换任务上下文
+
+下面这一段是切换任务上下文的代码：
+
+```asm
+stmdb sp!, {r0, r3}
+/* ... */
+bl vTaskSwitchContext
+/* ... */
+ldmia sp!, {r0, r3}
+```
+
+#### 找到任务 B 的栈
+
+下面这一段负责找到任务 B 的栈
+
+```asm
+ldr r1, [r3]
+ldr r0, [r1]
+```
+
+#### 加载任务 B 的上下文（出栈）
+
+这个相对简单些：
+
+`ldmia sp!, {r4-r11, r14}`
+
+本质上来说就是
+
+`pop {r4-r11, r14}`
+
+然后再设置一下 `psp` 为任务 B 的栈指针(`msr psp, r0`)，执行 `bx r14` 以从异常中返回，并把控制权交还给任务 B 即可。
+
+## 寄存器级别的 Debug
+
+```c
+volatile uint32_t pxStackNow = 0;
+volatile uint32_t isAligned = 0; // 1 表示对齐，0 表示非对齐
+
 void xPortPendSVHandler( void )
 {
 	/* This is a naked function. */
@@ -378,6 +469,17 @@ void xPortPendSVHandler( void )
 	"	ldr r1, [r3]						\n" /* The first item in pxCurrentTCB is the task top of stack. */
 	"	ldr r0, [r1]						\n"
 	"										\n"
+	/* 插入部分 */
+	" ldr r12, pxStackNowConst \n"
+	" str r0, [r12] \n"
+	" tst r0, #0x07 \n"
+	" ldr r12, isAlignedConst \n"
+	" mov r2, #1 \n"
+    " beq 1f \n"
+	" mov r2, #0 \n"
+	" 1:"
+	" str r2, [r12]\n"
+	/* 插入部分 */
 	"	ldmia r0!, {r4-r11, r14}			\n" /* Pop the core registers. */
 	"										\n"
 	"	tst r14, #0x10						\n" /* Is the task using the FPU context?  If so, pop the high vfp registers too. */
@@ -398,6 +500,10 @@ void xPortPendSVHandler( void )
 	"										\n"
 	"	.align 4							\n"
 	"pxCurrentTCBConst: .word pxCurrentTCB	\n"
+	/* 插入部分 */
+	"pxStackNowConst: .word pxStackNow	\n"
+	"isAlignedConst: .word isAligned \n"
+	/* 插入部分 */
 	::"i"(configMAX_SYSCALL_INTERRUPT_PRIORITY)
 	);
 }
