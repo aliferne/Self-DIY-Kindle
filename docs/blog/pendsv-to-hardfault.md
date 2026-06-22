@@ -256,13 +256,13 @@ PendSV_Handler@0x0800774e (/home/ferne/code/self-proj/Self-DIY-Kindle/Middleware
 首先看 0xE000ED2C，先确认一下 HFSR 是个什么情况，看到值又是 0x40000000，依然非常熟悉的 FORCED 置位，说明真凶另有他人，接下来让我们看到 CFSR(0xE000ED28)，
 发现值为 0x0100 0000，查阅内核手册即可得知对应 Bit 24 被置位（即 UNALIGNED 标志位），这说明以未对齐的方式访问了内存。
 
-最后是 signal handler 返回的是 0xFFFFFFF1 （顺带说一句，正常情况下应当为 0xFFFFFFFD，我们会在下文进行详细的讲解），对应 `EXC_RETURN` 的值为这个。
+最后是 signal handler 返回的是 0xFFFFFFF1 （顺带说一句，正常情况下应当为 0xFFFFFFFD，我们会在下文进行详细的讲解），对应 `EXC_RETURN` 的值为这个，我们会在下面讲解 `EXC_RETURN`，把之前搭建 Zig 环境的坑填上。
 
-## Cortex-M4 编程模型及异常处理机制讲解
+## Cortex-M4 编程模型，栈设计及异常处理机制
 
 在此之前我们需要先简单了解一下 Cortex-M4 的内核设计和错误机制处理，这有助于我们展开接下来内容的讲解。
 
-以下内容均选自《Arm Cortex-M3 与 Cortex-M4 权威指南》，下称《权威指南》。
+以下内容均选自《Arm Cortex-M3 与 Cortex-M4 权威指南》，下称《权威指南》，需要注意的是部分整合了个人的理解，因此下面的内容只能当作二道贩子兜售的二手知识，想要有更详细的理解，还是需要看原著，并且自己亲手调一遍 HardFault，这些知识才会是你的。
 
 ### 编程模型
 
@@ -281,6 +281,21 @@ M4 内核的编程模型是 “二二二” 模型：
 
 通过区分特权级和用户级，我们实际上可以实现对一些关键资源的保护，以及提供一个基本的安全模型。
 
+### 栈设计与影子栈
+
+我们都知道，程序运行时需要使用栈存储局部变量，由此就需要用到栈指针，一般来说一个栈指针就已经足够了，但是 Cortex-M3/4 内核为了方便嵌入式 OS，特地设置了两套栈指针：
+
+- 主栈指针 MSP
+- 进程栈指针 PSP
+
+之所以叫影子栈，我想是因为对于一般程序来说，在同一时刻不能同时见到两个栈指针，从而也就实现了一个栈为另一个栈的“影子”，看不见也摸不着（《权威指南》并没有说为什么叫影子栈，但提到了同一时刻无法同时看到两个栈）。
+
+在不使用 RTOS 的情况下，程序只需要主栈指针即可，但是在使用 RTOS 的情况下，则需要进程栈指针，分开设置两套栈指针的目的，实际上是为了安全和高效：
+
+- 在有 RTOS 时，内核使用主栈，而任务使用进程栈，这样在某个任务的任务栈溢出之后，内核和其他任务的栈不会受到影响（栈空间的分配不是连续的，因此不太可能覆写其他栈）。
+- 每个任务只需要满足自身栈的最大需求和从上下文切换中保存的上一级栈的栈帧，以及一些特定的条件即可，不需要考虑 ISR 和嵌套中断的栈，这就使得静态分配栈空间成为可能。
+- OS 还能借助存储器保护单元（MPU）还能访问某个栈区的任务，同时在它有栈溢出风险时，MPU 可以触发 `MemManageFault` 并避免栈空间以外的存储区域被覆盖。
+
 ### 异常处理机制
 
 #### 什么是异常
@@ -293,11 +308,30 @@ M4 内核的编程模型是 “二二二” 模型：
 
 对于 Cortex-M3/4 内核来说，有几个异常为错误处理异常，处理器检测到错误时则会触发这些异常，比如 `HardFault`, `UsageFault`, `MemManageFault`, `BusFault`，然而我们总是见到 `HardFault` 的死循环，而不是其他的，这是为什么呢？实际上内核的缺省行为是只使能了 `HardFault`，从而其他所有的错误处理异常都会被重定向到 `HardFault` 中，而在内核中 `HardFault` 有一块专门的寄存器 `SCB->HFSR`，这个寄存器的第 31 位 (`FORCED`) 会告诉你 `HardFault` 是不是由其他错误重定向而来。基本上 75% 以上的情况，我们都能认为 `HardFault` 是被重定向而来的(其自身发生的概率仅为 25%，如果只算理论值的话)。
 
-### 异常处理流程
+### 异常全流程
 
-TODO:
+异常全流程按照时间线可以分为：接受异常请求，异常进入，异常处理和异常返回。
 
-## OS、影子栈、SVC 与 PendSV
+我们不会讲得特别详细，我只需要保证你有个基本概念就行，详细的请看《权威指南》。
+
+我们在学怎么给单片机开中断的时候都学到过，要使能并开启中断，对于异常来说也是同理的，首先是异常请求，要触发内核的异常事件，你得保证异常被使能了，没被屏蔽且优先级高于当前执行的任务，此时内核才会去处理异常。而后就会进入异常，这里也和中断相似，首先我们要保存好当前任务的上下文（比如 PC 和一些寄存器），方便到时候处理完了回来还能找的到路，然后再从向量表中取出异常向量，准备去执行异常处理函数，并且更新和异常等相关的寄存器。完成了这些步骤之后就会正式开始处理异常，此时 MCU 会保证自己运行在特权模式，且使用 MSP 操作栈（这里我们不考虑异常嵌套）。最后到了异常返回时，MCU 会把一个叫做 `EXC_RETURN` (exception return) 的特殊值存进 LR 里面，当这个值被某个允许的异常返回指令写入 PC 时，就会触发异常返回流程。
+
+### `EXC_RETURN`
+
+然后我们来说道说道这个东西。
+
+它实际上就是一个普通地不能再普通的值了，只是说起到了一些对于当前处于什么运行状态的指示作用。
+这个值在使用一些特定指令加载到程序计数器 PC 时，比如 BX, POP 或者 LDR/LDM ，就会触发异常返回机制。
+
+![EXC_RETURN](../images/EXC_RETURN.png)
+
+看到这张图，我想你应该会知道为什么我之前说正常情况下应该返回 `0xFFFFFFFD`，因为我没用 FPU, 且我在任务调度，所以下一刻应该换任务，这就要求必须切换到 PSP 和线程模式，所以对应就只能是这个值了。
+
+有了这些前置知识，我想你应该可以自己分析这张图：
+
+![异常返回全流程](../images/异常返回全流程.png)
+
+## OS、SVC 与 PendSV
 
 ### 什么是 OS，什么是 RTOS
 
@@ -311,24 +345,9 @@ OS，按照教科书上的定义，指的是管理计算机硬件与软件资源
 
 因此理解 RTOS 的内核在干些什么，就理解了 RTOS 在干什么。不过我们在这里不会讲调度算法，而是会更加侧重于 OS 的启动流程和上下文切换逻辑。我们将在下面介绍 Cortex-M 内核用于支持嵌入式 OS 的两个异常，并由此引出启动流程和上下文切换的逻辑。
 
-### 什么是影子栈
-
-实际上 Cortex-M 内核为了支持 RTOS，特地设置了两套栈指针：
-
-- 主栈指针 MSP
-- 进程栈指针 PSP
-
-之所以叫影子栈，我想是因为对于一般程序来说，在同一时刻不能同时见到两个栈指针，从而也就实现了一个栈为另一个栈的“影子”，看不见也摸不着（《权威指南》并没有说为什么叫影子栈，但提到了同一时刻无法同时看到两个栈）。
-
-在不使用 RTOS 的情况下，程序只需要主栈指针即可，但是在使用 RTOS 的情况下，则需要进程栈指针，分开设置两套栈指针的目的，实际上是为了安全和高效：
-
-- 在有 RTOS 时，内核使用主栈，而任务使用进程栈，这样在某个任务的任务栈溢出之后，内核和其他任务的栈不会受到影响（栈空间的分配不是连续的，因此不太可能覆写其他栈）。
-- 每个任务只需要满足自身栈的最大需求和从上下文切换中保存的上一级栈的栈帧，以及一些特定的条件即可，不需要考虑 ISR 和嵌套中断的栈，这就使得静态分配栈空间成为可能。
-- OS 还能借助存储器保护单元（MPU）还能访问某个栈区的任务，同时在它有栈溢出风险时，MPU 可以触发 `MemManageFault` 并避免栈空间以外的存储区域被覆盖。
-
 ### 什么是 SVC
 
-SVC 又叫做请求管理调用，
+SVC 又叫做请求管理调用， TODO
 
 ### 什么是 PendSV
 
@@ -381,7 +400,23 @@ void xPortPendSVHandler( void ) __attribute__ (( naked ));
 
 需要注意，宏定义里面加入了 `__attribute__((naked))`， 这说明该函数是裸函数，只能内联汇编。
 
-由于 FreeRTOS 这部分的实现还涉及到一些不相关的内容（比如 `isb`, `dsb`），这些感兴趣的自行查阅，我们只抽出最重要的部分，此外让我们假设我们不使用 FPU （~~从而又能少讲几条指令，好耶！~~）
+由于 FreeRTOS 这部分的实现还涉及到一些不相关的内容（比如 `isb`, `dsb`），这些感兴趣的自行查阅，我们只抽出最重要的部分，此外让我们假设我们不使用 FPU （~~从而又能少讲几条指令，好耶！~~），首先让我们了解一个重要的东西——AAPCS 规范：
+
+#### AAPCS 规范
+
+AAPCS 规范，即 ARM 架构过程调用标准，它规定了编译器生成的汇编代码对 CPU 的操作约定（手写汇编最好也要遵守）。
+
+该标准允许 C 函数修改 R0～R3，R12，R14（LR） 以及 PSR，如果要修改 R4～R11，则应当将这些寄存器保存到栈中，并在函数结束前将其恢复。
+
+R0~R3, R12, LR, PSR 为“调用者保存寄存器”，若在函数调用后还需要使用这些寄存器的数值，就必须先行保存到内存中，而 R4~R11 为“被调用者保存寄存器”，被调用的子程序/函数需要保证这些值在函数结束时不会发生变化，不过在执行时可以发生变化，只是要确保函数返回时要恢复为初始值。
+
+因此对于一个被调用的函数来说， R0~R3, R12, LR, PSR 的所有权不属于它，它无需管理这些东西，而 R4~R11 则属于它，它可以随便用这些东西，但用完之后要收拾好。
+
+对于浮点单元也是类似的，这里不讲。
+
+一般来说函数调用将 R0～R3 作为输入参数，R0 用作返回结果，若返回值为 64 位则 R1 也作为返回结果。
+
+特别的，当处理异常时，返回地址（PC）的数值并不存在 LR, LR 存 `EXC_RETURN`，因此异常流程需要自行保存返回地址，也就是说此时异常处理需要保存八个寄存器（没有或者不启用 FPU 时），分别为 r4~r11, r14(lr)。
 
 #### 保存任务 A 的上下文（压栈）
 
@@ -395,8 +430,40 @@ ldr r2, [r3]
 
 stmdb r0!, {r4-r11, r14}
 str r0, [r2]
-
 ```
+
+第一条指令将 psp 的值读取到 r0 中，而第二句和 `pxCurrentTCB` 这个变量有关(见 tasks.c 文件)：
+
+```c
+/*lint -save -e956 A manual analysis and inspection has been used to determine
+which static variables must be declared volatile. */
+PRIVILEGED_DATA TCB_t * volatile pxCurrentTCB = NULL;
+```
+
+第二句实际上表示将 `pxCurrentTCB` 赋值给 r3，而因为这个变量是个指针，因此就需要解引用，而这就是第三句干的事情了，此外十分注意， `ldr r2, [r3]` 实际上表示的是拿出 r3 寄存器对应内存中的第一个值，并赋值给 r2，那么第一个值是什么呢，让我们来看：
+
+```c
+/*
+ * Task control block.  A task control block (TCB) is allocated for each task,
+ * and stores task state information, including a pointer to the task's context
+ * (the task's run time environment, including register values)
+ */
+typedef struct tskTaskControlBlock 			/* The old naming convention is used to prevent breaking kernel aware debuggers. */
+{
+	volatile StackType_t	*pxTopOfStack;	/*< Points to the location of the last item placed on the tasks stack.  THIS MUST BE THE FIRST MEMBER OF THE TCB STRUCT. */
+	/* ...... */
+} tskTCB;
+```
+
+现在知道为什么任务控制块 TCB 还要特地声明必须要把 `pxTopOfStack` 放在结构体的第一个变量了吧？
+
+```c
+	volatile StackType_t	*pxTopOfStack;	/*< Points to the location of the last item placed on the tasks stack.  THIS MUST BE THE FIRST MEMBER OF THE TCB STRUCT. */
+```
+
+本质上来说其实就是因为这两句以及其他类似的操作。
+
+然后  `stmdb r0!, {r4-r11, r14}`, `str r0, [r2]` 就没什么好说的了，前一句就是把相关的寄存器存到任务 A 的堆栈去（AAPCS 规范，记住，下面不说了），第二句就是把新的栈指针存回去。
 
 #### 切换任务上下文
 
@@ -410,6 +477,50 @@ bl vTaskSwitchContext
 ldmia sp!, {r0, r3}
 ```
 
+这一段实际上就是一个完整的汇编代码调用函数的标准流程: prologue(压栈，设值) => body(调用) => epilogue(出栈，复原)
+
+因此我们只看 `bl vTaskSwitchContext`，这个函数位于 tasks.c
+
+```c
+void vTaskSwitchContext( void )
+{
+    /* ... */
+    /* 如果你配置了我上篇文章说的宏的话，这里就会正常调用 */
+		taskCHECK_FOR_STACK_OVERFLOW();
+		/* ... */
+		
+		/* Select a new task to run using either the generic C or port
+		optimised asm code. */
+		taskSELECT_HIGHEST_PRIORITY_TASK(); /*lint !e9079 void * is used as this macro is used with timers and co-routines too.  Alignment is known to be fine as the type of the pointer stored and retrieved is the same. */
+		/* ... */
+}
+```
+
+我们只需要看 `taskSELECT_HIGHEST_PRIORITY_TASK()`，这个宏函数的实现，其中一句是：
+
+```c
+		listGET_OWNER_OF_NEXT_ENTRY( pxCurrentTCB, &( pxReadyTasksLists[ uxTopPriority ] ) );		\
+```
+
+对应：
+
+```c
+#define listGET_OWNER_OF_NEXT_ENTRY( pxTCB, pxList )										\
+{																							\
+List_t * const pxConstList = ( pxList );													\
+	/* Increment the index to the next item and return the item, ensuring */				\
+	/* we don't return the marker used at the end of the list.  */							\
+	( pxConstList )->pxIndex = ( pxConstList )->pxIndex->pxNext;							\
+	if( ( void * ) ( pxConstList )->pxIndex == ( void * ) &( ( pxConstList )->xListEnd ) )	\
+	{																						\
+		( pxConstList )->pxIndex = ( pxConstList )->pxIndex->pxNext;						\
+	}																						\
+	( pxTCB ) = ( pxConstList )->pxIndex->pvOwner;											\
+}
+```
+
+因此 `pxCurrentTCB` 会通过 `vTaskSwitchContext` 自动更新，回到 PendSV 之后，这里就是一个等待执行的任务了。
+
 #### 找到任务 B 的栈
 
 下面这一段负责找到任务 B 的栈
@@ -418,6 +529,8 @@ ldmia sp!, {r0, r3}
 ldr r1, [r3]
 ldr r0, [r1]
 ```
+
+没什么好说的，记住 `r3 = pxCurrentTCB` 即可，所以 r0 是任务 B 的栈顶指针。
 
 #### 加载任务 B 的上下文（出栈）
 
@@ -431,83 +544,31 @@ ldr r0, [r1]
 
 然后再设置一下 `psp` 为任务 B 的栈指针(`msr psp, r0`)，执行 `bx r14` 以从异常中返回，并把控制权交还给任务 B 即可。
 
-## 寄存器级别的 Debug
+## 本次 HardFault 的因果链
 
-```c
-volatile uint32_t pxStackNow = 0;
-volatile uint32_t isAligned = 0; // 1 表示对齐，0 表示非对齐
+有了这些前置的理论知识，我们可以来 debug 了。
 
-void xPortPendSVHandler( void )
-{
-	/* This is a naked function. */
+TODO: 也许能找到是谁修改了？
 
-	__asm volatile
-	(
-	"	mrs r0, psp							\n"
-	"	isb									\n"
-	"										\n"
-	"	ldr	r3, pxCurrentTCBConst			\n" /* Get the location of the current TCB. */
-	"	ldr	r2, [r3]						\n"
-	"										\n"
-	"	tst r14, #0x10						\n" /* Is the task using the FPU context?  If so, push high vfp registers. */
-	"	it eq								\n"
-	"	vstmdbeq r0!, {s16-s31}				\n"
-	"										\n"
-	"	stmdb r0!, {r4-r11, r14}			\n" /* Save the core registers. */
-	"	str r0, [r2]						\n" /* Save the new top of stack into the first member of the TCB. */
-	"										\n"
-	"	stmdb sp!, {r0, r3}					\n"
-	"	mov r0, %0 							\n"
-	"	msr basepri, r0						\n"
-	"	dsb									\n"
-	"	isb									\n"
-	"	bl vTaskSwitchContext				\n"
-	"	mov r0, #0							\n"
-	"	msr basepri, r0						\n"
-	"	ldmia sp!, {r0, r3}					\n"
-	"										\n"
-	"	ldr r1, [r3]						\n" /* The first item in pxCurrentTCB is the task top of stack. */
-	"	ldr r0, [r1]						\n"
-	"										\n"
-	/* 插入部分 */
-	" ldr r12, pxStackNowConst \n"
-	" str r0, [r12] \n"
-	" tst r0, #0x07 \n"
-	" ldr r12, isAlignedConst \n"
-	" mov r2, #1 \n"
-    " beq 1f \n"
-	" mov r2, #0 \n"
-	" 1:"
-	" str r2, [r12]\n"
-	/* 插入部分 */
-	"	ldmia r0!, {r4-r11, r14}			\n" /* Pop the core registers. */
-	"										\n"
-	"	tst r14, #0x10						\n" /* Is the task using the FPU context?  If so, pop the high vfp registers too. */
-	"	it eq								\n"
-	"	vldmiaeq r0!, {s16-s31}				\n"
-	"										\n"
-	"	msr psp, r0							\n"
-	"	isb									\n"
-	"										\n"
-	#ifdef WORKAROUND_PMU_CM001 /* XMC4000 specific errata workaround. */
-		#if WORKAROUND_PMU_CM001 == 1
-	"			push { r14 }				\n"
-	"			pop { pc }					\n"
-		#endif
-	#endif
-	"										\n"
-	"	bx r14								\n"
-	"										\n"
-	"	.align 4							\n"
-	"pxCurrentTCBConst: .word pxCurrentTCB	\n"
-	/* 插入部分 */
-	"pxStackNowConst: .word pxStackNow	\n"
-	"isAlignedConst: .word isAligned \n"
-	/* 插入部分 */
-	::"i"(configMAX_SYSCALL_INTERRUPT_PRIORITY)
-	);
-}
-```
+由于之前提到的错误是 UNALIGNED, 所以我们只要锚定与内存访问有关的函数和指令即可
+
+由于我们已经有了调用堆栈，所以我们可以知道栈溢出错误是在切换上下文的时候产生的，那么自然就是找 PendSV 处理函数的问题，由于我在调试的时候已经定位到是 `ldmia r0!, {r4-r11, r14}` 的问题了，那么就让我们打断点到改变了 r0 寄存器值的指令吧！
+
+因此断点设置在 `ldr r0, [r1]`，这一步意味着从 `pxCurrentTCB` 中拿到 `pxTopOfStack` 的值。
+
+注意观察左侧 Register 栏的 r0 和 r1：
+
+![Step1](../images/调试过程Step1.png)
+
+目前是很正常的。
+
+![Step2](../images/调试过程Step2.png)
+
+但是到了这里：
+
+![Step3](../images/调试过程Step3.png)
+
+看, r3 是正常的，但是 r1 变成了 0x1fff, 这说明在程序运行过程中，有指令将 `pxCurrentTCB` 对应的值修改为 0x1fff，进而导致 r0 从 r1 读出了垃圾值 0x3027b46，由于这个值不是 4 字节对齐的，最后使用 `ldmia` 对 UITask 的栈进行访问的时候就理所当然地炸掉了。
 
 ## 总结
 
