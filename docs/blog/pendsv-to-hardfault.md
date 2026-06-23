@@ -331,7 +331,7 @@ M4 内核的编程模型是 “二二二” 模型：
 
 ![异常返回全流程](../images/异常返回全流程.png)
 
-## OS、SVC 与 PendSV
+## OS、PendSV
 
 ### 什么是 OS，什么是 RTOS
 
@@ -344,10 +344,6 @@ OS，按照教科书上的定义，指的是管理计算机硬件与软件资源
 广义上来说，一个 OS 可以分为三个组成部分：内核、 Shell，和一些杂七杂八的软件。但对于一个 OS 来说，**最核心的概念实际上是内核**，也就是**负责线程/进程/任务管理、内存管理、驱动管理等的程序**。这也是为什么 Linux 有那么多发行版，但它们仍然是 Linux； 各种 RTOS 虽然复杂程度不一（FreeRTOS 只有非常轻量的内核，RTT 和 Zephyr 可以有宛如 Linux 般的 dts 等复杂驱动适配），但它们都提供了任务创建、调度、信号量、各种锁，因为 OS 的核心与灵魂就是内核，而 RTOS 则是任务调度.
 
 因此理解 RTOS 的内核在干些什么，就理解了 RTOS 在干什么。不过我们在这里不会讲调度算法，而是会更加侧重于 OS 的启动流程和上下文切换逻辑。我们将在下面介绍 Cortex-M 内核用于支持嵌入式 OS 的两个异常，并由此引出启动流程和上下文切换的逻辑。
-
-### 什么是 SVC
-
-SVC 又叫做请求管理调用， TODO
 
 ### 什么是 PendSV
 
@@ -548,8 +544,6 @@ ldr r0, [r1]
 
 有了这些前置的理论知识，我们可以来 debug 了。
 
-TODO: 也许能找到是谁修改了？
-
 由于之前提到的错误是 UNALIGNED, 所以我们只要锚定与内存访问有关的函数和指令即可
 
 由于我们已经有了调用堆栈，所以我们可以知道栈溢出错误是在切换上下文的时候产生的，那么自然就是找 PendSV 处理函数的问题，由于我在调试的时候已经定位到是 `ldmia r0!, {r4-r11, r14}` 的问题了，那么就让我们打断点到改变了 r0 寄存器值的指令吧！
@@ -568,7 +562,106 @@ TODO: 也许能找到是谁修改了？
 
 ![Step3](../images/调试过程Step3.png)
 
-看, r3 是正常的，但是 r1 变成了 0x1fff, 这说明在程序运行过程中，有指令将 `pxCurrentTCB` 对应的值修改为 0x1fff，进而导致 r0 从 r1 读出了垃圾值 0x3027b46，由于这个值不是 4 字节对齐的，最后使用 `ldmia` 对 UITask 的栈进行访问的时候就理所当然地炸掉了。
+看, r3 是正常的，但是 r2 和 r1 变成了 0x1fff, 这说明在程序运行过程中，有指令将 `pxCurrentTCB` 对应的值修改为 0x1fff，进而导致 r0 从 r1 读出了垃圾值 0x3027b46，由于这个值不是 4 字节对齐的，最后使用 `ldmia` 对 UITask 的栈进行访问的时候就理所当然地炸掉了。
+
+那么假如说，我们想找到是谁修改的呢？也很简单，借助 GDB 即可，为了确认是谁修改了这玩意对应的值，我们需要先找到它在内存中对应的地址，那么：
+
+```shell
+(gdb) p &pxCurrentTCB
+$1 = (TCB_t * volatile *) 0x20004630 <pxCurrentTCB>
+```
+
+然后我们将断点打在 `StartUITask` 的 `os_delay_ms(500)`，等运行到那里之后，再输入：
+
+```shell
+(gdb) watch *(uint32_t *)0x20004630 if *(uint32_t *)0x20004630 == 0x1fff
+Hardware watchpoint 1: *(uint32_t *)0x20004630
+```
+
+然后继续运行，接下来我们可以看到：
+
+![是谁修改了pxCurrentTCB对应的值](../images/是谁修改了pxCurrentTCB对应的值.png)
+
+注意我这里为什么标了 r2, 是因为一开始保存任务 A 的上下文的时候有一句 `ldr r2, [r3]`，说明 r2 实际上就是 `*pxCurrentTCB`，所以很明显值是在 `bl vTaskSwitchContext` 中被修改的， GDB 执行完这一句之后发现值被修改，于是停了下来，正好落在把 r0 清零的汇编上。
+
+或者更具体些（复现方法是在 `bl vTaskSwitchContext` 中打断点，运行到之前的 `os_delay_ms(500)` 之后，第一次 `bl` 是正常的，我们继续运行，第二次 `bl` 就需要进去这个函数里面看是哪里被修改了）：
+
+![调试过程-找出哪一句修改了pxCurrentTCB对应的值](../images/调试过程-找出哪一句修改了pxCurrentTCB对应的值.png)
+
+这三句是“帮凶”：
+
+```asm
+/* 将原本 r3[4] 的值重新给 r3 */
+ldr r3, [r3, #4]
+/* 将 r3[12] 的值（被篡改成 0x1fff）取出并放到 r2 */
+ldr r2, [r3, #12]
+/* 将 pxCurrentTCB 存到 r3 */
+ldr r3, [pc, #28]
+/* 将当前 r2 的值更新到 r3[0] (pxTopOfStack) */
+str r2, [r3, #0]
+```
+
+执行完这三句之后我们可以看到确实是被修改了的：
+
+![调试过程-GDB验证pxCurrentTCB值是否被修改](../images/调试过程-GDB验证pxCurrentTCB值是否被修改.png)
+
+进而导致下面的 `ldmia` 因为垃圾值内存没对齐而炸掉。
+
+然后我们再来找一下真凶，由于值在 `r3[12]`， 而 r3 此时为 `0x200014cc`（执行 `ldr r3, [r3, #4]` 那一句时），于是我们重新开始调试，并在 GDB 中输入：
+
+```shell
+(gdb) watch *(uint32_t *)(0x200014cc+0x0c) if *(uint32_t *)(0x200014cc+0x0c) == 0x1fff
+```
+
+然后你会发现 LVGL 库里的这一句被反复暂停：
+
+![是谁改变了pxCurrentTCB对应的值](../images/是谁改变了pxCurrentTCB对应的值.png)
+
+接下来执行 `os_delay_ms(500)`，然后两次 `bl vTaskSwitchContext` 之后“帮凶”成功把“鬼子领进村了”。
+
+（第一次 `bl vTaskSwitchContext` 并进去之后，看上面提到的四句，r3 的值为 0x20000d94, 而第二次 `bl` 则为 0x200014cc）。
+
+我们再来看一开始写的 Hook 函数，现在我们做如下修改：
+
+```c
+#include "FreeRTOS.h"
+#include "task.h"
+/* 临时暴露 TCB 结构体定义以访问栈指针 */
+struct tskTaskControlBlock {
+    volatile StackType_t *pxTopOfStack;
+    ListItem_t xStateListItem;
+    ListItem_t xEventListItem;
+    UBaseType_t uxPriority;
+    StackType_t *pxStack;
+};
+
+void vApplicationStackOverflowHook(TaskHandle_t xTask,
+                                   char *pcTaskName)
+{
+    printf("Stack overflow in task %s\r\n"
+           "=> [pxTopOfStack: %p]\r\n"
+           "=> [pxStack: %p]\r\n"
+           "=======================\r\n",
+           pcTaskName, xTask->pxTopOfStack, xTask->pxStack);
+
+    if (strcmp(pcTaskName, "UITask") == 0) {
+        gpio_write(&usr_led, GPIO_Level_High);
+    }
+}
+```
+
+打印信息为：
+
+```
+Stack overflow in task UITask
+=> [pxTopOfStack: 0x200013fc]
+=> [pxStack: 0x20001528]
+=======================
+```
+
+`pxStack` 表示栈起始地址，具体的自己看 `TCB` 结构体了。那么我用计算机算出来 0x1528 - 0x14cc = 300, 又因为这玩意是 `StackType_t`， 即 `uint32_t`，而 STM32CubeMX 的配置单位为 Word (`uint16_t`)，因此 * 2 之后发现为 600, 比我们分配的 512 大多了，然后之前说到的 0x200014cc, 我想就是因为栈溢出之后栈指针回环，然后导致读取到了垃圾值而导致的最终 UNALIGNED 错误。
+
+事实上 `(pxStack - pxTopOfStack) * 2` 的值有时会比 512 略小，但函数运行时只要调用链一深，那么栈很容易就会炸掉，很不幸的是，LVGL 正好是那种调用链异常深的第三方库。
 
 ## 总结
 
