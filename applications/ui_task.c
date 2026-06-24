@@ -26,11 +26,17 @@ struct tskTaskControlBlock {
 void vApplicationStackOverflowHook(TaskHandle_t xTask,
                                    char *pcTaskName)
 {
+    int32_t stack_usage =
+        (uint32_t)xTask->pxTopOfStack - (uint32_t)xTask->pxStack;
+    int32_t diff = stack_usage - 512;
     printf("Stack overflow in task %s\r\n"
            "=> [pxTopOfStack: %p]\r\n"
            "=> [pxStack: %p]\r\n"
+           "=> [pxTopOfStack - pxStack: %d,\tdiff: %d\tlt: %s]\r\n"
            "=======================\r\n",
-           pcTaskName, xTask->pxTopOfStack, xTask->pxStack);
+           pcTaskName, xTask->pxTopOfStack, xTask->pxStack,
+           stack_usage, diff,
+           diff > 0 ? "TRUE" : "FALSE");
 
     if (strcmp(pcTaskName, "UITask") == 0) {
         gpio_write(&usr_led, GPIO_Level_High);
