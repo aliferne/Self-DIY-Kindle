@@ -19,30 +19,30 @@
 #include "stm32f4xx_hal_def.h"
 #include "stm32f4xx_hal_spi.h"
 
-static SPI_Err_t hal_status_to_spi_err(HAL_StatusTypeDef stat);
+static spi_err_t hal_status_to_spi_err(HAL_StatusTypeDef stat);
 
 /* 硬件 SPI 传输实现（通过虚函数表调用，外部不直接使用） */
-static SPI_Err_t spi_hw_write_read(SPI_Model_t *m,
+static spi_err_t spi_hw_write_read(spi_t *m,
                                    const uint8_t *tx, uint8_t *rx, uint16_t len);
-static SPI_Err_t spi_hw_write(SPI_Model_t *m,
+static spi_err_t spi_hw_write(spi_t *m,
                               const uint8_t *tx, uint16_t len);
-static SPI_Err_t spi_hw_read(SPI_Model_t *m,
+static spi_err_t spi_hw_read(spi_t *m,
                              uint8_t *rx, uint16_t len);
 
 /*
  * 以下三个函数实现在 bsp_spi.c 中，但不通过 bsp_spi.h 暴露出来。
  * chip 层通过函数指针引用，此处用 extern 声明以通过编译。
  */
-extern SPI_Err_t spi_sw_write_read(SPI_Model_t *m,
+extern spi_err_t spi_sw_write_read(spi_t *m,
                                    const uint8_t *tx, uint8_t *rx, uint16_t len);
-extern SPI_Err_t spi_sw_write(SPI_Model_t *m, const uint8_t *tx, uint16_t len);
-extern SPI_Err_t spi_sw_read(SPI_Model_t *m, uint8_t *rx, uint16_t len);
+extern spi_err_t spi_sw_write(spi_t *m, const uint8_t *tx, uint16_t len);
+extern spi_err_t spi_sw_read(spi_t *m, uint8_t *rx, uint16_t len);
 
 /* ============================================================
  * API 实现
  * ============================================================ */
 
-SPI_Err_t spi_init(SPI_Model_t *m, SPI_Register_Cfg_t *reg_cfg, const SPI_Config_t *cfg)
+spi_err_t spi_init(spi_t *m, spi_reg_cfg_t *reg_cfg, const spi_cfg_t *cfg)
 {
     GPIO_Config_t gpio_cfg = {
         .mode      = GPIO_Mode_Output_PP,
@@ -102,7 +102,7 @@ SPI_Err_t spi_init(SPI_Model_t *m, SPI_Register_Cfg_t *reg_cfg, const SPI_Config
     return SPI_Err_OK;
 }
 
-SPI_Err_t spi_deinit(SPI_Model_t *m)
+spi_err_t spi_deinit(spi_t *m)
 {
     if (m->drv == SPI_Driver_SW) {
         gpio_deinit(&m->src.cs);
@@ -119,28 +119,28 @@ SPI_Err_t spi_deinit(SPI_Model_t *m)
 
 /* TODO: 硬件 SPI 可以提供更多的发送方式（IT、DMA等） */
 
-static SPI_Err_t spi_hw_read(SPI_Model_t *m, uint8_t *rx, uint16_t len)
+static spi_err_t spi_hw_read(spi_t *m, uint8_t *rx, uint16_t len)
 {
     SPI_HandleTypeDef *hspi = (SPI_HandleTypeDef *)m->src.hw;
     HAL_StatusTypeDef stat  = HAL_SPI_Receive(hspi, rx, len, m->config.hw.timeout);
     return hal_status_to_spi_err(stat);
 }
 
-static SPI_Err_t spi_hw_write(SPI_Model_t *m, const uint8_t *tx, uint16_t len)
+static spi_err_t spi_hw_write(spi_t *m, const uint8_t *tx, uint16_t len)
 {
     SPI_HandleTypeDef *hspi = (SPI_HandleTypeDef *)m->src.hw;
     HAL_StatusTypeDef stat  = HAL_SPI_Transmit(hspi, tx, len, m->config.hw.timeout);
     return hal_status_to_spi_err(stat);
 }
 
-static SPI_Err_t spi_hw_write_read(SPI_Model_t *m, const uint8_t *tx, uint8_t *rx, uint16_t len)
+static spi_err_t spi_hw_write_read(spi_t *m, const uint8_t *tx, uint8_t *rx, uint16_t len)
 {
     SPI_HandleTypeDef *hspi = (SPI_HandleTypeDef *)m->src.hw;
     HAL_StatusTypeDef stat  = HAL_SPI_TransmitReceive(hspi, tx, rx, len, m->config.hw.timeout);
     return hal_status_to_spi_err(stat);
 }
 
-static SPI_Err_t hal_status_to_spi_err(HAL_StatusTypeDef stat)
+static spi_err_t hal_status_to_spi_err(HAL_StatusTypeDef stat)
 {
     switch (stat) {
         case HAL_ERROR:

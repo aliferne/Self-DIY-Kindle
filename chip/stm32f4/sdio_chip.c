@@ -26,7 +26,7 @@
 #define SDIO_TIMEOUT 2500U
 
 /* 假定芯片只使用一块 SD 卡，因此只需要单例 */
-static SDIO_Model_t *s_active = NULL;
+static sdio_t *s_active = NULL;
 
 /*
 TODO:
@@ -35,8 +35,8 @@ TODO:
     并且跑第二次代码时需要重新拔插 SD 卡才能正常 MX_SD_SDIO_Init
 */
 
-SDIO_Err_t sdio_init(SDIO_Model_t *m, SDIO_Handle_t handle,
-                     const SDIO_Config_t *cfg)
+sdio_err_t sdio_init(sdio_t *m, sdio_handle_t handle,
+                     const sdio_cfg_t *cfg)
 {
     if (m == NULL || handle == NULL || cfg == NULL)
         return SDIO_Err_Param;
@@ -77,10 +77,10 @@ SDIO_Err_t sdio_init(SDIO_Model_t *m, SDIO_Handle_t handle,
  * 超时时自动置 error 标志位
  * ============================================================ */
 
-static SDIO_Err_t check_card_state(SDIO_Model_t *m)
+static sdio_err_t check_card_state(sdio_t *m)
 {
     SD_HandleTypeDef *h = (SD_HandleTypeDef *)m->handle;
-    SDIO_Err_t stat     = SDIO_Err_Ok;
+    sdio_err_t stat     = SDIO_Err_Ok;
 
     static uint32_t start_time = 0;
     if (start_time == 0) start_time = chip_get_tick();
@@ -97,7 +97,7 @@ static SDIO_Err_t check_card_state(SDIO_Model_t *m)
     return stat;
 }
 
-SDIO_Err_t sdio_read_blocks(SDIO_Model_t *m, uint8_t *buf,
+sdio_err_t sdio_read_blocks(sdio_t *m, uint8_t *buf,
                             uint32_t sector, uint32_t count)
 {
     if (m == NULL || buf == NULL)
@@ -139,7 +139,7 @@ SDIO_Err_t sdio_read_blocks(SDIO_Model_t *m, uint8_t *buf,
     }
 }
 
-SDIO_Err_t sdio_write_blocks(SDIO_Model_t *m, const uint8_t *buf,
+sdio_err_t sdio_write_blocks(sdio_t *m, const uint8_t *buf,
                              uint32_t sector, uint32_t count)
 {
     if (m == NULL || buf == NULL)
@@ -181,7 +181,7 @@ SDIO_Err_t sdio_write_blocks(SDIO_Model_t *m, const uint8_t *buf,
     }
 }
 
-SDIO_Err_t sdio_erase_blocks(SDIO_Model_t *m, uint32_t sector, uint32_t count)
+sdio_err_t sdio_erase_blocks(sdio_t *m, uint32_t sector, uint32_t count)
 {
     if (m == NULL)
         return SDIO_Err_Param;
@@ -197,7 +197,7 @@ SDIO_Err_t sdio_erase_blocks(SDIO_Model_t *m, uint32_t sector, uint32_t count)
     return check_card_state(m);
 }
 
-void sdio_get_info(SDIO_Model_t *m, uint32_t *block_size, uint32_t *block_count)
+void sdio_get_info(sdio_t *m, uint32_t *block_size, uint32_t *block_count)
 {
     if (m == NULL)
         return;

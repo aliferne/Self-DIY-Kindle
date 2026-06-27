@@ -40,7 +40,6 @@
 - [LVGL 显示中文](https://www.cnblogs.com/shumei52/p/18595202)
 - [LVGL 转换自定义字体教程](https://www.cnblogs.com/hwd00001/p/17393135.html)
 - [LVGL Font Tool 下载](http://dz.lfly.xyz/forum.php?mod=viewthread&tid=24&extra=page=1)
-- [PendSV 与堆栈操作](https://www.cnblogs.com/sky1991/p/stepbystep_stm32_os_3.html)
 
 ---
 

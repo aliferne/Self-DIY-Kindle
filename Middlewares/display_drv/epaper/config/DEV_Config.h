@@ -65,18 +65,18 @@ static inline void DEV_Delay_ms(uint32_t ms)
     os_delay_ms(ms);
 }
 
-static inline void DEV_Digital_Write(GPIO_Model_t *pin, int value)
+static inline void DEV_Digital_Write(gpio_t *pin, int value)
 {
     (void)gpio_write(pin, value == 0 ? GPIO_Level_Low : GPIO_Level_High);
 }
 
-static inline GPIO_Level_t DEV_Digital_Read(GPIO_Model_t *pin)
+static inline GPIO_Level_t DEV_Digital_Read(gpio_t *pin)
 {
     return gpio_read(pin);
 }
 
-void DEV_SPI_WriteByte(SPI_Model_t *spi, UBYTE value);
-void DEV_SPI_Write_nByte(SPI_Model_t *spi, UBYTE *value, UDOUBLE len);
+void DEV_SPI_WriteByte(spi_t *spi, UBYTE value);
+void DEV_SPI_Write_nByte(spi_t *spi, UBYTE *value, UDOUBLE len);
 
 int DEV_Module_Init(void);
 void DEV_Module_Exit(void);

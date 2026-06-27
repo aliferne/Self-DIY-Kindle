@@ -53,7 +53,7 @@ void StartUITask(void const *argument)
     uint8_t i = 1;
     for (;;) {
         lv_timer_handler();
-        os_delay_ms(2000);
+        os_delay_ms(10);
         lv_disp_set_rotation(disp, 0);
 
         if (turn_screen == 1) {

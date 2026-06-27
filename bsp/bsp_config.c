@@ -6,19 +6,19 @@
 #include "bsp_sys.h"
 #include "sdio.h"
 
-GPIO_Model_t usr_led;
-GPIO_Model_t pgup_btn;
-GPIO_Model_t pgdown_btn;
-GPIO_Model_t back_btn;
-GPIO_Model_t home_btn;
-GPIO_Model_t confirm_btn;
+gpio_t usr_led;
+gpio_t pgup_btn;
+gpio_t pgdown_btn;
+gpio_t back_btn;
+gpio_t home_btn;
+gpio_t confirm_btn;
 
-SDIO_Model_t storage;
+sdio_t storage;
 
-SPI_Model_t tft_spi;
-GPIO_Model_t tft_dc;
-GPIO_Model_t tft_rst;
-GPIO_Model_t tft_blk;
+spi_t tft_spi;
+gpio_t tft_dc;
+gpio_t tft_rst;
+gpio_t tft_blk;
 static void bsp_init_buttons(void);
 static void bsp_init_leds(void);
 static void bsp_init_tft(void);
@@ -62,19 +62,6 @@ static void bsp_init_buttons(void)
     gpio_init(&confirm_btn,
               (GPIO_Port_t)CONFIRM_BTN_PORT, (GPIO_Pin_t)CONFIRM_BTN_PIN,
               &init_conf);
-
-    /* --- 中断配置（仅配硬件，ISR 自动置 irq_flag） --- */
-    GPIO_IRQ_Config_t irq_conf = {
-        .trigger_edge     = GPIO_Mode_IT_Falling,
-        .preempt_priority = 5,
-        .sub_priority     = 0,
-    };
-
-    gpio_attach_irq(&pgup_btn, &irq_conf);
-    gpio_attach_irq(&pgdown_btn, &irq_conf);
-    gpio_attach_irq(&back_btn, &irq_conf);
-    gpio_attach_irq(&home_btn, &irq_conf);
-    gpio_attach_irq(&confirm_btn, &irq_conf);
 }
 
 static void bsp_init_leds(void)
@@ -90,14 +77,14 @@ static void bsp_init_leds(void)
               &init_conf);
 }
 
-SDIO_Err_t bsp_init_storage(void)
+sdio_err_t bsp_init_storage(void)
 {
-    SDIO_Config_t sdio_cfg = {
+    sdio_cfg_t sdio_cfg = {
         .mode     = SDIO_Mode_Polling,
         .wide_bus = 1,
     };
 
-    return sdio_init(&storage, (SDIO_Handle_t *)&hsd, &sdio_cfg);
+    return sdio_init(&storage, (sdio_handle_t *)&hsd, &sdio_cfg);
 }
 
 static void bsp_init_tft(void)
@@ -118,14 +105,14 @@ static void bsp_init_tft(void)
               (GPIO_Port_t)TFT_RST_PORT, (GPIO_Pin_t)TFT_RST_PIN,
               &init_conf);
 
-    SPI_Register_Cfg_t spi_reg_cfg = {
+    spi_reg_cfg_t spi_reg_cfg = {
         .drv     = SPI_Driver_HW,
-        .src.hw  = (SPI_Handle_t)TFT_HSPI,
+        .src.hw  = (spi_handle_t)TFT_HSPI,
         .cs.port = TFT_CS_PORT,
         .cs.pin  = TFT_CS_PIN,
     };
 
-    SPI_Config_t tft_spi_cfg = {
+    spi_cfg_t tft_spi_cfg = {
         .hw.timeout = 2000,
     };
 

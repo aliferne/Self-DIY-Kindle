@@ -7,6 +7,13 @@
 #include <stdint.h>
 #include <stddef.h>
 
+typedef enum {
+    SYS_OK = 0,
+    SYS_ERR,
+    SYS_BUSY,
+    SYS_TIMEOUT,
+} sys_stat_t;
+
 /*
  * 初始化一些相关的系统外设，如调试串口等
  *

@@ -67,18 +67,18 @@
 
 /* 显示屏硬件资源，假定使用 SPI 作为通信协议 */
 typedef struct {
-    SPI_Model_t *spi;      /**< SPI 总线（软件或硬件均可） */
-    GPIO_Model_t *dc_pin;  /**< Data/Command 引脚 */
-    GPIO_Model_t *rst_pin; /**< Reset 引脚 */
-    GPIO_Model_t *blk_pin; /**< 背光引脚（无需控制可传 NULL） */
+    spi_t *spi;      /**< SPI 总线（软件或硬件均可） */
+    gpio_t *dc_pin;  /**< Data/Command 引脚 */
+    gpio_t *rst_pin; /**< Reset 引脚 */
+    gpio_t *blk_pin; /**< 背光引脚（无需控制可传 NULL） */
 } Disp_Src_t;
 
 #if DISP_HAS_TOUCH == 1
 /* 显示屏触摸硬件资源，假定使用 I2C 作为通信协议 */
 typedef struct {
-    I2C_Model_t *i2c;  /**< I2C 总线 */
-    GPIO_Model_t *it;  /**< 中断引脚 */
-    GPIO_Model_t *rst; /**< 复位引脚 */
+    iic_t *i2c;  /**< I2C 总线 */
+    gpio_t *it;  /**< 中断引脚 */
+    gpio_t *rst; /**< 复位引脚 */
 } Disp_Touch_Src_t;
 #endif
 

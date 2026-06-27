@@ -55,10 +55,10 @@ typedef struct {
 } EPaper_Config_t;
 
 typedef struct {
-    SPI_Model_t spi;   /**< SPI 句柄（含 CS、SCK、MOSI、MISO） */
-    GPIO_Model_t dc;   /**< Data/Command 选择线 */
-    GPIO_Model_t rst;  /**< 复位线 */
-    GPIO_Model_t busy; /**< 忙检测线（输入） */
+    spi_t spi;   /**< SPI 句柄（含 CS、SCK、MOSI、MISO） */
+    gpio_t dc;   /**< Data/Command 选择线 */
+    gpio_t rst;  /**< 复位线 */
+    gpio_t busy; /**< 忙检测线（输入） */
     EPaper_Config_t cfg;
     Painter_Model_t painter; /**< 画笔模型 */
     uint8_t *canvas;         /**< 画布（数组）, 暂未被实际使用  */

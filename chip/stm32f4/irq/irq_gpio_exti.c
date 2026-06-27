@@ -64,7 +64,7 @@ static void handle_exti_irq(uint16_t GPIO_Pin)
         __HAL_GPIO_EXTI_CLEAR_IT(GPIO_Pin);
 
         int pin_num     = gpio_get_pin_num(GPIO_Pin);
-        GPIO_Model_t *m = gpio_irq_models[pin_num];
+        gpio_t *m = gpio_irq_models[pin_num];
 
         if (m != NULL)
             gpio_set_irq_flag(m);

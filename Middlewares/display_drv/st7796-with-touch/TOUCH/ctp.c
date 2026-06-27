@@ -8,9 +8,9 @@
 /*
  * 静态资源指针 ―― 通过 ctp_assign_* 注入
  */
-static GPIO_Model_t *ctp_rst_pin         = NULL;
-static GPIO_Model_t *ctp_it_pin          = NULL;
-static I2C_Model_t *ctp_i2c              = NULL;
+static gpio_t *ctp_rst_pin         = NULL;
+static gpio_t *ctp_it_pin          = NULL;
+static iic_t *ctp_i2c              = NULL;
 static void (*ctp_delay_ms)(uint32_t ms) = NULL;
 
 /* I2C 设备地址 (7-bit) */
@@ -24,13 +24,13 @@ static const uint16_t FT5206_TPX_TBL[5] = {
  * 资源注入
  * ============================================================ */
 
-void ctp_assign_pins(GPIO_Model_t *rst, GPIO_Model_t *it)
+void ctp_assign_pins(gpio_t *rst, gpio_t *it)
 {
     ctp_rst_pin = rst;
     ctp_it_pin  = it;
 }
 
-void ctp_assign_i2c(I2C_Model_t *i2c)
+void ctp_assign_i2c(iic_t *i2c)
 {
     ctp_i2c = i2c;
 }
@@ -49,7 +49,7 @@ void ctp_assign_delay(void (*cb)(uint32_t ms))
 // buf:数据缓缓存区
 // len:写数据长度
 // 返回值:0,成功;1,失败.
-uint8_t FT6336_WR_Reg(I2C_Model_t *i2c, uint16_t reg, uint8_t *buf, uint8_t len)
+uint8_t FT6336_WR_Reg(iic_t *i2c, uint16_t reg, uint8_t *buf, uint8_t len)
 {
     /*
      * 构造缓冲区: [寄存器地址, data0, data1, ...]
@@ -57,26 +57,26 @@ uint8_t FT6336_WR_Reg(I2C_Model_t *i2c, uint16_t reg, uint8_t *buf, uint8_t len)
      */
     uint8_t tmp[256];
     uint8_t i;
-    I2C_Err_t ret;
+    iic_err_t ret;
 
     tmp[0] = reg & 0xFF;
     for (i = 0; i < len; i++) {
         tmp[1 + i] = buf[i];
     }
 
-    ret = i2c_write(i2c, FT6336_ADDR, tmp, 1 + len);
-    return (ret == I2C_Err_OK) ? 0 : 1;
+    ret = iic_write(i2c, FT6336_ADDR, tmp, 1 + len);
+    return (ret == I2C_OK) ? 0 : 1;
 }
 
 // 从FT6336读出一次数据
 // reg:起始寄存器地址
 // buf:数据缓缓存区
 // len:读数据长度
-void FT6336_RD_Reg(I2C_Model_t *i2c, uint16_t reg, uint8_t *buf, uint8_t len)
+void FT6336_RD_Reg(iic_t *i2c, uint16_t reg, uint8_t *buf, uint8_t len)
 {
     uint8_t reg_byte = reg & 0xFF;
 
-    i2c_read_write(i2c, FT6336_ADDR, buf, len, &reg_byte, 1);
+    iic_read_write(i2c, FT6336_ADDR, buf, len, &reg_byte, 1);
 }
 
 /* ============================================================

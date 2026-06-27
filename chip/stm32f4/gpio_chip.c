@@ -19,7 +19,7 @@
  * 按 pin 号索引。ISR 查表找到 GPIO_Model_t 后置 irq_flag。
  * ============================================================ */
 
-GPIO_Model_t *gpio_irq_models[GPIO_MAX_PIN] = {NULL};
+gpio_t *gpio_irq_models[GPIO_MAX_PIN] = {NULL};
 
 static uint32_t mode_to_hal(GPIO_Mode_t m)
 {
@@ -105,7 +105,7 @@ static IRQn_Type get_exti_irqn(uint16_t pin)
  * API 实现
  * ============================================================ */
 
-GPIO_Err_t gpio_init(GPIO_Model_t *m, GPIO_Port_t port, GPIO_Pin_t pin, const GPIO_Config_t *cfg)
+GPIO_Err_t gpio_init(gpio_t *m, GPIO_Port_t port, GPIO_Pin_t pin, const GPIO_Config_t *cfg)
 {
     /* 只允许非中断类型的初始化操作 */
     if (cfg->mode >= GPIO_Mode_IT_Rising)
@@ -134,13 +134,13 @@ GPIO_Err_t gpio_init(GPIO_Model_t *m, GPIO_Port_t port, GPIO_Pin_t pin, const GP
     return GPIO_Err_OK;
 }
 
-GPIO_Err_t gpio_deinit(GPIO_Model_t *m)
+GPIO_Err_t gpio_deinit(gpio_t *m)
 {
     HAL_GPIO_DeInit((GPIO_TypeDef *)m->src.port, m->src.pin);
     return GPIO_Err_OK;
 }
 
-GPIO_Err_t gpio_write(GPIO_Model_t *m, GPIO_Level_t level)
+GPIO_Err_t gpio_write(gpio_t *m, GPIO_Level_t level)
 {
     if (m->use_irq)
         return GPIO_Err_Call_Write_When_Using_IRQ;
@@ -151,12 +151,12 @@ GPIO_Err_t gpio_write(GPIO_Model_t *m, GPIO_Level_t level)
     return GPIO_Err_OK;
 }
 
-GPIO_Level_t gpio_read(GPIO_Model_t *m)
+GPIO_Level_t gpio_read(gpio_t *m)
 {
     return (GPIO_Level_t)(HAL_GPIO_ReadPin((GPIO_TypeDef *)m->src.port, m->src.pin));
 }
 
-GPIO_Err_t gpio_toggle(GPIO_Model_t *m)
+GPIO_Err_t gpio_toggle(gpio_t *m)
 {
     if (m->use_irq)
         return GPIO_Err_Call_Write_When_Using_IRQ;
@@ -166,7 +166,7 @@ GPIO_Err_t gpio_toggle(GPIO_Model_t *m)
     return GPIO_Err_OK;
 }
 
-GPIO_Err_t gpio_attach_irq(GPIO_Model_t *m, const GPIO_IRQ_Config_t *irq_cfg)
+GPIO_Err_t gpio_attach_irq(gpio_t *m, const GPIO_IRQ_Config_t *irq_cfg)
 {
     GPIO_InitTypeDef init = {
         .Pin       = m->src.pin,
@@ -201,7 +201,7 @@ GPIO_Err_t gpio_attach_irq(GPIO_Model_t *m, const GPIO_IRQ_Config_t *irq_cfg)
     return GPIO_Err_OK;
 }
 
-GPIO_Err_t gpio_detach_irq(GPIO_Model_t *m)
+GPIO_Err_t gpio_detach_irq(gpio_t *m)
 {
     int pin_num = gpio_get_pin_num(m->src.pin);
     if (pin_num >= 0 && pin_num < GPIO_MAX_PIN) {

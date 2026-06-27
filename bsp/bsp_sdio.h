@@ -55,37 +55,37 @@ typedef enum {
     SDIO_Err_Busy     = 3,   /**< 上一次传输仍在进行 */
     SDIO_Err_DMA      = 4,   /**< DMA 传输错误 */
     SDIO_Err_Generic  = 5,   /**< HAL 返回 HAL_ERROR */
-} SDIO_Err_t;
+} sdio_err_t;
 
 typedef enum {
     SDIO_Mode_Polling = 0,   /**< 阻塞轮询 */
     SDIO_Mode_IT      = 1,   /**< 中断，chip 层内部等 busy 清零 */
     SDIO_Mode_DMA     = 2,   /**< DMA，chip 层内部等 busy 清零 */
-} SDIO_Mode_t;
+} sdio_mode_t;
 
 /** HAL 句柄的透明包装（chip 层内部转型为 SD_HandleTypeDef*） */
-typedef void *SDIO_Handle_t;
+typedef void *sdio_handle_t;
 
 /* ============================================================
  * 配置结构体
  * ============================================================ */
 
 typedef struct {
-    SDIO_Mode_t mode;         /**< 传输模式 */
+    sdio_mode_t mode;         /**< 传输模式 */
     uint8_t wide_bus : 1;    /**< 0=1Bit, 1=4Bit */
-} SDIO_Config_t;
+} sdio_cfg_t;
 
 /* ============================================================
  * SDIO 模型
  * ============================================================ */
 
 typedef struct {
-    SDIO_Config_t config;
-    SDIO_Handle_t handle;         /**< SD_HandleTypeDef*（CubeMX 初始化） */
+    sdio_cfg_t config;
+    sdio_handle_t handle;         /**< SD_HandleTypeDef*（CubeMX 初始化） */
     /* 卡片信息，sdio_init 时由 HAL_SD_GetCardInfo 填充 */
     uint32_t block_size;          /**< 逻辑块大小（字节），通常 512 */
     uint32_t block_count;         /**< 总块数 */
-} SDIO_Model_t;
+} sdio_t;
 
 /* ============================================================
  * API
@@ -98,8 +98,8 @@ typedef struct {
  * @param hal_handle  SD_HandleTypeDef*，必须已由 MX_SDIO_SD_Init() 初始化
  * @param cfg         配置（传输模式、时钟分频、总线宽度）
  */
-SDIO_Err_t sdio_init(SDIO_Model_t *m, SDIO_Handle_t hal_handle,
-                     const SDIO_Config_t *cfg);
+sdio_err_t sdio_init(sdio_t *m, sdio_handle_t hal_handle,
+                     const sdio_cfg_t *cfg);
 
 /**
  * 读取块数据。
@@ -111,7 +111,7 @@ SDIO_Err_t sdio_init(SDIO_Model_t *m, SDIO_Handle_t hal_handle,
  * @param sector  起始扇区（LBA）
  * @param count   扇区数
  */
-SDIO_Err_t sdio_read_blocks(SDIO_Model_t *m, uint8_t *buf,
+sdio_err_t sdio_read_blocks(sdio_t *m, uint8_t *buf,
                             uint32_t sector, uint32_t count);
 
 /**
@@ -124,7 +124,7 @@ SDIO_Err_t sdio_read_blocks(SDIO_Model_t *m, uint8_t *buf,
  * @param sector  起始扇区（LBA）
  * @param count   扇区数
  */
-SDIO_Err_t sdio_write_blocks(SDIO_Model_t *m, const uint8_t *buf,
+sdio_err_t sdio_write_blocks(sdio_t *m, const uint8_t *buf,
                              uint32_t sector, uint32_t count);
 
 /**
@@ -134,9 +134,9 @@ SDIO_Err_t sdio_write_blocks(SDIO_Model_t *m, const uint8_t *buf,
  * @param sector  起始扇区（LBA）
  * @param count   扇区数
  */
-SDIO_Err_t sdio_erase_blocks(SDIO_Model_t *m, uint32_t sector, uint32_t count);
+sdio_err_t sdio_erase_blocks(sdio_t *m, uint32_t sector, uint32_t count);
 
 /**
  * 获取卡片信息。
  */
-void sdio_get_info(SDIO_Model_t *m, uint32_t *block_size, uint32_t *block_count);
+void sdio_get_info(sdio_t *m, uint32_t *block_size, uint32_t *block_count);

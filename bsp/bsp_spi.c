@@ -4,7 +4,7 @@
 /* SPI 延时函数 */
 #define SPI_DELAY(delay) dwt_delay_us(delay)
 
-static uint8_t spi_sw_xfer_byte(SPI_Model_t *m, uint8_t tx_byte);
+static uint8_t spi_sw_xfer_byte(spi_t *m, uint8_t tx_byte);
 
 /* ============================================================
  * 统一 API 转发层
@@ -13,18 +13,18 @@ static uint8_t spi_sw_xfer_byte(SPI_Model_t *m, uint8_t tx_byte);
  * 调用方无需关心底层驱动类型。
  * ============================================================ */
 
-SPI_Err_t spi_write_read(SPI_Model_t *m,
+spi_err_t spi_write_read(spi_t *m,
                          const uint8_t *tx, uint8_t *rx, uint16_t len)
 {
     return m->write_read(m, tx, rx, len);
 }
 
-SPI_Err_t spi_write(SPI_Model_t *m, const uint8_t *tx, uint16_t len)
+spi_err_t spi_write(spi_t *m, const uint8_t *tx, uint16_t len)
 {
     return m->write(m, tx, len);
 }
 
-SPI_Err_t spi_read(SPI_Model_t *m, uint8_t *rx, uint16_t len)
+spi_err_t spi_read(spi_t *m, uint8_t *rx, uint16_t len)
 {
     return m->read(m, rx, len);
 }
@@ -33,7 +33,7 @@ SPI_Err_t spi_read(SPI_Model_t *m, uint8_t *rx, uint16_t len)
  * 软件 SPI 实现
  * ============================================================ */
 
-SPI_Err_t spi_sw_write_read(SPI_Model_t *m,
+spi_err_t spi_sw_write_read(spi_t *m,
                                    const uint8_t *tx, uint8_t *rx, uint16_t len)
 {
     if (len == 0)
@@ -54,12 +54,12 @@ SPI_Err_t spi_sw_write_read(SPI_Model_t *m,
     return SPI_Err_OK;
 }
 
-SPI_Err_t spi_sw_write(SPI_Model_t *m, const uint8_t *tx, uint16_t len)
+spi_err_t spi_sw_write(spi_t *m, const uint8_t *tx, uint16_t len)
 {
     return spi_sw_write_read(m, tx, NULL, len);
 }
 
-SPI_Err_t spi_sw_read(SPI_Model_t *m, uint8_t *rx, uint16_t len)
+spi_err_t spi_sw_read(spi_t *m, uint8_t *rx, uint16_t len)
 {
     return spi_sw_write_read(m, NULL, rx, len);
 }
@@ -70,12 +70,12 @@ SPI_Err_t spi_sw_read(SPI_Model_t *m, uint8_t *rx, uint16_t len)
  * 直接操作 GPIO。
  * ============================================================ */
 
-void spi_cs_select(SPI_Model_t *m)
+void spi_cs_select(spi_t *m)
 {
     (void)gpio_write(&m->src.cs, GPIO_Level_Low);
 }
 
-void spi_cs_deselect(SPI_Model_t *m)
+void spi_cs_deselect(spi_t *m)
 {
     (void)gpio_write(&m->src.cs, GPIO_Level_High);
 }
@@ -86,7 +86,7 @@ void spi_cs_deselect(SPI_Model_t *m)
  * 时序：设 MOSI → delay → idle→active(采样 MISO) → delay → active→idle
  */
 static uint8_t spi_sw_xfer_byte_cpha0(
-    SPI_Model_t *m,
+    spi_t *m,
     uint8_t tx_byte,
     uint32_t delay,
     GPIO_Level_t idle,
@@ -127,7 +127,7 @@ static uint8_t spi_sw_xfer_byte_cpha0(
  * 时序：设 MOSI + idle→active → delay → active→idle(采样 MISO) → delay
  */
 static uint8_t spi_sw_xfer_byte_cpha1(
-    SPI_Model_t *m,
+    spi_t *m,
     uint8_t tx_byte,
     uint32_t delay,
     GPIO_Level_t idle,
@@ -166,7 +166,7 @@ static uint8_t spi_sw_xfer_byte_cpha1(
  * 根据预计算的 cpha 选择时序路径，idle/active 电平也已在 spi_init 中确定。
  * 运行时每个 bit 内部无分支（除 MOSI 设置和 MISO 采样外）。
  */
-static uint8_t spi_sw_xfer_byte(SPI_Model_t *m, uint8_t tx_byte)
+static uint8_t spi_sw_xfer_byte(spi_t *m, uint8_t tx_byte)
 {
     uint32_t delay      = m->config.sw.bit_delay_us;
     GPIO_Level_t idle   = m->config.sw.sclk_idle;

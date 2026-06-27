@@ -18,26 +18,26 @@
  * 以下六个函数实现在 bsp_i2c.c 中，但不通过 bsp_i2c.h 暴露出来。
  * chip 层通过函数指针引用，此处用 extern 声明以通过编译。
  */
-extern I2C_Err_t i2c_sw_write(I2C_Model_t *m, uint8_t dev_addr,
+extern iic_err_t i2c_sw_write(iic_t *m, uint8_t dev_addr,
                               const uint8_t *data, uint16_t len);
-extern I2C_Err_t i2c_sw_read(I2C_Model_t *m, uint8_t dev_addr,
+extern iic_err_t i2c_sw_read(iic_t *m, uint8_t dev_addr,
                              uint8_t *buf, uint16_t len);
-extern I2C_Err_t i2c_sw_read_write(I2C_Model_t *m, uint8_t dev_addr,
+extern iic_err_t i2c_sw_read_write(iic_t *m, uint8_t dev_addr,
                                    uint8_t *rx_buf, uint16_t rx_len,
                                    const uint8_t *tx_buf, uint16_t tx_len);
-extern void i2c_sw_sda_high(I2C_Model_t *m);
-extern void i2c_sw_sda_low(I2C_Model_t *m);
-extern void i2c_sw_scl_high(I2C_Model_t *m);
-extern void i2c_sw_scl_low(I2C_Model_t *m);
+extern void i2c_sw_sda_high(iic_t *m);
+extern void i2c_sw_sda_low(iic_t *m);
+extern void i2c_sw_scl_high(iic_t *m);
+extern void i2c_sw_scl_low(iic_t *m);
 
 /* ============================================================
  * API 实现
  * ============================================================ */
 
-I2C_Err_t i2c_init(I2C_Model_t *m,
+iic_err_t iic_init(iic_t *m,
                    GPIO_Port_t sda_port, GPIO_Pin_t sda_pin,
                    GPIO_Port_t scl_port, GPIO_Pin_t scl_pin,
-                   const I2C_Config_t *cfg)
+                   const iic_cfg_t *cfg)
 {
     /*
      * 软件 I2C 强制使用 Output_OD（开漏），
@@ -54,9 +54,9 @@ I2C_Err_t i2c_init(I2C_Model_t *m,
 
     /* 要么内部上拉，要么外部上拉，不允许内部下拉 */
     if (cfg->sw.sda_pull == GPIO_Pull_Down)
-        return I2C_Err_Invalid_Mode;
+        return I2C_INVALID_MODE;
     if (cfg->sw.scl_pull == GPIO_Pull_Down)
-        return I2C_Err_Invalid_Mode;
+        return I2C_INVALID_MODE;
 
     gpio_init(&m->src.sw.sda, sda_port, sda_pin, &pin_cfg);
 
@@ -64,7 +64,6 @@ I2C_Err_t i2c_init(I2C_Model_t *m,
     gpio_init(&m->src.sw.scl, scl_port, scl_pin, &pin_cfg);
 
     m->config = *cfg;
-    m->busy   = 0;
 
     /* TODO: 硬件 I2C 待实现 */
     m->read       = i2c_sw_read;
@@ -75,13 +74,12 @@ I2C_Err_t i2c_init(I2C_Model_t *m,
     i2c_sw_sda_high(m);
     i2c_sw_scl_high(m);
 
-    return I2C_Err_OK;
+    return I2C_OK;
 }
 
-I2C_Err_t i2c_deinit(I2C_Model_t *m)
+iic_err_t iic_deinit(iic_t *m)
 {
     gpio_deinit(&m->src.sw.sda);
     gpio_deinit(&m->src.sw.scl);
-    m->busy = 0;
-    return I2C_Err_OK;
+    return I2C_OK;
 }

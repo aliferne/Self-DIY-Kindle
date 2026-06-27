@@ -17,19 +17,19 @@
  * 全局 GPIO 模型声明
  * ============================================================ */
 
-extern GPIO_Model_t usr_led;
-extern GPIO_Model_t pgup_btn;
-extern GPIO_Model_t pgdown_btn;
-extern GPIO_Model_t back_btn;
-extern GPIO_Model_t home_btn;
-extern GPIO_Model_t confirm_btn;
+extern gpio_t usr_led;
+extern gpio_t pgup_btn;
+extern gpio_t pgdown_btn;
+extern gpio_t back_btn;
+extern gpio_t home_btn;
+extern gpio_t confirm_btn;
 
-extern SDIO_Model_t storage;
+extern sdio_t storage;
 
-extern SPI_Model_t tft_spi;
-extern GPIO_Model_t tft_dc;
-extern GPIO_Model_t tft_rst;
-extern GPIO_Model_t tft_blk;
+extern spi_t tft_spi;
+extern gpio_t tft_dc;
+extern gpio_t tft_rst;
+extern gpio_t tft_blk;
 
 /* ============================================================
  * 初始化入口
@@ -41,4 +41,4 @@ void bsp_init_hardware(void);
  * FatFs 初始化设备的接口
  */
 
-SDIO_Err_t bsp_init_storage(void);
+sdio_err_t bsp_init_storage(void);

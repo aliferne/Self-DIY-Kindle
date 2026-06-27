@@ -22,7 +22,8 @@ typedef enum {
 } input_id_t;
 
 typedef enum {
-    Button_Input = 0,
+    BUTTON_PRESS = 0,
+    BUTTON_LONG_PRESS,
 } input_type_t;
 
 typedef struct input_event {

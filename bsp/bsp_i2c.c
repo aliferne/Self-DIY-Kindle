@@ -1,33 +1,37 @@
 #include "bsp_i2c.h"
 #include "bsp_sys.h"
+#include <stdint.h>
+
+#define I2C_WR_CMD (0U)
+#define I2C_RD_CMD (1U)
 
 /* I2C 延时函数 */
 #define I2C_DELAY(delay) dwt_delay_us(delay)
 
-void i2c_sw_sda_high(I2C_Model_t *m);
-void i2c_sw_sda_low(I2C_Model_t *m);
-GPIO_Level_t i2c_sw_get_sda(I2C_Model_t *m);
-void i2c_sw_scl_high(I2C_Model_t *m);
-void i2c_sw_scl_low(I2C_Model_t *m);
-void i2c_sw_start(I2C_Model_t *m);
-void i2c_sw_stop(I2C_Model_t *m);
-uint8_t i2c_sw_send_byte(I2C_Model_t *m, uint8_t byte);
-uint8_t i2c_sw_recv_byte(I2C_Model_t *m, uint8_t ack);
-uint8_t send_addr(I2C_Model_t *m, uint8_t dev_addr, I2C_RW_t rw);
+void i2c_sw_sda_high(iic_t *m);
+void i2c_sw_sda_low(iic_t *m);
+GPIO_Level_t i2c_sw_get_sda(iic_t *m);
+void i2c_sw_scl_high(iic_t *m);
+void i2c_sw_scl_low(iic_t *m);
+void i2c_sw_start(iic_t *m);
+void i2c_sw_stop(iic_t *m);
+uint8_t i2c_sw_send_byte(iic_t *m, uint8_t byte);
+uint8_t i2c_sw_recv_byte(iic_t *m, uint8_t ack);
+uint8_t send_addr(iic_t *m, uint8_t dev_addr, uint8_t rw);
 
-I2C_Err_t i2c_write(I2C_Model_t *m, uint8_t dev_addr,
+iic_err_t iic_write(iic_t *m, uint8_t dev_addr,
                     const uint8_t *data, uint16_t len)
 {
     return m->write(m, dev_addr, data, len);
 }
 
-I2C_Err_t i2c_read(I2C_Model_t *m, uint8_t dev_addr,
+iic_err_t iic_read(iic_t *m, uint8_t dev_addr,
                    uint8_t *buf, uint16_t len)
 {
     return m->read(m, dev_addr, buf, len);
 }
 
-I2C_Err_t i2c_read_write(I2C_Model_t *m, uint8_t dev_addr,
+iic_err_t iic_read_write(iic_t *m, uint8_t dev_addr,
                          uint8_t *rx_buf, uint16_t rx_len,
                          const uint8_t *tx_buf, uint16_t tx_len)
 {
@@ -38,44 +42,38 @@ I2C_Err_t i2c_read_write(I2C_Model_t *m, uint8_t dev_addr,
  * 外部函数，软件 I2C 可在 BSP 层直接实现
  * ============================================================ */
 
-I2C_Err_t i2c_sw_write(I2C_Model_t *m, uint8_t dev_addr,
+iic_err_t i2c_sw_write(iic_t *m, uint8_t dev_addr,
                        const uint8_t *data, uint16_t len)
 {
-    m->busy = 1;
 
     i2c_sw_start(m);
-    if (send_addr(m, dev_addr, I2C_Write)) {
+    if (send_addr(m, dev_addr, I2C_WR_CMD)) {
         i2c_sw_stop(m);
-        m->busy = 0;
-        return I2C_Err_NACK;
+        return I2C_NACK;
     }
 
     for (uint16_t i = 0; i < len; i++) {
         if (i2c_sw_send_byte(m, data[i])) {
             i2c_sw_stop(m);
-            m->busy = 0;
-            return I2C_Err_NACK;
+            return I2C_NACK;
         }
     }
 
     i2c_sw_stop(m);
-    m->busy = 0;
-    return I2C_Err_OK;
+    return I2C_OK;
 }
 
-I2C_Err_t i2c_sw_read(I2C_Model_t *m, uint8_t dev_addr,
+iic_err_t i2c_sw_read(iic_t *m, uint8_t dev_addr,
                       uint8_t *buf, uint16_t len)
 {
     if (len == 0)
-        return I2C_Err_OK;
+        return I2C_OK;
 
-    m->busy = 1;
 
     i2c_sw_start(m);
-    if (send_addr(m, dev_addr, I2C_Read)) {
+    if (send_addr(m, dev_addr, I2C_RD_CMD)) {
         i2c_sw_stop(m);
-        m->busy = 0;
-        return I2C_Err_NACK;
+        return I2C_NACK;
     }
 
     for (uint16_t i = 0; i < len; i++) {
@@ -85,8 +83,7 @@ I2C_Err_t i2c_sw_read(I2C_Model_t *m, uint8_t dev_addr,
     }
 
     i2c_sw_stop(m);
-    m->busy = 0;
-    return I2C_Err_OK;
+    return I2C_OK;
 }
 
 /*
@@ -97,28 +94,25 @@ I2C_Err_t i2c_sw_read(I2C_Model_t *m, uint8_t dev_addr,
  *
  * 典型场景：先写寄存器地址，后读数据。
  */
-I2C_Err_t i2c_sw_read_write(I2C_Model_t *m, uint8_t dev_addr,
+iic_err_t i2c_sw_read_write(iic_t *m, uint8_t dev_addr,
                             uint8_t *rx_buf, uint16_t rx_len,
                             const uint8_t *tx_data, uint16_t tx_len)
 {
     if (rx_len == 0)
-        return I2C_Err_OK;
+        return I2C_OK;
 
-    m->busy = 1;
 
     /* --- 写阶段 --- */
     i2c_sw_start(m);
-    if (send_addr(m, dev_addr, I2C_Write)) {
+    if (send_addr(m, dev_addr, I2C_WR_CMD)) {
         i2c_sw_stop(m);
-        m->busy = 0;
-        return I2C_Err_NACK;
+        return I2C_NACK;
     }
 
     for (uint16_t i = 0; i < tx_len; i++) {
         if (i2c_sw_send_byte(m, tx_data[i])) {
             i2c_sw_stop(m);
-            m->busy = 0;
-            return I2C_Err_NACK;
+            return I2C_NACK;
         }
     }
 
@@ -126,10 +120,9 @@ I2C_Err_t i2c_sw_read_write(I2C_Model_t *m, uint8_t dev_addr,
     i2c_sw_start(m); /* 重复 START */
 
     /* --- 读阶段 --- */
-    if (send_addr(m, dev_addr, I2C_Read)) {
+    if (send_addr(m, dev_addr, I2C_RD_CMD)) {
         i2c_sw_stop(m);
-        m->busy = 0;
-        return I2C_Err_NACK;
+        return I2C_NACK;
     }
 
     for (uint16_t i = 0; i < rx_len; i++) {
@@ -138,8 +131,7 @@ I2C_Err_t i2c_sw_read_write(I2C_Model_t *m, uint8_t dev_addr,
     }
 
     i2c_sw_stop(m);
-    m->busy = 0;
-    return I2C_Err_OK;
+    return I2C_OK;
 }
 
 /* ============================================================
@@ -148,32 +140,32 @@ I2C_Err_t i2c_sw_read_write(I2C_Model_t *m, uint8_t dev_addr,
  * 直接操作 GPIO.
  * ============================================================ */
 
-void i2c_sw_sda_high(I2C_Model_t *m)
+void i2c_sw_sda_high(iic_t *m)
 {
     (void)gpio_write(&m->src.sw.sda, GPIO_Level_High);
 }
 
-void i2c_sw_sda_low(I2C_Model_t *m)
+void i2c_sw_sda_low(iic_t *m)
 {
     (void)gpio_write(&m->src.sw.sda, GPIO_Level_Low);
 }
 
-GPIO_Level_t i2c_sw_get_sda(I2C_Model_t *m)
+GPIO_Level_t i2c_sw_get_sda(iic_t *m)
 {
     return gpio_read(&m->src.sw.sda);
 }
 
-void i2c_sw_scl_high(I2C_Model_t *m)
+void i2c_sw_scl_high(iic_t *m)
 {
     (void)gpio_write(&m->src.sw.scl, GPIO_Level_High);
 }
 
-void i2c_sw_scl_low(I2C_Model_t *m)
+void i2c_sw_scl_low(iic_t *m)
 {
     (void)gpio_write(&m->src.sw.scl, GPIO_Level_Low);
 }
 
-void i2c_sw_start(I2C_Model_t *m)
+void i2c_sw_start(iic_t *m)
 {
     i2c_sw_sda_high(m);
     i2c_sw_scl_high(m);
@@ -183,7 +175,7 @@ void i2c_sw_start(I2C_Model_t *m)
     i2c_sw_scl_low(m);
 }
 
-void i2c_sw_stop(I2C_Model_t *m)
+void i2c_sw_stop(iic_t *m)
 {
     i2c_sw_sda_low(m);
     i2c_sw_scl_high(m);
@@ -196,7 +188,7 @@ void i2c_sw_stop(I2C_Model_t *m)
  * 发送一个字节，返回 ACK 状态。
  * 返回 0 = ACK，返回 1 = NACK。
  */
-uint8_t i2c_sw_send_byte(I2C_Model_t *m, uint8_t byte)
+uint8_t i2c_sw_send_byte(iic_t *m, uint8_t byte)
 {
     uint32_t delay = m->config.sw.scl_delay_us;
 
@@ -228,7 +220,7 @@ uint8_t i2c_sw_send_byte(I2C_Model_t *m, uint8_t byte)
  * ack = 0: 主机发送 NACK（接收最后一个字节时使用）
  * ack = 1: 主机发送 ACK
  */
-uint8_t i2c_sw_recv_byte(I2C_Model_t *m, uint8_t ack)
+uint8_t i2c_sw_recv_byte(iic_t *m, uint8_t ack)
 {
     uint32_t delay = m->config.sw.scl_delay_us;
     uint8_t byte   = 0;
@@ -265,7 +257,7 @@ uint8_t i2c_sw_recv_byte(I2C_Model_t *m, uint8_t ack)
 /*
  * 发送地址+读写位，返回 NACK 状态
  */
-uint8_t send_addr(I2C_Model_t *m, uint8_t dev_addr, I2C_RW_t rw)
+uint8_t send_addr(iic_t *m, uint8_t dev_addr, uint8_t rw)
 {
-    return i2c_sw_send_byte(m, (uint8_t)(dev_addr << 1) | (uint8_t)rw);
+    return i2c_sw_send_byte(m, (uint8_t)(dev_addr << 1) | rw);
 }

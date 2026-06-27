@@ -119,7 +119,7 @@ typedef struct {
     GPIO_IRQ_Config_t irq_config;
     uint8_t use_irq : 1;
     uint8_t irq_flag : 1; /**< ISR 置位，应用层查询后清除 */
-} GPIO_Model_t;
+} gpio_t;
 
 /* ============================================================
  * 中断模型表
@@ -133,26 +133,26 @@ typedef struct {
 
 #define GPIO_MAX_PIN 16
 
-extern GPIO_Model_t *gpio_irq_models[GPIO_MAX_PIN];
+extern gpio_t *gpio_irq_models[GPIO_MAX_PIN];
 
-GPIO_Err_t gpio_init(GPIO_Model_t *m, GPIO_Port_t port, GPIO_Pin_t pin, const GPIO_Config_t *cfg);
-GPIO_Err_t gpio_deinit(GPIO_Model_t *m);
+GPIO_Err_t gpio_init(gpio_t *m, GPIO_Port_t port, GPIO_Pin_t pin, const GPIO_Config_t *cfg);
+GPIO_Err_t gpio_deinit(gpio_t *m);
 
-GPIO_Err_t gpio_write(GPIO_Model_t *m, GPIO_Level_t level);
-GPIO_Level_t gpio_read(GPIO_Model_t *m);
-GPIO_Err_t gpio_toggle(GPIO_Model_t *m);
+GPIO_Err_t gpio_write(gpio_t *m, GPIO_Level_t level);
+GPIO_Level_t gpio_read(gpio_t *m);
+GPIO_Err_t gpio_toggle(gpio_t *m);
 
-GPIO_Err_t gpio_attach_irq(GPIO_Model_t *m, const GPIO_IRQ_Config_t *irq_cfg);
-GPIO_Err_t gpio_detach_irq(GPIO_Model_t *m);
+GPIO_Err_t gpio_attach_irq(gpio_t *m, const GPIO_IRQ_Config_t *irq_cfg);
+GPIO_Err_t gpio_detach_irq(gpio_t *m);
 
 /** ISR 中调用，置 irq_flag（由芯片中断处理函数调用） */
-static inline void gpio_set_irq_flag(GPIO_Model_t *m)
+static inline void gpio_set_irq_flag(gpio_t *m)
 {
     m->irq_flag = 1;
 }
 
 /** 应用层调用，清除 irq_flag */
-static inline void gpio_clear_irq_flag(GPIO_Model_t *m)
+static inline void gpio_clear_irq_flag(gpio_t *m)
 {
     m->irq_flag = 0;
 }

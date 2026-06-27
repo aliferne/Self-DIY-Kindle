@@ -104,7 +104,6 @@ int main(void)
   MX_SPI1_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-  SCB->SHCSR |= (1 << 18U);
     sys_chip_init();
     bsp_init_hardware();
     mid_init_modules();

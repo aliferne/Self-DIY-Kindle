@@ -14,13 +14,13 @@
 #define FT_TP4_REG        0x15 // 第四个触摸点数据地址
 #define FT_TP5_REG        0x1B // 第五个触摸点数据地址
 
-uint8_t FT6336_WR_Reg(I2C_Model_t *i2c, uint16_t reg, uint8_t *buf, uint8_t len);
-void FT6336_RD_Reg(I2C_Model_t *i2c, uint16_t reg, uint8_t *buf, uint8_t len);
+uint8_t FT6336_WR_Reg(iic_t *i2c, uint16_t reg, uint8_t *buf, uint8_t len);
+void FT6336_RD_Reg(iic_t *i2c, uint16_t reg, uint8_t *buf, uint8_t len);
 void FT6336_Init(void);
 uint8_t FT6336_Scan(uint8_t mode);
 
-void ctp_assign_pins(GPIO_Model_t *rst, GPIO_Model_t *it);
-void ctp_assign_i2c(I2C_Model_t *i2c);
+void ctp_assign_pins(gpio_t *rst, gpio_t *it);
+void ctp_assign_i2c(iic_t *i2c);
 void ctp_assign_delay(void (*cb)(uint32_t ms));
 
 #endif

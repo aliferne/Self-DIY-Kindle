@@ -48,14 +48,14 @@
 typedef enum {
     SPI_Driver_HW = 0,
     SPI_Driver_SW = 1,
-} SPI_Driver_t;
+} spi_drv_t;
 
 typedef enum {
     SPI_Err_OK      = 0,
     SPI_Err_Error   = 1,
     SPI_Err_Timeout = 2,
     SPI_Err_Busy    = 3,
-} SPI_Err_t;
+} spi_err_t;
 
 /*
  * SPI 模式枚举 —— bit[1]=CPOL, bit[0]=CPHA
@@ -68,7 +68,7 @@ typedef enum {
     SPI_Mode_1 = 1, /**< CPOL=0, CPHA=1 — SCLK 空闲低, 下降沿采样 */
     SPI_Mode_2 = 2, /**< CPOL=1, CPHA=0 — SCLK 空闲高, 下降沿采样 */
     SPI_Mode_3 = 3, /**< CPOL=1, CPHA=1 — SCLK 空闲高, 上升沿采样 */
-} SPI_Mode_t;
+} spi_mode_t;
 
 #define SPI_CPOL(mode) (((mode) >> 1) & 1) /**< 从枚举值提取 CPOL */
 #define SPI_CPHA(mode) (((mode) >> 0) & 1) /**< 从枚举值提取 CPHA */
@@ -78,17 +78,17 @@ typedef enum {
  * ============================================================ */
 
 /** SPI 端口句柄（芯片实现内部转型为具体外设指针） */
-typedef void *SPI_Handle_t;
+typedef void *spi_handle_t;
 
 typedef union {
     struct {
-        GPIO_Model_t sclk;
-        GPIO_Model_t mosi;
-        GPIO_Model_t miso;
+        gpio_t sclk;
+        gpio_t mosi;
+        gpio_t miso;
     } sw;            /**< 软件 SPI: 三个 GPIO 引脚 */
-    GPIO_Model_t cs; /**< 片选信号 */
-    SPI_Handle_t hw; /**< 硬件 SPI：一个 HSPI 句柄 */
-} SPI_Source_t;
+    gpio_t cs; /**< 片选信号 */
+    spi_handle_t hw; /**< 硬件 SPI：一个 HSPI 句柄 */
+} spi_src_t;
 /*
  * SPI_Config_t — union 形式，后续可扩展 hw 配置
  */
@@ -102,7 +102,7 @@ typedef union {
      *     避免每个 bit 都查表/分支。
      */
     struct {
-        SPI_Mode_t mode;       /**< SPI 模式 0-3（用户填入） */
+        spi_mode_t mode;       /**< SPI 模式 0-3（用户填入） */
         GPIO_Speed_t speed;    /**< GPIO 速度配置 */
         uint16_t bit_delay_us; /**< 半位周期延时 (μs)（用户填入） */
         /* ---- 以下由 spi_init 预计算，运行时只读 ---- */
@@ -113,7 +113,7 @@ typedef union {
     struct {
         uint32_t timeout; /**< 发送/接收的超时时间 */
     } hw;
-} SPI_Config_t;
+} spi_cfg_t;
 
 /* 软件 SPI 注册参数：三个引脚的 (Port, Pin) */
 typedef struct {
@@ -123,47 +123,47 @@ typedef struct {
     GPIO_Pin_t mosi_pin;
     GPIO_Port_t miso_port;
     GPIO_Pin_t miso_pin;
-} SPI_Register_SW_Cfg_t;
+} spi_reg_sw_cfg_t;
 
 /* 统一注册配置 */
 typedef struct {
-    SPI_Driver_t drv;
+    spi_drv_t drv;
     union {
-        SPI_Register_SW_Cfg_t sw;
-        SPI_Handle_t hw; /* 硬件 SPI：直接用句柄指针 */
+        spi_reg_sw_cfg_t sw;
+        spi_handle_t hw; /* 硬件 SPI：直接用句柄指针 */
     } src;
     struct {
         GPIO_Port_t port;
         GPIO_Pin_t pin;
     } cs;
-} SPI_Register_Cfg_t;
+} spi_reg_cfg_t;
 
 /*
  * SPI_Model_t — 运行时模型
  */
 typedef struct spi_model {
-    SPI_Driver_t drv;
-    SPI_Source_t src;
-    SPI_Config_t config;
+    spi_drv_t drv;
+    spi_src_t src;
+    spi_cfg_t config;
     volatile uint8_t busy : 1;
 
-    SPI_Err_t (*read)(struct spi_model *m, uint8_t *rx, uint16_t len);
-    SPI_Err_t (*write)(struct spi_model *m, const uint8_t *tx, uint16_t len);
-    SPI_Err_t (*write_read)(struct spi_model *m, const uint8_t *tx, uint8_t *rx, uint16_t len);
-} SPI_Model_t;
+    spi_err_t (*read)(struct spi_model *m, uint8_t *rx, uint16_t len);
+    spi_err_t (*write)(struct spi_model *m, const uint8_t *tx, uint16_t len);
+    spi_err_t (*write_read)(struct spi_model *m, const uint8_t *tx, uint8_t *rx, uint16_t len);
+} spi_t;
 
 /* ============================================================
  * API 声明
  * ============================================================ */
 
-SPI_Err_t spi_init(SPI_Model_t *m, SPI_Register_Cfg_t *reg_cfg, const SPI_Config_t *cfg);
-SPI_Err_t spi_deinit(SPI_Model_t *m);
+spi_err_t spi_init(spi_t *m, spi_reg_cfg_t *reg_cfg, const spi_cfg_t *cfg);
+spi_err_t spi_deinit(spi_t *m);
 
-SPI_Err_t spi_write_read(SPI_Model_t *m,
+spi_err_t spi_write_read(spi_t *m,
                          const uint8_t *tx, uint8_t *rx, uint16_t len);
 
-SPI_Err_t spi_write(SPI_Model_t *m, const uint8_t *tx, uint16_t len);
-SPI_Err_t spi_read(SPI_Model_t *m, uint8_t *rx, uint16_t len);
+spi_err_t spi_write(spi_t *m, const uint8_t *tx, uint16_t len);
+spi_err_t spi_read(spi_t *m, uint8_t *rx, uint16_t len);
 
-void spi_cs_select(SPI_Model_t *m);
-void spi_cs_deselect(SPI_Model_t *m);
+void spi_cs_select(spi_t *m);
+void spi_cs_deselect(spi_t *m);
