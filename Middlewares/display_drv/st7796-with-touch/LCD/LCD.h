@@ -80,7 +80,7 @@ void gui_fill_circle(uint16_t x0, uint16_t y0, uint16_t r, uint16_t color);     
 void gui_draw_hline(uint16_t x0, uint16_t y0, uint16_t len, uint16_t color);                           // 画水平线 电容触摸屏专有部分
 uint16_t LCD_ReadPoint(uint16_t x, uint16_t y);                                                        // 读取指定坐标颜色
 
-void lcd_assign_src(Disp_Src_t *src);
+void lcd_assign_src(disp_src_t *src);
 void lcd_assign_delay(void (*cb)(uint32_t ms));
 lcd_dev_t *lcd_get_dev(void);
 

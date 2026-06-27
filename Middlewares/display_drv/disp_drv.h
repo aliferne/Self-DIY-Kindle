@@ -10,7 +10,7 @@
  *
  * 使用方式：
  *   1. 调用方自行初始化 SPI_Model_t 和 GPIO_Model_t（DC/RST/BLK）
- *   2. 填充 Disp_Src_t 上下文 (tft)
+ *   2. 填充 disp_src_t 上下文 (tft)
  *   3. 提供 Disp_Drv_t 结构体 (disp)
  *   4. 令 disp.src = &tft;
  *   5. 调用 display_init(&disp)
@@ -20,7 +20,7 @@
  *     GPIO_Model_t lcd_dc  = { ... };
  *     GPIO_Model_t lcd_rst = { ... };
  *
- *     Disp_Src_t tft = {
+ *     disp_src_t tft = {
  *         .spi     = &lcd_spi,
  *         .dc_pin  = &lcd_dc,
  *         .rst_pin = &lcd_rst,
@@ -71,7 +71,7 @@ typedef struct {
     gpio_t *dc_pin;  /**< Data/Command 引脚 */
     gpio_t *rst_pin; /**< Reset 引脚 */
     gpio_t *blk_pin; /**< 背光引脚（无需控制可传 NULL） */
-} Disp_Src_t;
+} disp_src_t;
 
 #if DISP_HAS_TOUCH == 1
 /* 显示屏触摸硬件资源，假定使用 I2C 作为通信协议 */
@@ -79,14 +79,14 @@ typedef struct {
     iic_t *i2c;  /**< I2C 总线 */
     gpio_t *it;  /**< 中断引脚 */
     gpio_t *rst; /**< 复位引脚 */
-} Disp_Touch_Src_t;
+} disp_touch_src_t;
 #endif
 
 /* 显示驱动 */
 typedef struct _disp_drv {
-    Disp_Src_t *src; /**< 底层驱动资源 */
+    disp_src_t *src; /**< 底层驱动资源 */
 #if DISP_HAS_TOUCH == 1
-    Disp_Touch_Src_t *touch;
+    disp_touch_src_t *touch;
 #endif
     /*
      * 私有变量，

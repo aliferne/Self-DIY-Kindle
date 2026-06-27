@@ -8,23 +8,18 @@
 static void input_dispatcher(input_event_t *e)
 {
     ASSERT_FAIL(e == NULL, return);
-    
+
     /* 目前是一个相对简单的标志位操作，后续可以换成任务通知 */
     switch (e->event_id) {
         case PAGEUP:
-            turn_screen = 1;
             break;
         case PAGEDOWN:
-            turn_screen = 0;
             break;
         case BACK:
-            turn_screen = !turn_screen;
             break;
         case HOME:
-            turn_screen = 0;
             break;
         case CONFIRM:
-            turn_screen = 1;
             break;
         case NONE:
         default:

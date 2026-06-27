@@ -11,11 +11,8 @@
 
 #include "bsp_gpio.h"
 #include "bsp_sdio.h"
+#include "bsp_i2c.h"
 #include "bsp_spi.h"
-
-/* ============================================================
- * 全局 GPIO 模型声明
- * ============================================================ */
 
 extern gpio_t usr_led;
 extern gpio_t pgup_btn;
@@ -31,9 +28,9 @@ extern gpio_t tft_dc;
 extern gpio_t tft_rst;
 extern gpio_t tft_blk;
 
-/* ============================================================
- * 初始化入口
- * ============================================================ */
+extern gpio_t tp_int;
+extern gpio_t tp_rst;
+extern iic_t tp_i2c;
 
 void bsp_init_hardware(void);
 

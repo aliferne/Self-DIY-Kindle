@@ -25,7 +25,7 @@ void display_init(Disp_Drv_t *drv)
 
     display_set_delay_cb(drv, chip_delay_ms);
 
-    /* [DI] 将 Disp_Src_t 注入到 LCD.c */
+    /* [DI] 将 disp_src_t 注入到 LCD.c */
     lcd_assign_src(drv->src);
     lcd_assign_delay(drv->delay_cb);
 
@@ -38,7 +38,7 @@ void display_init(Disp_Drv_t *drv)
     drv->width  = ((lcd_dev_t *)drv->priv)->width;
     drv->height = ((lcd_dev_t *)drv->priv)->height;
 
-    /* [DI] 将 Disp_Touch_Src_t 注入到 ctp.c */
+    /* [DI] 将 disp_touch_src_t 注入到 ctp.c */
 #if DISP_HAS_TOUCH
     if (drv->touch) {
         ctp_assign_i2c(drv->touch->i2c);
@@ -62,12 +62,12 @@ void display_deinit(Disp_Drv_t *drv)
 }
 
 /* ============================================================
- * display_rst — 硬件复位 (通过 Disp_Src_t.rst_pin)
+ * display_rst — 硬件复位 (通过 disp_src_t.rst_pin)
  * ============================================================ */
 void display_rst(Disp_Drv_t *drv)
 {
     ASSERT_FAIL(drv == NULL || drv->src == NULL, return);
-    Disp_Src_t *src = drv->src;
+    disp_src_t *src = drv->src;
     ASSERT_FAIL(src->rst_pin == NULL, return);
 
     gpio_write(src->rst_pin, GPIO_Level_Low);

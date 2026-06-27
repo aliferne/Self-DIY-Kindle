@@ -4,7 +4,7 @@
  * 中间层配置相关
  */
 
-#include "display_drv/disp_drv.h"
+#include "disp_drv.h"
 
 extern Disp_Drv_t display;
 

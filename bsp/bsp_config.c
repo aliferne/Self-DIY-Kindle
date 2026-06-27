@@ -2,6 +2,7 @@
 #include "bsp_gpio.h"
 #include "bsp_sdio.h"
 #include "bsp_spi.h"
+#include "bsp_i2c.h"
 #include "pin_src.h"
 #include "bsp_sys.h"
 #include "sdio.h"
@@ -19,9 +20,20 @@ spi_t tft_spi;
 gpio_t tft_dc;
 gpio_t tft_rst;
 gpio_t tft_blk;
+
+/* touchpad related ----------- */
+gpio_t tp_int;
+gpio_t tp_rst;
+iic_t tp_i2c;
+
+/* TODO: I2C 的底层 API 尚未改写，需要改写 */
+// static gpio_t tp_scl;
+// static gpio_t tp_sda;
+
 static void bsp_init_buttons(void);
 static void bsp_init_leds(void);
 static void bsp_init_tft(void);
+static void bsp_init_touchpad(void);
 
 void bsp_init_hardware(void)
 {
@@ -31,13 +43,8 @@ void bsp_init_hardware(void)
     /* 由于引入了 FatFs，这里直接在 disk_initialize 中调用此初始化函数 */
     // bsp_init_storage();
     bsp_init_tft();
+    bsp_init_touchpad();
 }
-
-/* ============================================================
- * 按键初始化（输入 + 上拉 + 下降沿中断）
- *
- * 中断仅置 irq_flag，应用层轮询后调用 gpio_clear_irq_flag() 清除。
- * ============================================================ */
 
 static void bsp_init_buttons(void)
 {
@@ -119,4 +126,33 @@ static void bsp_init_tft(void)
     spi_init(&tft_spi,
              &spi_reg_cfg,
              &tft_spi_cfg);
+}
+
+static void bsp_init_touchpad(void)
+{
+    GPIO_Config_t init_conf = {
+        .mode  = GPIO_Mode_Output_PP,
+        .pull  = GPIO_Pull_None,
+        .speed = GPIO_Speed_Low,
+    };
+
+    gpio_init(&tp_int,
+              (GPIO_Port_t)TOUCH_INT_PORT, (GPIO_Pin_t)TOUCH_INT_PIN,
+              &init_conf);
+    gpio_init(&tp_rst,
+              (GPIO_Port_t)TOUCH_RST_PORT, (GPIO_Pin_t)TOUCH_RST_PIN,
+              &init_conf);
+
+    iic_cfg_t i2c_cfg = {
+        .sw = {
+            .scl_delay_us = 50,
+            .scl_pull     = GPIO_Pull_Up,
+            .sda_pull     = GPIO_Pull_Up,
+            .speed        = GPIO_Speed_Low,
+        }};
+
+    iic_init(&tp_i2c,
+             (GPIO_Port_t)TOUCH_SDA_PORT, (GPIO_Pin_t)TOUCH_SDA_PIN,
+             (GPIO_Port_t)TOUCH_SCL_PORT, (GPIO_Pin_t)TOUCH_SCL_PIN,
+             &i2c_cfg);
 }

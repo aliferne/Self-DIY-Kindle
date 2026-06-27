@@ -28,7 +28,7 @@
  * SPI 批量写原语
  * ============================================================ */
 
-static void display_write_cmd_bulk(Disp_Src_t *src, const uint8_t *data, uint32_t len)
+static void display_write_cmd_bulk(disp_src_t *src, const uint8_t *data, uint32_t len)
 {
     ASSERT_FAIL(src == NULL || src->dc_pin == NULL || data == NULL, return);
     // DC=低 → 指令
@@ -39,7 +39,7 @@ static void display_write_cmd_bulk(Disp_Src_t *src, const uint8_t *data, uint32_
     spi_cs_deselect(src->spi);
 }
 
-static void display_write_data_bulk(Disp_Src_t *src, const uint8_t *data, uint32_t len)
+static void display_write_data_bulk(disp_src_t *src, const uint8_t *data, uint32_t len)
 {
     ASSERT_FAIL(src == NULL || src->dc_pin == NULL || data == NULL, return);
     // DC=高 → 数据
@@ -50,7 +50,7 @@ static void display_write_data_bulk(Disp_Src_t *src, const uint8_t *data, uint32
     spi_cs_deselect(src->spi);
 }
 
-static void display_write_index(Disp_Src_t *src, uint8_t cmd)
+static void display_write_index(disp_src_t *src, uint8_t cmd)
 {
     display_write_cmd_bulk(src, &cmd, 1);
 }
@@ -63,7 +63,7 @@ static void display_write_index(Disp_Src_t *src, uint8_t cmd)
 void display_init(Disp_Drv_t *drv)
 {
     ASSERT_FAIL(drv == NULL || drv->src == NULL, return);
-    Disp_Src_t *tft = (Disp_Src_t *)drv->src;
+    disp_src_t *tft = (disp_src_t *)drv->src;
 
     /* 设置延时回调 */
     display_set_delay_cb(drv, chip_delay_ms);
@@ -142,7 +142,7 @@ void display_init(Disp_Drv_t *drv)
 void display_deinit(Disp_Drv_t *drv)
 {
     ASSERT_FAIL(drv == NULL || drv->src == NULL, return);
-    Disp_Src_t *tft = (Disp_Src_t *)drv->src;
+    disp_src_t *tft = (disp_src_t *)drv->src;
 
     gpio_deinit(tft->blk_pin);
     gpio_deinit(tft->dc_pin);
@@ -156,7 +156,7 @@ void display_deinit(Disp_Drv_t *drv)
 void display_rst(Disp_Drv_t *drv)
 {
     ASSERT_FAIL(drv == NULL || drv->src == NULL, return);
-    Disp_Src_t *tft = (Disp_Src_t *)drv->src;
+    disp_src_t *tft = (disp_src_t *)drv->src;
     ASSERT_FAIL(tft->rst_pin == NULL, return);
 
     gpio_write(tft->rst_pin, GPIO_Level_Low);
@@ -170,7 +170,7 @@ void display_write_16bit(Disp_Drv_t *drv, uint16_t data)
 {
     ASSERT_FAIL(drv == NULL || drv->src == NULL, return);
 
-    Disp_Src_t *tft = (Disp_Src_t *)drv->src;
+    disp_src_t *tft = (disp_src_t *)drv->src;
     uint8_t buf[2]  = {(uint8_t)(data >> 8), (uint8_t)(data & 0xFF)};
     display_write_data_bulk(tft, buf, 2);
 }
@@ -180,7 +180,7 @@ void display_write_cmd(Disp_Drv_t *drv, uint8_t *data, uint32_t len)
 {
     ASSERT_FAIL(drv == NULL || drv->src == NULL, return);
 
-    display_write_cmd_bulk((Disp_Src_t *)drv->src, data, len);
+    display_write_cmd_bulk((disp_src_t *)drv->src, data, len);
 }
 
 /* 写入数据 */
@@ -188,7 +188,7 @@ void display_write_data(Disp_Drv_t *drv, uint8_t *data, uint32_t len)
 {
     ASSERT_FAIL(drv == NULL || drv->src == NULL, return);
 
-    display_write_data_bulk((Disp_Src_t *)drv->src, data, len);
+    display_write_data_bulk((disp_src_t *)drv->src, data, len);
 }
 
 /* 开启背光 */
@@ -196,7 +196,7 @@ void display_backlight_on(Disp_Drv_t *drv)
 {
     ASSERT_FAIL(drv == NULL || drv->src == NULL, return);
 
-    Disp_Src_t *tft = (Disp_Src_t *)drv->src;
+    disp_src_t *tft = (disp_src_t *)drv->src;
 
     ASSERT_FAIL(tft->blk_pin == NULL, return);
 
@@ -208,7 +208,7 @@ void display_backlight_off(Disp_Drv_t *drv)
 {
     ASSERT_FAIL(drv == NULL || drv->src == NULL, return);
 
-    Disp_Src_t *tft = (Disp_Src_t *)drv->src;
+    disp_src_t *tft = (disp_src_t *)drv->src;
 
     ASSERT_FAIL(tft->blk_pin == NULL, return);
 
@@ -221,7 +221,7 @@ void display_set_region(Disp_Drv_t *drv,
                         uint32_t x_end, uint32_t y_end)
 {
     ASSERT_FAIL(drv == NULL || drv->src == NULL, return);
-    Disp_Src_t *tft = (Disp_Src_t *)drv->src;
+    disp_src_t *tft = (disp_src_t *)drv->src;
 
     uint8_t col_data[] = {0x00, (uint8_t)x_start, 0x00, (uint8_t)x_end};
     uint8_t row_data[] = {0x00, (uint8_t)y_start, 0x00, (uint8_t)y_end};
@@ -242,8 +242,8 @@ void display_spin_screen(Disp_Drv_t *drv, uint8_t dir)
     static const uint8_t vals[] = {0xC0, 0xA0, 0x00, 0x60};
     if (dir > 3) dir = 0;
 
-    display_write_index((Disp_Src_t *)drv->src, 0x36);
-    display_write_data_bulk((Disp_Src_t *)drv->src, &vals[dir], 1);
+    display_write_index((disp_src_t *)drv->src, 0x36);
+    display_write_data_bulk((disp_src_t *)drv->src, &vals[dir], 1);
 }
 
 /* 清除屏幕 */
@@ -260,7 +260,7 @@ void display_fill_screen(Disp_Drv_t *drv,
 {
     ASSERT_FAIL(drv == NULL || drv->src == NULL, return);
 
-    Disp_Src_t *tft = (Disp_Src_t *)drv->src;
+    disp_src_t *tft = (disp_src_t *)drv->src;
     uint32_t w      = x_end - x_start + 1;
     uint32_t h      = y_end - y_start + 1;
     uint32_t total  = w * h;
@@ -305,7 +305,7 @@ void display_write_pixels(Disp_Drv_t *drv,
                           const uint16_t *pixels)
 {
     ASSERT_FAIL(drv == NULL || drv->src == NULL || pixels == NULL, return);
-    Disp_Src_t *tft = (Disp_Src_t *)drv->src;
+    disp_src_t *tft = (disp_src_t *)drv->src;
 
     display_set_region(drv, x, y, x + w - 1, y + h - 1);
 

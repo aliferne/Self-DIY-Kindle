@@ -12,15 +12,6 @@ LV_FONT_DECLARE(simhei_size14)
 LV_FONT_DECLARE(simhei_size16)
 LV_FONT_DECLARE(simhei_size18)
 
-#include "FreeRTOS.h"
-#include "task.h"
-void vApplicationStackOverflowHook(TaskHandle_t xTask,
-                                   char *pcTaskName)
-{
-    printf("Stack overflow in task %s\r\n", pcTaskName);
-}
-
-uint8_t turn_screen = 0;
 
 void StartUITask(void const *argument)
 {
@@ -48,18 +39,10 @@ void StartUITask(void const *argument)
     lv_obj_t *label = lv_label_create(obj);
     lv_obj_set_style_text_font(label, &simhei_size14, 0);
 
-    lv_label_set_text(label, "确认");
+    lv_label_set_text(label, "confirm");
 
-    uint8_t i = 1;
     for (;;) {
         lv_timer_handler();
         os_delay_ms(10);
-        lv_disp_set_rotation(disp, 0);
-
-        if (turn_screen == 1) {
-            turn_screen = 0;
-            i           = (i + 1) % 4;
-            gpio_toggle(&usr_led);
-        }
     }
 }

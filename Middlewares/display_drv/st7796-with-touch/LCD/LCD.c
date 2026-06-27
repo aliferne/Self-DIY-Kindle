@@ -9,10 +9,10 @@
 #include "bsp_handle.h"
 
 static void (*lcd_delay_ms)(uint32_t ms) = NULL;
-static Disp_Src_t *lcd_src               = NULL;
+static disp_src_t *lcd_src               = NULL;
 static lcd_dev_t lcddev;
 
-void lcd_assign_src(Disp_Src_t *src)
+void lcd_assign_src(disp_src_t *src)
 {
     lcd_src = src;
 }
