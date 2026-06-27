@@ -23,7 +23,7 @@ static disp_touch_src_t touch = {
     .rst = &tp_rst
 };
 
-Disp_Drv_t display;
+disp_drv_t display;
 
 void mid_init_modules(void)
 {

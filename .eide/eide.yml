@@ -9,42 +9,6 @@ virtualFolder:
   files:
     - path: startup_stm32f407xx.s
   folders:
-    - name: Application
-      files: []
-      folders:
-        - name: MDK-ARM
-          files:
-            - path: MDK-ARM/startup_stm32f407xx.s
-          folders: []
-        - name: User
-          files: []
-          folders:
-            - name: Core
-              files:
-                - path: Core/Src/main.c
-                - path: Core/Src/gpio.c
-                - path: Core/Src/freertos.c
-                - path: Core/Src/stm32f4xx_it.c
-                - path: Core/Src/stm32f4xx_hal_msp.c
-                - path: Core/Src/sysmem.c
-                - path: Core/Src/syscalls.c
-                - path: Core/Src/sdio.c
-                - path: Core/Src/dma.c
-                - path: Core/Src/spi.c
-                - path: Core/Src/stm32f4xx_hal_timebase_tim.c
-                - path: Core/Src/usart.c
-              folders: []
-            - name: FATFS
-              files: []
-              folders:
-                - name: App
-                  files:
-                    - path: FATFS/App/fatfs.c
-                  folders: []
-                - name: Target
-                  files:
-                    - path: FATFS/Target/user_diskio.c
-                  folders: []
     - name: Drivers
       files: []
       folders:
@@ -388,7 +352,12 @@ virtualFolder:
         - path: applications/music_task.c
         - path: applications/net_task.c
         - path: applications/process_task.c
-        - path: applications/ui_task.c
+        - path: applications/ui/ui_home_page.c
+        - path: applications/ui/ui_net_page.c
+        - path: applications/ui/ui_player_page.c
+        - path: applications/ui/ui_reader_page.c
+        - path: applications/ui/ui_settings_page.c
+        - path: applications/ui/ui_task.c
       folders: []
     - name: Chip
       files: []
@@ -412,6 +381,42 @@ virtualFolder:
                     - path: chip/stm32f4/irq/irq_sys_it.c
                     - path: chip/stm32f4/irq/irq_sdio.c
                     - path: chip/stm32f4/irq/irq_uart.c
+                  folders: []
+    - name: Application
+      files: []
+      folders:
+        - name: MDK-ARM
+          files:
+            - path: MDK-ARM/startup_stm32f407xx.s
+          folders: []
+        - name: User
+          files: []
+          folders:
+            - name: Core
+              files:
+                - path: Core/Src/main.c
+                - path: Core/Src/gpio.c
+                - path: Core/Src/freertos.c
+                - path: Core/Src/stm32f4xx_it.c
+                - path: Core/Src/stm32f4xx_hal_msp.c
+                - path: Core/Src/sysmem.c
+                - path: Core/Src/syscalls.c
+                - path: Core/Src/sdio.c
+                - path: Core/Src/dma.c
+                - path: Core/Src/spi.c
+                - path: Core/Src/stm32f4xx_hal_timebase_tim.c
+                - path: Core/Src/usart.c
+              folders: []
+            - name: FATFS
+              files: []
+              folders:
+                - name: App
+                  files:
+                    - path: FATFS/App/fatfs.c
+                  folders: []
+                - name: Target
+                  files:
+                    - path: FATFS/Target/user_diskio.c
                   folders: []
 dependenceList: []
 outDir: build

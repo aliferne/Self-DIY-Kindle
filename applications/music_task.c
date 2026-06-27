@@ -1,4 +1,3 @@
-#include "music_task.h"
 #include "bsp_sys.h"
 
 void StartMusicTask(void const *argument)

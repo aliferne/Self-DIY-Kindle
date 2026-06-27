@@ -50,6 +50,7 @@ static void disp_drv_update_cb(lv_disp_drv_t *drv);
  *  STATIC VARIABLES
  **********************/
 lv_disp_t *disp;
+lv_disp_drv_t lv_disp_drv; /*Descriptor of a display driver*/
 static uint32_t disp_hor_res = 0;
 static uint32_t disp_ver_res = 0;
 static lv_color_t *disp_buf1 = NULL;
@@ -115,23 +116,22 @@ void lv_port_disp_init(void)
      * Register the display in LVGL
      *----------------------------------*/
 
-    static lv_disp_drv_t disp_drv; /*Descriptor of a display driver*/
-    lv_disp_drv_init(&disp_drv);   /*Basic initialization*/
+    lv_disp_drv_init(&lv_disp_drv);   /*Basic initialization*/
 
     /*Set up the functions to access to your display*/
 
     /*Set the resolution of the display*/
-    disp_drv.hor_res = disp_hor_res;
-    disp_drv.ver_res = disp_ver_res;
+    lv_disp_drv.hor_res = disp_hor_res;
+    lv_disp_drv.ver_res = disp_ver_res;
 
     /*Used to copy the buffer's content to the display*/
-    disp_drv.flush_cb = disp_flush;
+    lv_disp_drv.flush_cb = disp_flush;
 
     /*Set a display buffer*/
-    disp_drv.draw_buf = &draw_buf_dsc_2;
+    lv_disp_drv.draw_buf = &draw_buf_dsc_2;
 
     /* 旋转屏幕时用于更新底层硬件 */
-    disp_drv.drv_update_cb = disp_drv_update_cb;
+    lv_disp_drv.drv_update_cb = disp_drv_update_cb;
 
     /*Required for Example 3)*/
     // disp_drv.full_refresh = 1;
@@ -142,7 +142,7 @@ void lv_port_disp_init(void)
     // disp_drv.gpu_fill_cb = gpu_fill;
 
     /*Finally register the driver*/
-    disp = lv_disp_drv_register(&disp_drv);
+    disp = lv_disp_drv_register(&lv_disp_drv);
 }
 
 /**********************

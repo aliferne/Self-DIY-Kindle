@@ -6,6 +6,6 @@
 
 #include "disp_drv.h"
 
-extern Disp_Drv_t display;
+extern disp_drv_t display;
 
 void mid_init_modules(void);

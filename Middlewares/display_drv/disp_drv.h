@@ -101,57 +101,57 @@ typedef struct _disp_drv {
     uint32_t height;
     /* 延时函数指针 */
     void (*delay_cb)(uint32_t ms);
-} Disp_Drv_t;
+} disp_drv_t;
 
-static inline void display_set_delay_cb(Disp_Drv_t *drv, void (*cb)(uint32_t ms))
+static inline void display_set_delay_cb(disp_drv_t *drv, void (*cb)(uint32_t ms))
 {
     drv->delay_cb = cb;
 }
 
-void display_init(Disp_Drv_t *drv); /**< 和 LVGL 的 disp_init 区分开 */
-void display_deinit(Disp_Drv_t *drv);
-void display_rst(Disp_Drv_t *drv);
+void display_init(disp_drv_t *drv); /**< 和 LVGL 的 disp_init 区分开 */
+void display_deinit(disp_drv_t *drv);
+void display_rst(disp_drv_t *drv);
 
-void display_backlight_on(Disp_Drv_t *drv);
-void display_backlight_off(Disp_Drv_t *drv);
-void display_set_region(Disp_Drv_t *drv,
+void display_backlight_on(disp_drv_t *drv);
+void display_backlight_off(disp_drv_t *drv);
+void display_set_region(disp_drv_t *drv,
                         uint32_t x_start, uint32_t y_start,
                         uint32_t x_end, uint32_t y_end);
-void display_spin_screen(Disp_Drv_t *drv, uint8_t dir);
+void display_spin_screen(disp_drv_t *drv, uint8_t dir);
 
-void display_clean_screen(Disp_Drv_t *drv, uint16_t color);
-void display_fill_screen(Disp_Drv_t *drv,
+void display_clean_screen(disp_drv_t *drv, uint16_t color);
+void display_fill_screen(disp_drv_t *drv,
                          uint32_t x_start, uint32_t y_start,
                          uint32_t x_end, uint32_t y_end,
                          uint16_t color);
 
-void display_set_cursor(Disp_Drv_t *drv, uint32_t x, uint32_t y);
-void display_write_pixels(Disp_Drv_t *drv,
+void display_set_cursor(disp_drv_t *drv, uint32_t x, uint32_t y);
+void display_write_pixels(disp_drv_t *drv,
                           uint32_t x, uint32_t y,
                           uint32_t w, uint32_t h,
                           const uint16_t *pixels);
-void display_draw_point(Disp_Drv_t *drv,
+void display_draw_point(disp_drv_t *drv,
                         uint32_t x, uint32_t y, uint16_t color);
-void display_draw_line(Disp_Drv_t *drv,
+void display_draw_line(disp_drv_t *drv,
                        uint32_t x0, uint32_t y0,
                        uint32_t x1, uint32_t y1, uint16_t color);
-void display_draw_circle(Disp_Drv_t *drv,
+void display_draw_circle(disp_drv_t *drv,
                          uint32_t x, uint32_t y,
                          uint32_t r, uint16_t color);
-void display_draw_rect(Disp_Drv_t *drv,
+void display_draw_rect(disp_drv_t *drv,
                        uint32_t x, uint32_t y,
                        uint32_t w, uint32_t h, uint16_t color);
-void display_draw_string(Disp_Drv_t *drv,
+void display_draw_string(disp_drv_t *drv,
                          uint32_t x, uint32_t y,
                          uint16_t fc, uint16_t bc,
                          const char *str);
-void display_draw_number(Disp_Drv_t *drv,
+void display_draw_number(disp_drv_t *drv,
                          uint32_t x, uint32_t y,
                          uint16_t fc, uint16_t bc,
                          int num);
 
 /* 测试显示效果，可以不实现 */
-void display_test(Disp_Drv_t *display);
+void display_test(disp_drv_t *display);
 
 #if DISP_HAS_TOUCH == 1
 void display_touch_init(/* TODO: Args */);

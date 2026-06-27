@@ -308,7 +308,12 @@ C_SOURCES += \
   applications/music_task.c \
   applications/net_task.c \
   applications/process_task.c \
-  applications/ui_task.c
+  applications/ui/ui_task.c \
+  applications/ui/ui_home_page.c \
+  applications/ui/ui_net_page.c \
+  applications/ui/ui_player_page.c \
+  applications/ui/ui_reader_page.c \
+  applications/ui/ui_settings_page.c \
 
 ######################################
 # C 源文件 — Chip layer
@@ -352,6 +357,7 @@ C_INCLUDES = \
 -I  bsp \
 -I  services \
 -I  applications \
+-I  applications/ui \
 -I  . \
 -I  chip/stm32f4 \
 -I  Middlewares \
@@ -430,6 +436,7 @@ LDFLAGS = $(MCU) \
 ######################################
 # 目标文件（使用完整路径避免文件名冲突）
 ######################################
+C_SOURCES := $(sort $(C_SOURCES))
 C_OBJECTS = $(C_SOURCES:%.c=$(BUILD_DIR)/%.o)
 ASM_OBJECTS = $(ASM_SOURCES:%.s=$(BUILD_DIR)/%.o)
 OBJECTS = $(C_OBJECTS) $(ASM_OBJECTS)

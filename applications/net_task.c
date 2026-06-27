@@ -1,4 +1,3 @@
-#include "net_task.h"
 #include "bsp_sys.h"
 
 void StartNetTask(void const *argument)

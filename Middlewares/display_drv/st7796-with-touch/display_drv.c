@@ -19,7 +19,7 @@
 /* ============================================================
  * [DI] display_init — 初始化 ST7796
  * ============================================================ */
-void display_init(Disp_Drv_t *drv)
+void display_init(disp_drv_t *drv)
 {
     ASSERT_FAIL(drv == NULL || drv->src == NULL, return);
 
@@ -55,7 +55,7 @@ void display_init(Disp_Drv_t *drv)
 /* ============================================================
  * display_deinit — 去初始化
  * ============================================================ */
-void display_deinit(Disp_Drv_t *drv)
+void display_deinit(disp_drv_t *drv)
 {
     ASSERT_FAIL(drv == NULL, return);
     drv->is_initialized = 0;
@@ -64,7 +64,7 @@ void display_deinit(Disp_Drv_t *drv)
 /* ============================================================
  * display_rst — 硬件复位 (通过 disp_src_t.rst_pin)
  * ============================================================ */
-void display_rst(Disp_Drv_t *drv)
+void display_rst(disp_drv_t *drv)
 {
     ASSERT_FAIL(drv == NULL || drv->src == NULL, return);
     disp_src_t *src = drv->src;
@@ -79,14 +79,14 @@ void display_rst(Disp_Drv_t *drv)
 /* ============================================================
  * 背光控制
  * ============================================================ */
-void display_backlight_on(Disp_Drv_t *drv)
+void display_backlight_on(disp_drv_t *drv)
 {
     ASSERT_FAIL(drv == NULL || drv->src == NULL, return);
     ASSERT_FAIL(drv->src->blk_pin == NULL, return);
     gpio_write(drv->src->blk_pin, GPIO_Level_High);
 }
 
-void display_backlight_off(Disp_Drv_t *drv)
+void display_backlight_off(disp_drv_t *drv)
 {
     ASSERT_FAIL(drv == NULL || drv->src == NULL, return);
     ASSERT_FAIL(drv->src->blk_pin == NULL, return);
@@ -96,7 +96,7 @@ void display_backlight_off(Disp_Drv_t *drv)
 /* ============================================================
  * 区域 / 方向
  * ============================================================ */
-void display_set_region(Disp_Drv_t *drv,
+void display_set_region(disp_drv_t *drv,
                         uint32_t x_start, uint32_t y_start,
                         uint32_t x_end, uint32_t y_end)
 {
@@ -106,7 +106,7 @@ void display_set_region(Disp_Drv_t *drv,
                    (uint16_t)(y_end - y_start + 1));
 }
 
-void display_spin_screen(Disp_Drv_t *drv, uint8_t dir)
+void display_spin_screen(disp_drv_t *drv, uint8_t dir)
 {
     drv->spin_dir = dir;
 
@@ -120,13 +120,13 @@ void display_spin_screen(Disp_Drv_t *drv, uint8_t dir)
 /* ============================================================
  * 清屏 / 填充
  * ============================================================ */
-void display_clean_screen(Disp_Drv_t *drv, uint16_t color)
+void display_clean_screen(disp_drv_t *drv, uint16_t color)
 {
     GIVEUP(drv);
     LCD_Clear(color);
 }
 
-void display_fill_screen(Disp_Drv_t *drv,
+void display_fill_screen(disp_drv_t *drv,
                          uint32_t x_start, uint32_t y_start,
                          uint32_t x_end, uint32_t y_end,
                          uint16_t color)
@@ -140,13 +140,13 @@ void display_fill_screen(Disp_Drv_t *drv,
 /* ============================================================
  * 光标 / 像素
  * ============================================================ */
-void display_set_cursor(Disp_Drv_t *drv, uint32_t x, uint32_t y)
+void display_set_cursor(disp_drv_t *drv, uint32_t x, uint32_t y)
 {
     GIVEUP(drv);
     LCD_SetCursor((uint16_t)x, (uint16_t)y);
 }
 
-void display_write_pixels(Disp_Drv_t *drv,
+void display_write_pixels(disp_drv_t *drv,
                           uint32_t x, uint32_t y,
                           uint32_t w, uint32_t h,
                           const uint16_t *pixels)
@@ -160,7 +160,7 @@ void display_write_pixels(Disp_Drv_t *drv,
 /* ============================================================
  * 基本图元
  * ============================================================ */
-void display_draw_point(Disp_Drv_t *drv,
+void display_draw_point(disp_drv_t *drv,
                         uint32_t x, uint32_t y, uint16_t color)
 {
     GIVEUP(drv);
@@ -168,7 +168,7 @@ void display_draw_point(Disp_Drv_t *drv,
     LCD_Fast_DrawPoint((uint16_t)x, (uint16_t)y, color);
 }
 
-void display_draw_line(Disp_Drv_t *drv,
+void display_draw_line(disp_drv_t *drv,
                        uint32_t x0, uint32_t y0,
                        uint32_t x1, uint32_t y1, uint16_t color)
 {
@@ -178,7 +178,7 @@ void display_draw_line(Disp_Drv_t *drv,
                  (uint16_t)x1, (uint16_t)y1);
 }
 
-void display_draw_circle(Disp_Drv_t *drv,
+void display_draw_circle(disp_drv_t *drv,
                          uint32_t x, uint32_t y,
                          uint32_t r, uint16_t color)
 {
@@ -187,7 +187,7 @@ void display_draw_circle(Disp_Drv_t *drv,
     LCD_Draw_Circle((uint16_t)x, (uint16_t)y, (uint8_t)r);
 }
 
-void display_draw_rect(Disp_Drv_t *drv,
+void display_draw_rect(disp_drv_t *drv,
                        uint32_t x, uint32_t y,
                        uint32_t w, uint32_t h, uint16_t color)
 {
@@ -200,7 +200,7 @@ void display_draw_rect(Disp_Drv_t *drv,
 /* ============================================================
  * 文字
  * ============================================================ */
-void display_draw_string(Disp_Drv_t *drv,
+void display_draw_string(disp_drv_t *drv,
                          uint32_t x, uint32_t y,
                          uint16_t fc, uint16_t bc,
                          const char *str)
@@ -212,7 +212,7 @@ void display_draw_string(Disp_Drv_t *drv,
                    200, 200, 16, (uint8_t *)str);
 }
 
-void display_draw_number(Disp_Drv_t *drv,
+void display_draw_number(disp_drv_t *drv,
                          uint32_t x, uint32_t y,
                          uint16_t fc, uint16_t bc,
                          int num)
@@ -226,7 +226,7 @@ void display_draw_number(Disp_Drv_t *drv,
 /* ============================================================
  * display_test — 测试显示效果
  * ============================================================ */
-void display_test(Disp_Drv_t *drv)
+void display_test(disp_drv_t *drv)
 {
     GIVEUP(drv);
     LCD_Clear(RED);
