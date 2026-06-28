@@ -222,6 +222,17 @@ C_SOURCES += \
   Middlewares/algorithm/fifo.c
 
 ######################################
+# C/ASM 源文件 — RTT
+######################################
+C_SOURCES += \
+  Middlewares/RTT/RTT/SEGGER_RTT.c \
+  Middlewares/RTT/RTT/SEGGER_RTT_printf.c \
+  Middlewares/RTT/Syscalls/SEGGER_RTT_Syscalls_GCC.c
+
+ASM_SOURCES += \
+  Middlewares/RTT/RTT/SEGGER_RTT_ASM_ARMv7M.s
+
+######################################
 # C 源文件 — LVGL (使用通配符自动收集)
 ######################################
 LVGL_DIRS = \
@@ -344,56 +355,58 @@ C_DEFS = \
 # 头文件搜索路径
 ######################################
 C_INCLUDES = \
--I  Core/Inc \
--I  Drivers/STM32F4xx_HAL_Driver/Inc \
--I  Drivers/STM32F4xx_HAL_Driver/Inc/Legacy \
--I  Drivers/CMSIS/Device/ST/STM32F4xx/Include \
--I  Drivers/CMSIS/Include \
--I  Middlewares/Third_Party/FreeRTOS/Source/include \
--I  Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS \
--I  Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F \
--I  Middlewares/FatFs \
--I  Middlewares/miniz \
--I  bsp \
--I  services \
--I  applications \
--I  applications/ui \
--I  . \
--I  chip/stm32f4 \
--I  Middlewares \
--I  Middlewares/lvgl \
--I  Middlewares/ebtn \
--I  Middlewares/lvgl/demos \
--I  Middlewares/lvgl/porting \
--I  Middlewares/lvgl/src/core \
--I  Middlewares/lvgl/src/font \
--I  Middlewares/lvgl/src \
--I  Middlewares/lvgl/src/hal \
--I  Middlewares/lvgl/src/widgets \
--I  Middlewares/lvgl/src/misc \
--I  Middlewares/lvgl/src/draw \
--I  Middlewares/lvgl/src/draw/stm32_dma2d \
--I  Middlewares/lvgl/src/draw/sw \
--I  Middlewares/display_drv \
--I  Middlewares/display_drv/st7796-with-touch \
--I  Middlewares/display_drv/st7796-with-touch/LCD \
--I  Middlewares/display_drv/st7796-with-touch/TOUCH \
--I  Middlewares/display_drv/epaper \
--I  Middlewares/display_drv/epaper/config \
--I  Middlewares/display_drv/epaper/drv \
--I  Middlewares/display_drv/epaper/fonts \
--I  Middlewares/display_drv/epaper/gui \
--I  Middlewares/display_drv/epaper/test \
--I  Middlewares/display_drv/st7735s \
--I  Middlewares/algorithm \
--ICore/Inc \
--IDrivers/STM32F4xx_HAL_Driver/Inc \
--IDrivers/STM32F4xx_HAL_Driver/Inc/Legacy \
--IMiddlewares/Third_Party/FreeRTOS/Source/include \
--IMiddlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS \
--IMiddlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F \
--IDrivers/CMSIS/Device/ST/STM32F4xx/Include \
--IDrivers/CMSIS/Include
+  -ICore/Inc \
+  -IDrivers/STM32F4xx_HAL_Driver/Inc \
+  -IDrivers/STM32F4xx_HAL_Driver/Inc/Legacy \
+  -IDrivers/CMSIS/Device/ST/STM32F4xx/Include \
+  -IDrivers/CMSIS/Include \
+  -IMiddlewares/Third_Party/FreeRTOS/Source/include \
+  -IMiddlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS \
+  -IMiddlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F \
+  -IMiddlewares/FatFs \
+  -IMiddlewares/miniz \
+  -Ibsp \
+  -Iservices \
+  -Iapplications \
+  -Iapplications/ui \
+  -I. \
+  -Ichip/stm32f4 \
+  -IMiddlewares \
+  -IMiddlewares/lvgl \
+  -IMiddlewares/ebtn \
+  -IMiddlewares/lvgl/demos \
+  -IMiddlewares/lvgl/porting \
+  -IMiddlewares/lvgl/src/core \
+  -IMiddlewares/lvgl/src/font \
+  -IMiddlewares/lvgl/src \
+  -IMiddlewares/lvgl/src/hal \
+  -IMiddlewares/lvgl/src/widgets \
+  -IMiddlewares/lvgl/src/misc \
+  -IMiddlewares/lvgl/src/draw \
+  -IMiddlewares/lvgl/src/draw/stm32_dma2d \
+  -IMiddlewares/lvgl/src/draw/sw \
+  -IMiddlewares/display_drv \
+  -IMiddlewares/display_drv/st7796-with-touch \
+  -IMiddlewares/display_drv/st7796-with-touch/LCD \
+  -IMiddlewares/display_drv/st7796-with-touch/TOUCH \
+  -IMiddlewares/display_drv/epaper \
+  -IMiddlewares/display_drv/epaper/config \
+  -IMiddlewares/display_drv/epaper/drv \
+  -IMiddlewares/display_drv/epaper/fonts \
+  -IMiddlewares/display_drv/epaper/gui \
+  -IMiddlewares/display_drv/epaper/test \
+  -IMiddlewares/display_drv/st7735s \
+  -IMiddlewares/algorithm \
+  -IMiddlewares/RTT/RTT \
+  -IMiddlewares/RTT/Config \
+  -ICore/Inc \
+  -IDrivers/STM32F4xx_HAL_Driver/Inc \
+  -IDrivers/STM32F4xx_HAL_Driver/Inc/Legacy \
+  -IMiddlewares/Third_Party/FreeRTOS/Source/include \
+  -IMiddlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS \
+  -IMiddlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F \
+  -IDrivers/CMSIS/Device/ST/STM32F4xx/Include \
+  -IDrivers/CMSIS/Include
 
 ######################################
 # 编译选项
@@ -413,7 +426,7 @@ CFLAGS = $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) \
   -MMD \
   -MP
 
-ASFLAGS = $(MCU) $(OPT) \
+ASFLAGS = $(MCU) $(OPT) $(C_INCLUDES) \
   -Wall \
   -ffunction-sections \
   -fdata-sections \

@@ -329,6 +329,13 @@ virtualFolder:
           files:
             - path: Middlewares/ebtn/ebtn.c
           folders: []
+        - name: segger_rtt
+          files:
+            - path: Middlewares/RTT/RTT/SEGGER_RTT_ASM_ARMv7M.s
+            - path: Middlewares/RTT/RTT/SEGGER_RTT_printf.c
+            - path: Middlewares/RTT/RTT/SEGGER_RTT.c
+            - path: Middlewares/RTT/Syscalls/SEGGER_RTT_Syscalls_GCC.c
+          folders: []
     - name: BSP
       files:
         - path: bsp/bsp_config.c
@@ -472,6 +479,8 @@ targets:
         - Middlewares/display_drv/st7796-with-touch/TOUCH
         - Middlewares/algorithm
         - Middlewares/ebtn
+        - Middlewares/RTT/Config
+        - Middlewares/RTT/RTT
       libList: []
     excludeList:
       - <virtual_root>/Application/MDK-ARM/startup_stm32f407xx.s
