@@ -1,6 +1,7 @@
 #pragma once
 
 /* 用于调用 fs 相关操作 */
+#include "ff.h"
 #include "srv_config.h"
 #include "storage_srv.h"
 #include "bsp_handle.h"
@@ -12,11 +13,11 @@
  * @param fp 文件指针
  * @param filename 文件名
  */
-#define OPEN_FONT_FILE(fp, filename)                                \
+#define open_font_file(fp, filename)                                \
     do {                                                            \
         FRESULT res =                                               \
             storage_open(&sdcard, fp, "/fonts/" filename, FA_READ); \
-        ASSERT_FAIL(res != FR_OK, return NULL);                     \
+        ASSERT_FAIL(res != FR_OK, for (;;));                        \
     } while (0)
 
 /**
@@ -27,13 +28,18 @@
  * @param offset 读取数据的偏移量
  * @param size 要读取的数据大小
  */
-#define READ_FONT_FILE(fp, buf, offset, size)    \
-    do {                                         \
-        UINT nread;                              \
-        FRESULT res = FR_OK;                     \
-        res         = storage_lseek(fp, offset); \
-        ASSERT_FAIL(res != FR_OK, return NULL);  \
-        res = f_read(fp, buf, size, &nread);     \
-        ASSERT_FAIL(res != FR_OK, return NULL);  \
-        ASSERT_FAIL(nread != size, return NULL); \
-    } while (0)
+static bool read_font_file(FIL *fp, uint8_t *buf, size_t offset, size_t size)
+{
+    UINT nread;
+    FRESULT res = FR_OK;
+    res         = f_lseek(fp, offset);
+
+    if (res != FR_OK)
+        for (;;);
+
+    res = f_read(fp, buf, size, &nread);
+
+    if (res != FR_OK || nread != size)
+        return false;
+    return true;
+}

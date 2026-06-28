@@ -5,6 +5,8 @@
 #include "stm32f4xx_hal.h"
 #include "usart.h"
 #include <stdint.h>
+#include "FreeRTOS.h"
+#include "task.h"
 
 #define SYS_USE_UART &huart1
 static UART_Model_t sys_com;
@@ -78,6 +80,18 @@ void os_delay_until(uint32_t *prv_wake_time, uint32_t ms)
     osDelayUntil(prv_wake_time, ms);
 }
 
+/* 临界区相关 ------------------------------ */
+void os_enter_critical(void)
+{
+    taskENTER_CRITICAL();
+}
+
+void os_exit_critical(void)
+{
+    taskEXIT_CRITICAL();
+}
+
+/* DWT 相关 ------------------------------ */
 #ifdef USE_DWT_DELAY
 
 void dwt_init(void)

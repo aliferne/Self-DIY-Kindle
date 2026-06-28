@@ -23,6 +23,8 @@
 
 /* 以下为 GCC 特有的 `__attribute__` 语法 */
 #ifdef __GNUC__
+/* 声明为弱函数 */
+#define __WEAK __attribute__((weak))
 /* 取消自动内存对齐 */
 #define __PACKED __attribute__((packed))
 /* 强制声明某个可能未使用函数/变量为已使用，避免编译器优化 */
@@ -40,6 +42,7 @@
 /* 声明函数不会返回 */
 #define __NO_RETURN __attribute__((noreturn))
 #else
+#define __WEAK
 #define __PACKED
 #define __USED
 #define __SECTION(sec_name)

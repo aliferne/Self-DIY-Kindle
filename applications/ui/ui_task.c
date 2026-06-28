@@ -29,6 +29,7 @@ extern void ui_disp_home_page(void);
 extern void ui_disp_settings_page(void);
 extern void ui_disp_reader_page(void);
 extern void ui_disp_player_page(void);
+void flusher(lv_timer_t *timer);
 
 void StartUITask(void const *argument)
 {
@@ -51,33 +52,35 @@ void StartUITask(void const *argument)
     lv_style_set_y(&style, 0);
 
     /*Create an object with the new style*/
-    // lv_obj_t *obj = lv_obj_create(lv_scr_act());
-    // lv_obj_add_style(obj, &style, 0);
-
-    // lv_obj_t *label = lv_label_create(obj);
-    /* FIXME: 目前看来可能是配置字体失效，导致无法显示，先用英文画 UI 吧 */
-    // lv_obj_set_style_text_font(label, &simhei_size14, 0);
-
-    int i              = 0;
-    const char *txts[] = {"yes", "no", "ok", "confirm"};
-    lv_obj_t *obj      = lv_obj_create(lv_scr_act());
+    lv_obj_t *obj = lv_obj_create(lv_scr_act());
     lv_obj_add_style(obj, &style, 0);
 
     lv_obj_t *label = lv_label_create(obj);
-    lv_label_set_text_static(label, txts[i]);
+    lv_obj_set_style_text_font(label, &simhei_size14, 0);
+
+    lv_label_set_text_static(label, "确认");
+
+    // lv_timer_t *timer = lv_timer_create(flusher, 1000, label);
 
     for (;;) {
-        /* 
+        /*
          * FIXME: UI 局部更新时的绘制是破碎的，但是全局刷新（旋转屏幕）非常流畅
          */
         // if (current_page == HOME_PAGE)
         //     ui_disp_home_page();
 
-        lv_label_set_text_static(label, txts[i]);
-        i = (i + 1) % LEN(txts);
-
         lv_timer_handler();
 
         os_delay_ms(10);
     }
+}
+
+void flusher(lv_timer_t *timer)
+{
+    static int i       = 0;
+    const char *txts[] = {"yes", "no", "ok", "confirm"};
+
+    lv_obj_t *label = (lv_obj_t *)timer->user_data;
+    lv_label_set_text_static(label, txts[i]);
+    i = (i + 1) % LEN(txts);
 }

@@ -43,11 +43,15 @@ static uint8_t *__user_font_getdata(int offset, int size)
 {
     // 如字模保存在SPI FLASH, SPIFLASH_Read(__g_font_buf,offset,size);
     // 如字模已加载到SDRAM,直接返回偏移地址即可如:return (uint8_t*)(sdram_fontddr+offset);
+    bool res = false;
+
     if (!__g_font_opened) {
-        OPEN_FONT_FILE(&__g_font_fp, "simhei_size18.bin");
+        open_font_file(&__g_font_fp, "simhei_size18.bin");
         __g_font_opened = 1;
     }
-    READ_FONT_FILE(&__g_font_fp, __g_font_buf, offset, size);
+
+    res = read_font_file(&__g_font_fp, __g_font_buf, offset, size);
+    ASSERT_FAIL(res == false, for (;;));
 
     return __g_font_buf;
 }
