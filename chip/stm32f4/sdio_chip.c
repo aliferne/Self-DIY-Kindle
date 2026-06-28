@@ -41,6 +41,9 @@ sdio_err_t sdio_init(sdio_t *m, sdio_handle_t handle,
     if (m == NULL || handle == NULL || cfg == NULL)
         return SDIO_Err_Param;
 
+    if (m->enter_critical_cb == NULL || m->exit_critical_cb == NULL)
+        return SDIO_Err_NoCriticalCB;
+
     SD_HandleTypeDef *h = (SD_HandleTypeDef *)handle;
 
     m->handle = handle;
@@ -112,10 +115,9 @@ sdio_err_t sdio_read_blocks(sdio_t *m, uint8_t *buf,
             if (timeout < SDIO_TIMEOUT)
                 timeout = SDIO_TIMEOUT;
 
-            /* TODO: 我想这里还需要考虑一下， bsp 层是否应当根据启用了 OS 来决定调用这个 */
-            os_enter_critical();
+            if (m->enter_critical_cb) m->enter_critical_cb();
             hal_ret = HAL_SD_ReadBlocks(h, buf, sector, count, timeout);
-            os_exit_critical();
+            if (m->exit_critical_cb) m->exit_critical_cb();
 
             if (hal_ret == HAL_TIMEOUT)
                 return SDIO_Err_Timeout;
@@ -157,10 +159,9 @@ sdio_err_t sdio_write_blocks(sdio_t *m, const uint8_t *buf,
             if (timeout < SDIO_TIMEOUT)
                 timeout = SDIO_TIMEOUT;
 
-            /* TODO: 我想这里还需要考虑一下， bsp 层是否应当根据启用了 OS 来决定调用这个 */
-            os_enter_critical();
+            if (m->enter_critical_cb) m->enter_critical_cb();
             hal_ret = HAL_SD_WriteBlocks(h, (uint8_t *)buf, sector, count, timeout);
-            os_exit_critical();
+            if (m->exit_critical_cb) m->exit_critical_cb();
 
             if (hal_ret == HAL_TIMEOUT)
                 return SDIO_Err_Timeout;
@@ -196,10 +197,10 @@ sdio_err_t sdio_erase_blocks(sdio_t *m, uint32_t sector, uint32_t count)
     uint32_t end   = sector + count - 1;
 
     SD_HandleTypeDef *h = (SD_HandleTypeDef *)m->handle;
-    /* TODO: 我想这里还需要考虑一下， bsp 层是否应当根据启用了 OS 来决定调用这个 */
-    os_enter_critical();
+
+    if (m->enter_critical_cb) m->enter_critical_cb();
     HAL_StatusTypeDef ret = HAL_SD_Erase(h, start, end);
-    os_exit_critical();
+    if (m->exit_critical_cb) m->exit_critical_cb();
 
     if (ret != HAL_OK) return SDIO_Err_Generic;
 

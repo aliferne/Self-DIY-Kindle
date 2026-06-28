@@ -49,18 +49,19 @@
  * ============================================================ */
 
 typedef enum {
-    SDIO_Err_Ok       = 0,
-    SDIO_Err_Param    = 1,   /**< 参数错误（NULL 指针等） */
-    SDIO_Err_Timeout  = 2,   /**< 超时（仅 Polling 模式） */
-    SDIO_Err_Busy     = 3,   /**< 上一次传输仍在进行 */
-    SDIO_Err_DMA      = 4,   /**< DMA 传输错误 */
-    SDIO_Err_Generic  = 5,   /**< HAL 返回 HAL_ERROR */
+    SDIO_Err_Ok           = 0,
+    SDIO_Err_Param        = 1, /**< 参数错误（NULL 指针等） */
+    SDIO_Err_Timeout      = 2, /**< 超时（仅 Polling 模式） */
+    SDIO_Err_Busy         = 3, /**< 上一次传输仍在进行 */
+    SDIO_Err_DMA          = 4, /**< DMA 传输错误 */
+    SDIO_Err_Generic      = 5, /**< HAL 返回 HAL_ERROR */
+    SDIO_Err_NoCriticalCB = 6, /**< 没有提供进/出临界回调 */
 } sdio_err_t;
 
 typedef enum {
-    SDIO_Mode_Polling = 0,   /**< 阻塞轮询 */
-    SDIO_Mode_IT      = 1,   /**< 中断，chip 层内部等 busy 清零 */
-    SDIO_Mode_DMA     = 2,   /**< DMA，chip 层内部等 busy 清零 */
+    SDIO_Mode_Polling = 0, /**< 阻塞轮询 */
+    SDIO_Mode_IT      = 1, /**< 中断，chip 层内部等 busy 清零 */
+    SDIO_Mode_DMA     = 2, /**< DMA，chip 层内部等 busy 清零 */
 } sdio_mode_t;
 
 /** HAL 句柄的透明包装（chip 层内部转型为 SD_HandleTypeDef*） */
@@ -71,8 +72,8 @@ typedef void *sdio_handle_t;
  * ============================================================ */
 
 typedef struct {
-    sdio_mode_t mode;         /**< 传输模式 */
-    uint8_t wide_bus : 1;    /**< 0=1Bit, 1=4Bit */
+    sdio_mode_t mode;     /**< 传输模式 */
+    uint8_t wide_bus : 1; /**< 0=1Bit, 1=4Bit */
 } sdio_cfg_t;
 
 /* ============================================================
@@ -81,10 +82,25 @@ typedef struct {
 
 typedef struct {
     sdio_cfg_t config;
-    sdio_handle_t handle;         /**< SD_HandleTypeDef*（CubeMX 初始化） */
+    sdio_handle_t handle; /**< SD_HandleTypeDef*（CubeMX 初始化） */
     /* 卡片信息，sdio_init 时由 HAL_SD_GetCardInfo 填充 */
-    uint32_t block_size;          /**< 逻辑块大小（字节），通常 512 */
-    uint32_t block_count;         /**< 总块数 */
+    uint32_t block_size;  /**< 逻辑块大小（字节），通常 512 */
+    uint32_t block_count; /**< 总块数 */
+
+    /**
+     * @brief 进入临界区/退出临界区的回调
+     *
+     * 考虑到 sd 卡读写时序较快，且当软件处理速率无法跟上硬件时会触发 RX_OVERRUN
+     * 因此有必要在读写操作时进入临界区以保护 sd 卡优先正常读写，将其变为原子操作
+     *
+     * 对于裸机环境，可使用 `__disable_irq` 和 `__enable_irq`
+     * 对于 OS 环境，则根据对应的 OS 提供的进出临界区的函数来使用
+     * 无论使用什么函数，都要保证 sd 卡读写的原子性，以及不可中断
+     *
+     * @warning 必须提供！
+     */
+    void (*enter_critical_cb)(void);
+    void (*exit_critical_cb)(void);
 } sdio_t;
 
 /* ============================================================

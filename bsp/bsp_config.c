@@ -91,6 +91,10 @@ sdio_err_t bsp_init_storage(void)
         .wide_bus = 1,
     };
 
+    /* 必须提供进出临界区的回调 */
+    storage.enter_critical_cb = os_enter_critical;
+    storage.exit_critical_cb  = os_exit_critical;
+
     return sdio_init(&storage, (sdio_handle_t *)&hsd, &sdio_cfg);
 }
 
