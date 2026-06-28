@@ -32,7 +32,7 @@ static bool read_font_file(FIL *fp, uint8_t *buf, size_t offset, size_t size)
 {
     UINT nread;
     FRESULT res = FR_OK;
-    res         = f_lseek(fp, offset);
+    res         = storage_lseek(fp, offset);
 
     if (res != FR_OK)
         for (;;);
