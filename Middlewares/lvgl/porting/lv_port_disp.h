@@ -22,34 +22,32 @@ extern "C" {
 #include "lvgl/lvgl.h"
 #endif
 
-#include "disp_drv.h"
-
-extern lv_disp_t *disp;
-extern lv_disp_drv_t lv_disp_drv;
+extern lv_disp_t *lv_disp;
+extern uint32_t disp_hor_res;
+extern uint32_t disp_ver_res;
 
 /*********************
  *      DEFINES
  *********************/
-#define SCR_WIDTH  lv_disp_drv.hor_res
-#define SCR_HEIGHT lv_disp_drv.ver_res
+#define SCR_WIDTH  disp_hor_res
+#define SCR_HEIGHT disp_ver_res
 
-/* FIXME: 下面直接根据驱动来显示的颜色不太正常 */
-#define LV_DISP_RED     lv_color_hex(DISP_RED)
-#define LV_DISP_GREEN   lv_color_hex(DISP_GREEN)
-#define LV_DISP_BLUE    lv_color_hex(DISP_BLUE)
-#define LV_DISP_BLUE2   lv_color_hex(DISP_BLUE2)
-#define LV_DISP_PINK    lv_color_hex(DISP_PINK)
-#define LV_DISP_ORANGE  lv_color_hex(DISP_ORANGE)
-#define LV_DISP_WHITE   lv_color_hex(DISP_WHITE)
-#define LV_DISP_BLACK   lv_color_hex(DISP_BLACK)
-#define LV_DISP_YELLOW  lv_color_hex(DISP_YELLOW)
-#define LV_DISP_CYAN    lv_color_hex(DISP_CYAN)
-#define LV_DISP_PURPLE  lv_color_hex(DISP_PURPLE)
-#define LV_DISP_PURPLE2 lv_color_hex(DISP_PURPLE2)
-#define LV_DISP_PURPLE3 lv_color_hex(DISP_PURPLE3)
-#define LV_DISP_GRAY0   lv_color_hex(DISP_GRAY0)
-#define LV_DISP_GRAY1   lv_color_hex(DISP_GRAY1)
-#define LV_DISP_GRAY2   lv_color_hex(DISP_GRAY2)
+#define LV_DISP_RED     lv_color_make(255, 0, 0)
+#define LV_DISP_GREEN   lv_color_make(0, 255, 0)
+#define LV_DISP_BLUE    lv_color_make(0, 0, 255)
+#define LV_DISP_BLUE2   lv_color_make(28, 57, 255)
+#define LV_DISP_PINK    lv_color_make(255, 105, 180)
+#define LV_DISP_ORANGE  lv_color_make(255, 165, 0)
+#define LV_DISP_WHITE   lv_color_make(255, 255, 255)
+#define LV_DISP_BLACK   lv_color_make(0, 0, 0)
+#define LV_DISP_YELLOW  lv_color_make(255, 255, 0)
+#define LV_DISP_CYAN    lv_color_make(0, 255, 255)
+#define LV_DISP_PURPLE  lv_color_make(128, 0, 128)
+#define LV_DISP_PURPLE2 lv_color_make(186, 85, 211)
+#define LV_DISP_PURPLE3 lv_color_make(75, 0, 130)
+#define LV_DISP_GRAY0   lv_color_make(239, 239, 239)
+#define LV_DISP_GRAY1   lv_color_make(128, 128, 128)
+#define LV_DISP_GRAY2   lv_color_make(64, 64, 64)
 
 /**********************
  *      TYPEDEFS

@@ -4,6 +4,8 @@
  */
 
 /*Copy this file as "lv_port_disp.c" and set this value to "1" to enable content*/
+#include "bsp_sys.h"
+#include <stdint.h>
 #if 1
 
 /*********************
@@ -49,10 +51,11 @@ static void disp_drv_update_cb(lv_disp_drv_t *drv);
 /**********************
  *  STATIC VARIABLES
  **********************/
-lv_disp_t *disp;
-lv_disp_drv_t lv_disp_drv; /*Descriptor of a display driver*/
-static uint32_t disp_hor_res = 0;
-static uint32_t disp_ver_res = 0;
+uint32_t disp_hor_res = 0;
+uint32_t disp_ver_res = 0;
+
+lv_disp_t *lv_disp;
+static lv_disp_drv_t lv_disp_drv; /*Descriptor of a display driver*/
 static lv_color_t *disp_buf1 = NULL;
 static lv_color_t *disp_buf2 = NULL;
 
@@ -116,7 +119,7 @@ void lv_port_disp_init(void)
      * Register the display in LVGL
      *----------------------------------*/
 
-    lv_disp_drv_init(&lv_disp_drv);   /*Basic initialization*/
+    lv_disp_drv_init(&lv_disp_drv); /*Basic initialization*/
 
     /*Set up the functions to access to your display*/
 
@@ -142,7 +145,7 @@ void lv_port_disp_init(void)
     // disp_drv.gpu_fill_cb = gpu_fill;
 
     /*Finally register the driver*/
-    disp = lv_disp_drv_register(&lv_disp_drv);
+    lv_disp = lv_disp_drv_register(&lv_disp_drv);
 }
 
 /**********************
@@ -158,6 +161,12 @@ static void disp_init(void)
      * 而软件则会在 middlewares 层被初始化，
      * 这里会被用来设置动态更新屏幕的回调函数，并初始化屏幕长宽
      */
+
+    /*
+     * 刚开始时需要赋值为屏幕默认显示方向的长宽，
+     * 后面只需要使用 LVGL 的 lv_disp_drv 来更新长宽即可
+     * 见 disp_drv_update_cb@lv_port_disp.c, lv_disp_drv_update@lv_hal_disp.c
+     */
     disp_hor_res = display.width;
     disp_ver_res = display.height;
 
@@ -167,7 +176,7 @@ static void disp_init(void)
     if (disp_buf2 == NULL)
         disp_buf2 = malloc(sizeof(lv_color_t) * disp_hor_res * 10);
 
-    ASSERT_FAIL(disp_buf1 == NULL || disp_buf2 == NULL, return);
+    ASSERT_FAIL(disp_buf1 == NULL || disp_buf2 == NULL, for (;;));
 }
 
 volatile bool disp_flush_enabled = true;
@@ -233,6 +242,11 @@ static void disp_drv_update_cb(lv_disp_drv_t *drv)
 {
     static const uint8_t lv_to_dir[] = {
         DISP_NO_SPIN, DISP_LSPIN_90, DISP_LSPIN_180, DISP_LSPIN_270};
+
+    /* 由于 LVGL 会自动帮我们更新屏幕渲染的宽高，因此直接这么赋值即可 */
+    disp_hor_res = lv_disp_drv.hor_res;
+    disp_ver_res = lv_disp_drv.ver_res;
+
     display_spin_screen(&display, lv_to_dir[drv->rotated]);
 }
 

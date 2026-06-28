@@ -1,6 +1,10 @@
 #include "bsp_sys.h"
+#include "bsp_handle.h"
+#include "lv_obj_pos.h"
+#include "lv_printf.h"
 #include "lv_timer.h"
 #include "lv_port_disp.h"
+#include <stddef.h>
 #include <stdio.h>
 
 LV_FONT_DECLARE(simhei_size14)
@@ -22,8 +26,6 @@ typedef enum {
 static ui_page_t current_page = HOME_PAGE;
 
 extern void ui_disp_home_page(void);
-extern void ui_update_home_page(void);
-
 extern void ui_disp_settings_page(void);
 extern void ui_disp_reader_page(void);
 extern void ui_disp_player_page(void);
@@ -34,24 +36,21 @@ void StartUITask(void const *argument)
     lv_init();
     lv_port_disp_init();
 
-    if (current_page == HOME_PAGE)
-        ui_disp_home_page();
+    static lv_style_t style;
+    lv_style_init(&style);
+    lv_style_set_radius(&style, 5);
 
-    // static lv_style_t style;
-    // lv_style_init(&style);
-    // lv_style_set_radius(&style, 5);
+    /*Make a gradient*/
+    lv_style_set_width(&style, 128);
+    lv_style_set_height(&style, LV_SIZE_CONTENT);
 
-    // /*Make a gradient*/
-    // lv_style_set_width(&style, 128);
-    // lv_style_set_height(&style, LV_SIZE_CONTENT);
+    lv_style_set_pad_ver(&style, 0);
+    lv_style_set_pad_left(&style, 0);
 
-    // lv_style_set_pad_ver(&style, 0);
-    // lv_style_set_pad_left(&style, 0);
+    lv_style_set_x(&style, lv_pct(0));
+    lv_style_set_y(&style, 0);
 
-    // lv_style_set_x(&style, lv_pct(0));
-    // lv_style_set_y(&style, 0);
-
-    // /*Create an object with the new style*/
+    /*Create an object with the new style*/
     // lv_obj_t *obj = lv_obj_create(lv_scr_act());
     // lv_obj_add_style(obj, &style, 0);
 
@@ -59,14 +58,26 @@ void StartUITask(void const *argument)
     /* FIXME: 目前看来可能是配置字体失效，导致无法显示，先用英文画 UI 吧 */
     // lv_obj_set_style_text_font(label, &simhei_size14, 0);
 
-    // lv_label_set_text(label, "confirm");
+    int i              = 0;
+    const char *txts[] = {"yes", "no", "ok", "confirm"};
+    lv_obj_t *obj      = lv_obj_create(lv_scr_act());
+    lv_obj_add_style(obj, &style, 0);
+
+    lv_obj_t *label = lv_label_create(obj);
+    lv_label_set_text_static(label, txts[i]);
 
     for (;;) {
-        /* FIXME: UI 的绘制是破碎的 */
-        if (current_page == HOME_PAGE)
-            ui_update_home_page();
+        /* 
+         * FIXME: UI 局部更新时的绘制是破碎的，但是全局刷新（旋转屏幕）非常流畅
+         */
+        // if (current_page == HOME_PAGE)
+        //     ui_disp_home_page();
+
+        lv_label_set_text_static(label, txts[i]);
+        i = (i + 1) % LEN(txts);
 
         lv_timer_handler();
+
         os_delay_ms(10);
     }
 }
