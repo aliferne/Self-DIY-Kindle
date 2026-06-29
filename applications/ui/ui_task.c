@@ -34,7 +34,7 @@ void StartUITask(void const *argument)
     lv_port_disp_init();
 
     // lv_timer_t *timer = lv_timer_create(flusher, 1000, label);
-
+    // 
     for (;;) {
         /*
          * FIXME: UI 局部更新时的绘制是破碎的，但是全局刷新（旋转屏幕）非常流畅

@@ -17,14 +17,14 @@
  */
 
 #define STORAGE_MAX_PATH_LEN (128u)
-#define STORAGE_HANDLE_ERROR(errcond, msg, acts_when_failed) \
-    HANDLE_ERROR(errcond, msg, acts_when_failed)
+#define STORAGE_LOG_WHEN_FAILED(cond, acts_when_failed, msg, ...) \
+    LOG_WHEN_FAILED(cond, acts_when_failed, msg, ##__VA_ARGS__)
 
 /**
  * 在内部拼接路径，要求路径格式为：
  *
  * `/path/to/file` 或者 `path/to/file`
- * 
+ *
  * 注意，这取决于你怎么思考，你可以将文件层级结构解读成 0:/path/to/file, 也可以解读成 0:path/to/file
  */
 static void make_path(Storage_t *s, const char *path, char *out, size_t sz)
@@ -41,10 +41,10 @@ StorageState_t storage_init(Storage_t *s)
     s->is_initialized = 1;
 
     FRESULT res = f_mount(&s->fs, s->volume, 1);
-    STORAGE_HANDLE_ERROR(
+    STORAGE_LOG_WHEN_FAILED(
         res != FR_OK,
-        "Failed to mount volume",
-        return Storage_Failed);
+        return Storage_Failed,
+        "Failed to mount volume");
 
     return Storage_Ok;
 }
@@ -74,10 +74,10 @@ StorageState_t storage_mkdir(Storage_t *s, const char *path)
         return Storage_Ok;
 
     FRESULT res = f_mkdir(full);
-    STORAGE_HANDLE_ERROR(
+    STORAGE_LOG_WHEN_FAILED(
         res != FR_OK,
-        "Failed to create directory",
-        return Storage_Failed);
+        return Storage_Failed,
+        "Failed to create directory");
 
     return Storage_Ok;
 }
@@ -91,8 +91,7 @@ StorageState_t storage_mkdirs(Storage_t *s, const char *paths[], uint32_t len)
 
         if (stat != Storage_Ok) {
             char msg[STORAGE_MAX_PATH_LEN + 21];
-            snprintf(msg, sizeof(msg), "Failed when making %s", paths[i]);
-            STORAGE_HANDLE_ERROR(1, msg, return stat);
+            STORAGE_LOG_WHEN_FAILED(1, return stat, "Failed when making %s", paths[i]);
         }
     }
     return Storage_Ok;

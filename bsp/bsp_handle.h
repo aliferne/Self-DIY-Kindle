@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "rtt_srv.h"
 
 /*
  * 用于错误处理，断言语句等比较常用的操作
@@ -68,20 +69,19 @@
         }                          \
     } while (0)
 
-#define DEBUG_PRINTF(msg, ...) printf(msg, ##__VA_ARGS__)
+/*
+ *  各种输出日志的方法，
+ *  这里统一换成 LOG_XXX 的形式，
+ *  后续如果没了 RTT 可以换成其他的
+ */
 
-/* 打印日志 */
-#define USE_ERR_LOG 0
-#if USE_ERR_LOG
-/* TODO: 有待重定向到 RTT */
-#define ERR_PRINT(msg) printf(                \
-    "|- File %s -|- Line %d -|\tError: %s\n", \
-    __FILE__, __LINE__, msg)
-#else
-#define ERR_PRINT(msg)
-#endif
-/* 错误处理宏，当满足 errcond 时，执行特定操作 */
-#define HANDLE_ERROR(errcond, msg, acts_when_failed) \
-    ASSERT(errcond,                                  \
-           ERR_PRINT(msg);                           \
-           acts_when_failed)
+#define LOG_INFO(msg, ...)  RTT_LOG_INFO(msg, ##__VA_ARGS__)
+#define LOG_DEBUG(msg, ...) RTT_LOG_DEBUG(msg, ##__VA_ARGS__)
+#define LOG_WARN(msg, ...)  RTT_LOG_WARN(msg, ##__VA_ARGS__)
+#define LOG_ERROR(msg, ...) RTT_LOG_ERROR(msg, ##__VA_ARGS__)
+
+/* 当不满足 cond 时，打印日志并执行特定操作 */
+#define LOG_WHEN_FAILED(cond, acts_when_failed, msg, ...) \
+    ASSERT_FAIL(cond,                                     \
+                LOG_ERROR(msg, ##__VA_ARGS__);            \
+                acts_when_failed)

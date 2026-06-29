@@ -1,5 +1,4 @@
 #include "ctp.h"
-#include "touch.h"
 #include "bsp_i2c.h"
 #include "bsp_gpio.h"
 #include "bsp_handle.h"
@@ -8,13 +7,18 @@
 /*
  * 静态资源指针 ―― 通过 ctp_assign_* 注入
  */
-static gpio_t *ctp_rst_pin         = NULL;
-static gpio_t *ctp_it_pin          = NULL;
-static iic_t *ctp_i2c              = NULL;
+static gpio_t *ctp_rst_pin               = NULL;
+static gpio_t *ctp_it_pin                = NULL;
+static iic_t *ctp_i2c                    = NULL;
 static void (*ctp_delay_ms)(uint32_t ms) = NULL;
 
 /* I2C 设备地址 (7-bit) */
 #define FT6336_ADDR 0x38
+#define FT6336_PRESS_DOWN  0x80
+#define FT6336_CATH_PRESS  0x40
+
+/* 默认触屏类型: 电容屏 */
+static uint8_t ctp_touchtype = 0x80;
 
 /* 触摸点坐标寄存器表 */
 static const uint16_t FT5206_TPX_TBL[5] = {
@@ -99,55 +103,52 @@ void FT6336_Init(void)
  * ============================================================ */
 
 // 扫描触摸屏(采用查询方式)
-// mode:0,正常扫描.
-// 返回值:当前触屏状态.
-// 0,触屏无触摸;1,触屏有触摸
-uint8_t FT6336_Scan(uint8_t mode)
+// x/y: 输出缓冲区 (至少 5 个 uint16_t)
+// sta: 输出状态 (bit7:按下, bit4~0:触摸点数)
+// 返回值:0,触屏无触摸;1,触屏有触摸
+uint8_t FT6336_Scan(uint16_t *x, uint16_t *y, uint8_t *sta)
 {
     uint8_t buf[4];
     uint8_t i   = 0;
     uint8_t res = 0;
     uint8_t temp;
+    uint8_t finger_reg;
     static uint8_t t = 0; // 控制查询间隔,从而降低CPU占用率
+
     t++;
-    if ((t % 10) == 0 || t < 10) // 空闲时,每进入10次CTP_Scan函数才检测1次,从而节省CPU使用率
+    if ((t % 10) == 0 || t < 10) // 空闲时,每进入10次才检测1次,从而节省CPU使用率
     {
-        FT6336_RD_Reg(ctp_i2c, FT_REG_NUM_FINGER, &mode, 1); // 读取触摸点的状态
-        if ((mode & 0x0F) && ((mode & 0x0F) < 6)) {
-            temp       = 0xFF << (mode & 0x0F); // 将点的个数转换为1的位数,匹配tp_dev.sta定义
-            tp_dev.sta = (~temp) | TP_PRES_DOWN | TP_CATH_PRES;
+        FT6336_RD_Reg(ctp_i2c, FT_REG_NUM_FINGER, &finger_reg, 1);
+        if ((finger_reg & 0x0F) && ((finger_reg & 0x0F) < 6)) {
+            temp    = 0xFF << (finger_reg & 0x0F);
+            *sta    = (~temp) | FT6336_PRESS_DOWN | FT6336_CATH_PRESS;
             for (i = 0; i < 5; i++) {
-                if (tp_dev.sta & (1 << i)) // 触摸有效?
-                {
-                    FT6336_RD_Reg(ctp_i2c, FT5206_TPX_TBL[i], buf, 4); // 读取XY坐标值
-                    if (tp_dev.touchtype & 0x01)                       // 横屏
-                    {
-                        tp_dev.y[i] = ((uint16_t)(buf[0] & 0x0F) << 8) + buf[1];
-                        tp_dev.x[i] = ((uint16_t)(buf[2] & 0x0F) << 8) + buf[3];
+                if (*sta & (1 << i)) {
+                    FT6336_RD_Reg(ctp_i2c, FT5206_TPX_TBL[i], buf, 4);
+                    if (ctp_touchtype & 0x01) {
+                        y[i] = ((uint16_t)(buf[0] & 0x0F) << 8) + buf[1];
+                        x[i] = ((uint16_t)(buf[2] & 0x0F) << 8) + buf[3];
                     } else {
-                        tp_dev.x[i] = (((uint16_t)(buf[0] & 0x0F) << 8) + buf[1]);
-                        tp_dev.y[i] = ((uint16_t)(buf[2] & 0x0F) << 8) + buf[3];
+                        x[i] = ((uint16_t)(buf[0] & 0x0F) << 8) + buf[1];
+                        y[i] = ((uint16_t)(buf[2] & 0x0F) << 8) + buf[3];
                     }
-                    if ((buf[0] & 0xF0) != 0x80) tp_dev.x[i] = tp_dev.y[i] = 0; // 必须是contact事件，才认为有效
+                    if ((buf[0] & 0xF0) != 0x80) x[i] = y[i] = 0;
                 }
             }
             res = 1;
-            if (tp_dev.x[0] == 0 && tp_dev.y[0] == 0) mode = 0; // 读到的数据都是0,则忽略此次数据
-            t = 0;                                              // 触发一次,则会最少连续监测10次,从而提高命中率
+            if (x[0] == 0 && y[0] == 0) finger_reg = 0;
+            t = 0;
         }
     }
-    if ((mode & 0x1F) == 0) // 无触摸点按下
-    {
-        if (tp_dev.sta & TP_PRES_DOWN) // 之前是被按下的
-        {
-            tp_dev.sta &= ~(1 << 7); // 标记按键松开
-        } else                       // 之前就没有被按下
-        {
-            tp_dev.x[0] = 0xFFFF;
-            tp_dev.y[0] = 0xFFFF;
-            tp_dev.sta &= 0xE0; // 清除点有效标记
+    if ((finger_reg & 0x1F) == 0) {
+        if (*sta & FT6336_PRESS_DOWN) {
+            *sta &= ~(1 << 7);
+        } else {
+            x[0] = 0xFFFF;
+            y[0] = 0xFFFF;
+            *sta &= 0xE0;
         }
     }
-    if (t > 240) t = 10; // 重新从10开始计数
+    if (t > 240) t = 10;
     return res;
 }

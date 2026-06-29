@@ -76,10 +76,6 @@ typedef struct {
     uint8_t wide_bus : 1; /**< 0=1Bit, 1=4Bit */
 } sdio_cfg_t;
 
-/* ============================================================
- * SDIO 模型
- * ============================================================ */
-
 typedef struct {
     sdio_cfg_t config;
     sdio_handle_t handle; /**< SD_HandleTypeDef*（CubeMX 初始化） */
@@ -102,10 +98,6 @@ typedef struct {
     void (*enter_critical_cb)(void);
     void (*exit_critical_cb)(void);
 } sdio_t;
-
-/* ============================================================
- * API
- * ============================================================ */
 
 /**
  * 初始化 SDIO 模型。

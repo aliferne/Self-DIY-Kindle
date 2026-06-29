@@ -50,12 +50,6 @@
 #define DISP_GRAY1   0x8410
 #define DISP_GRAY2   0x4208
 
-/*
- * 显示屏是否具有触控功能
- * 由于 disp_drv 同一时间只能选一个底层屏幕驱动，这个硬编码其实还行
- */
-#define DISP_HAS_TOUCH (1)
-
 /* 旋转方向 */
 #define DISP_NO_SPIN   0
 #define DISP_LSPIN_90  1
@@ -73,25 +67,14 @@ typedef struct {
     gpio_t *blk_pin; /**< 背光引脚（无需控制可传 NULL） */
 } disp_src_t;
 
-#if DISP_HAS_TOUCH == 1
-/* 显示屏触摸硬件资源，假定使用 I2C 作为通信协议 */
-typedef struct {
-    iic_t *i2c;  /**< I2C 总线 */
-    gpio_t *it;  /**< 中断引脚 */
-    gpio_t *rst; /**< 复位引脚 */
-} disp_touch_src_t;
-#endif
-
 /* 显示驱动 */
 typedef struct _disp_drv {
     disp_src_t *src; /**< 底层驱动资源 */
-#if DISP_HAS_TOUCH == 1
-    disp_touch_src_t *touch;
-#endif
     /*
      * 私有变量，
-     * 有些驱动会自带类似于 Disp_Drv_t 的结构体，
-     * 此时可以把它纳入私有变量来，从而在底层驱动代码可以使用 disp->priv.xxx
+     * 有些驱动会自带类似于 disp_drv_t 的结构体，
+     * 此时可以把它纳入私有变量来，
+     * 从而在底层驱动代码可以使用 disp->priv.xxx
      * 的方式来访问该结构体
      */
     void *priv;
@@ -99,6 +82,7 @@ typedef struct _disp_drv {
     uint8_t spin_dir; // 当前屏幕朝向
     uint32_t width;
     uint32_t height;
+    
     /* 延时函数指针 */
     void (*delay_cb)(uint32_t ms);
 } disp_drv_t;
@@ -153,8 +137,3 @@ void display_draw_number(disp_drv_t *drv,
 /* 测试显示效果，可以不实现 */
 void display_test(disp_drv_t *display);
 
-#if DISP_HAS_TOUCH == 1
-void display_touch_init(/* TODO: Args */);
-void display_touch_scan(/* TODO: Args */);
-void display_with_touch_test(/* TODO: Args */);
-#endif

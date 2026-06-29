@@ -17,7 +17,13 @@
 uint8_t FT6336_WR_Reg(iic_t *i2c, uint16_t reg, uint8_t *buf, uint8_t len);
 void FT6336_RD_Reg(iic_t *i2c, uint16_t reg, uint8_t *buf, uint8_t len);
 void FT6336_Init(void);
-uint8_t FT6336_Scan(uint8_t mode);
+/*
+ * 扫描触摸屏
+ * x/y: 输出缓冲区 (至少 TOUCH_MAX_POINTS 大小)
+ * sta: 输出状态 (见 TP_STATE_* 定义)
+ * 返回值: 0=无触摸, 1=有触摸
+ */
+uint8_t FT6336_Scan(uint16_t *x, uint16_t *y, uint8_t *sta);
 
 void ctp_assign_pins(gpio_t *rst, gpio_t *it);
 void ctp_assign_i2c(iic_t *i2c);

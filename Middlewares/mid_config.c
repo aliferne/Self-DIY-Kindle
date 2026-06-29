@@ -1,6 +1,8 @@
 #include "mid_config.h"
 #include "bsp_config.h"
+#include "bsp_sys.h"
 #include "disp_drv.h"
+#include "touch_drv.h"
 #include "bsp_handle.h"
 #include "pin_src.h"
 #include "bsp_config.h"
@@ -9,6 +11,7 @@
 
 static void mid_init_epaper(void);
 static void mid_init_tft(void);
+static void mid_init_touch(void);
 static void mid_init_epaper(void);
 
 static disp_src_t tft = {
@@ -18,17 +21,18 @@ static disp_src_t tft = {
     .spi     = &tft_spi,
 };
 
-static disp_touch_src_t touch = {
+static touch_src_t touch_src = {
     .i2c = &tp_i2c,
-    .it = &tp_int,
-    .rst = &tp_rst
-};
+    .it  = &tp_int,
+    .rst = &tp_rst};
 
 disp_drv_t display;
+touch_drv_t touch;
 
 void mid_init_modules(void)
 {
     mid_init_tft();
+    mid_init_touch();
     // mid_init_epaper();
 
     /* 初始化 RTT 调试支持 */
@@ -38,10 +42,17 @@ void mid_init_modules(void)
 static void mid_init_tft(void)
 {
     display.src = &tft;
-    display.touch = &touch;
 
     display_init(&display);
     display_backlight_on(&display);
+}
+
+static void mid_init_touch(void)
+{
+    touch.src = &touch_src;
+    touch.delay_cb = os_delay_ms;
+
+    touch_init(&touch);
 }
 
 __NOT_USED static void mid_init_epaper(void)

@@ -187,7 +187,7 @@ ifeq ($(USE_DISPLAY), st7796)
   DISPLAY_SRCS   = \
     Middlewares/display_drv/st7796-with-touch/LCD/LCD.c \
     Middlewares/display_drv/st7796-with-touch/TOUCH/ctp.c \
-    Middlewares/display_drv/st7796-with-touch/TOUCH/touch.c \
+    Middlewares/display_drv/st7796-with-touch/touch_drv.c \
     Middlewares/display_drv/st7796-with-touch/display_drv.c
 else ifeq ($(USE_DISPLAY), epaper)
   DISPLAY_DEF    = -DUSE_DISPLAY_EPAPER

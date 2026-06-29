@@ -2,8 +2,6 @@
 
 _m_tp_dev tp_dev =
 {
-    TP_Init,
-    TP_Scan,
     .touchtype = TP_TYPE_CTP,
 };
 
@@ -13,14 +11,12 @@ _m_tp_dev tp_dev =
 //0,触屏无触摸;1,触屏有触摸
 uint8_t TP_Scan(uint8_t tp)
 {
-    return tp_dev.scan(tp);
+    return FT6336_Scan(tp);
 }
 
 //触摸屏初始化
 //返回值:0,成功
-uint8_t TP_Init(void)
+void TP_Init(void)
 {
     FT6336_Init();
-    tp_dev.scan = FT6336_Scan;
-    return 0;
 }

@@ -53,9 +53,9 @@ int rtt_getkey(void);
 char *rtt_gets(char *buf, int size);
 
 /* FIXME: can't print floating numbers, behavior of `rtt_clear` seems to be a little strange */
-#define RTT_ERROR(sFormat, ...)  rtt_cprintf(rtt_color_text_bright_red,   "[ERROR] " sFormat "\r\n", ##__VA_ARGS__)
-#define RTT_WARN(sFormat, ...)   rtt_cprintf(rtt_color_text_yellow,       "[WARN] " sFormat "\r\n", ##__VA_ARGS__)
-#define RTT_INFO(sFormat, ...)   rtt_cprintf(rtt_color_text_bright_white, "[INFO] " sFormat "\r\n", ##__VA_ARGS__)
-#define RTT_DEBUG(sFormat, ...)  rtt_cprintf(rtt_color_text_cyan,         "[DEBUG] " sFormat "\r\n", ##__VA_ARGS__)
+#define RTT_LOG_ERROR(sFormat, ...)  rtt_cprintf(rtt_color_text_bright_red,   "[ERROR] "  sFormat, ##__VA_ARGS__)
+#define RTT_LOG_WARN(sFormat, ...)   rtt_cprintf(rtt_color_text_yellow,       "[WARN] "   sFormat, ##__VA_ARGS__)
+#define RTT_LOG_INFO(sFormat, ...)   rtt_cprintf(rtt_color_text_bright_white, "[INFO] "   sFormat, ##__VA_ARGS__)
+#define RTT_LOG_DEBUG(sFormat, ...)  rtt_cprintf(rtt_color_text_cyan,         "[DEBUG] "  sFormat, ##__VA_ARGS__)
 
 #endif

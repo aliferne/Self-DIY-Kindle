@@ -1,21 +1,5 @@
 #pragma once
 
-/*
- * 使用示例：
- *
- *   I2C_Model_t eeprom;
- *   i2c_init(&eeprom, GPIOB, GPIO_PIN_6, GPIOB, GPIO_PIN_7,
- *            &(I2C_Config_t){ .sw = {
- *       .scl_delay_us = 5,
- *       .sda_pull     = GPIO_Pull_Up,
- *       .scl_pull     = GPIO_Pull_Up,
- *   }});
- *
- *   // 写寄存器地址后读数据（含 REPEATED START）
- *   uint8_t reg = 0x10, buf[4];
- *   i2c_write_read(&eeprom, 0x50, &reg, 1, buf, 4);
- */
-
 #include "bsp_gpio.h"
 
 typedef enum {

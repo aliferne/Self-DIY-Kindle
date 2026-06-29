@@ -23,10 +23,8 @@ void sys_chip_init(void)
 
 /*
  * 此函数依赖于 SYS_USE_UART
- * 
- * @note: TODO: 6/29 引入了 SEGGER RTT, 此处实现不再使用, `sys_chip_init` 我想也可以精简一些了。
  */
-__WEAK int _write(int file, char *ptr, int len)
+int _write(int file, char *ptr, int len)
 {
     GIVEUP(file);
 

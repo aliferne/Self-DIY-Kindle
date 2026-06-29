@@ -12,9 +12,6 @@
 // 触摸屏控制器 (电容屏 only)
 typedef struct
 {
-    /* TODO: 这里设计得不太行，看下怎么优化 */
-    uint8_t (*init)(void);    // 初始化触摸屏控制器
-    uint8_t (*scan)(uint8_t); // 扫描触摸屏.0,屏幕扫描;1,物理坐标;
     uint16_t x[CT_MAX_TOUCH]; // 当前坐标
     uint16_t y[CT_MAX_TOUCH]; // 电容屏有最多5组坐标
     /*
@@ -33,6 +30,6 @@ extern _m_tp_dev tp_dev; // 触屏控制器在touch.c里面定义
 // 电容屏/电阻屏 共用函数
 
 uint8_t TP_Scan(uint8_t tp); // 扫描
-uint8_t TP_Init(void);       // 初始化
+void TP_Init(void);          // 初始化
 
 #endif

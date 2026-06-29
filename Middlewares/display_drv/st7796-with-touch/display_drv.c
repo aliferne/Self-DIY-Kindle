@@ -1,12 +1,13 @@
 /*
- * display_drv.c — ST7796 带触屏的 Disp_Drv_t 适配层
+ * display_drv.c — ST7796 Disp_Drv_t 适配层
  *
- * 不重新实现任何绘图算法，全部委托给 LCD.c 和 TOUCH/*.c。
+ * 不重新实现任何绘图算法，全部委托给 LCD.c。
  *
  * 依赖注入（标记为 [DI]）：
  *   1. display_init() 将 drv->src 注入到 LCD.c（spi/dc/rst/blk 句柄）
- *   2. display_init() 将 drv->touch 注入到 ctp.c（i2c/it/rst 句柄）
- *   3. delay 回调通过 display_set_delay_cb() 注入
+ *   2. delay 回调通过 display_set_delay_cb() 注入
+ *
+ * 注：触摸功能已独立为 touch_drv_t，不再由 display_drv 管理。
  */
 
 #include "bsp_sys.h"
@@ -14,7 +15,6 @@
 #include "bsp_handle.h"
 #include "LCD.h"
 #include <stdio.h>
-#include "touch.h"
 
 /* ============================================================
  * [DI] display_init — 初始化 ST7796
@@ -37,17 +37,6 @@ void display_init(disp_drv_t *drv)
 
     drv->width  = ((lcd_dev_t *)drv->priv)->width;
     drv->height = ((lcd_dev_t *)drv->priv)->height;
-
-    /* [DI] 将 disp_touch_src_t 注入到 ctp.c */
-#if DISP_HAS_TOUCH
-    if (drv->touch) {
-        ctp_assign_i2c(drv->touch->i2c);
-        ctp_assign_pins(drv->touch->rst, drv->touch->it);
-        ctp_assign_delay(drv->delay_cb);
-
-        TP_Init();
-    }
-#endif
 
     drv->is_initialized = 1;
 }

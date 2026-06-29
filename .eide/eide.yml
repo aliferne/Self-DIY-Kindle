@@ -318,8 +318,8 @@ virtualFolder:
               files:
                 - path: Middlewares/display_drv/st7796-with-touch/LCD/LCD.c
                 - path: Middlewares/display_drv/st7796-with-touch/TOUCH/ctp.c
-                - path: Middlewares/display_drv/st7796-with-touch/TOUCH/touch.c
                 - path: Middlewares/display_drv/st7796-with-touch/display_drv.c
+                - path: Middlewares/display_drv/st7796-with-touch/touch_drv.c
               folders: []
         - name: algorithm
           files:
