@@ -1,3 +1,4 @@
+#include "rtt_srv.h"
 #include "bsp_sys.h"
 #include <stdio.h>
 
@@ -13,7 +14,8 @@ void vApplicationStackOverflowHook(TaskHandle_t xTask,
 
 void StartProcessTask(void const *argument)
 {
+    char i = 0;
     for (;;) {
-        os_delay_ms(50);
+        os_delay_ms(1000);
     }
 }

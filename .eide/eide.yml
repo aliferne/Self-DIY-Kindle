@@ -335,6 +335,7 @@ virtualFolder:
             - path: Middlewares/RTT/RTT/SEGGER_RTT_printf.c
             - path: Middlewares/RTT/RTT/SEGGER_RTT.c
             - path: Middlewares/RTT/Syscalls/SEGGER_RTT_Syscalls_GCC.c
+            - path: Middlewares/RTT/rtt_srv.c
           folders: []
     - name: BSP
       files:
@@ -481,6 +482,7 @@ targets:
         - Middlewares/ebtn
         - Middlewares/RTT/Config
         - Middlewares/RTT/RTT
+        - Middlewares/RTT
       libList: []
     excludeList:
       - <virtual_root>/Application/MDK-ARM/startup_stm32f407xx.s
@@ -488,6 +490,7 @@ targets:
       - <virtual_root>/Middlewares/display_drv/epaper
       - <virtual_root>/Middlewares/display_drv/st7735s/tft.c
       - <virtual_root>/Middlewares/display_drv/st7735s
+      - <virtual_root>/Middlewares/segger_rtt/SEGGER_RTT_Syscalls_GCC.c
     settings:
       debugger: cortex-debug
     toolchain: GCC

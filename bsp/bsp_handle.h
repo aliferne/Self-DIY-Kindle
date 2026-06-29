@@ -73,6 +73,7 @@
 /* 打印日志 */
 #define USE_ERR_LOG 0
 #if USE_ERR_LOG
+/* TODO: 有待重定向到 RTT */
 #define ERR_PRINT(msg) printf(                \
     "|- File %s -|- Line %d -|\tError: %s\n", \
     __FILE__, __LINE__, msg)

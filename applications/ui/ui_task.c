@@ -43,7 +43,6 @@ void StartUITask(void const *argument)
             ui_disp_home_page();
 
         lv_timer_handler();
-
         os_delay_ms(10);
     }
 }

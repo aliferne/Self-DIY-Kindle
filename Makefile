@@ -227,7 +227,8 @@ C_SOURCES += \
 C_SOURCES += \
   Middlewares/RTT/RTT/SEGGER_RTT.c \
   Middlewares/RTT/RTT/SEGGER_RTT_printf.c \
-  Middlewares/RTT/Syscalls/SEGGER_RTT_Syscalls_GCC.c
+  Middlewares/RTT/rtt_srv.c \
+  # Middlewares/RTT/Syscalls/SEGGER_RTT_Syscalls_GCC.c
 
 ASM_SOURCES += \
   Middlewares/RTT/RTT/SEGGER_RTT_ASM_ARMv7M.s
@@ -397,6 +398,7 @@ C_INCLUDES = \
   -IMiddlewares/display_drv/epaper/test \
   -IMiddlewares/display_drv/st7735s \
   -IMiddlewares/algorithm \
+  -IMiddlewares/RTT \
   -IMiddlewares/RTT/RTT \
   -IMiddlewares/RTT/Config \
   -ICore/Inc \

@@ -50,6 +50,7 @@
       "-IMiddlewares/display_drv/epaper/gui",
       "-IMiddlewares/display_drv/epaper/test",
       "-IMiddlewares/FatFs",
+      "-IMiddlewares/RTT",
       "-Iservices",
       "-Iapplications",
       "-Og",
