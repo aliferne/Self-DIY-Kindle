@@ -35,6 +35,14 @@
             "command": "${command:eide.project.clean}",
             "group": "build",
             "problemMatcher": []
+        },
+        /* segger rtt support in vscode */
+        {
+            "label": "rtt",
+            "type": "shell",
+            "command": "JLinkRTTClient",
+            "args": [],
+            "problemMatcher": [],
         }
     ]
 }

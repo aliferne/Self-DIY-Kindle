@@ -77,15 +77,19 @@
  */
 
 #ifdef __RTT_SRV_H__
-#define LOG_INFO(msg, ...)  RTT_LOG_INFO(msg, ##__VA_ARGS__)
-#define LOG_DEBUG(msg, ...) RTT_LOG_DEBUG(msg, ##__VA_ARGS__)
-#define LOG_WARN(msg, ...)  RTT_LOG_WARN(msg, ##__VA_ARGS__)
-#define LOG_ERROR(msg, ...) RTT_LOG_ERROR(msg, ##__VA_ARGS__)
+#define LOG_INFO(msg, ...)     RTT_LOG_INFO(msg, ##__VA_ARGS__)
+#define LOG_DEBUG(msg, ...)    RTT_LOG_DEBUG(msg, ##__VA_ARGS__)
+#define LOG_WARN(msg, ...)     RTT_LOG_WARN(msg, ##__VA_ARGS__)
+#define LOG_ERROR(msg, ...)    RTT_LOG_ERROR(msg, ##__VA_ARGS__)
+#define LOG_GET_CHAR()         RTT_GET_CHAR()
+#define LOG_GET_STR(buf, size) RTT_GET_STR((buf), (size))
 #else
 #define LOG_INFO(msg, ...)
 #define LOG_DEBUG(msg, ...)
 #define LOG_WARN(msg, ...)
 #define LOG_ERROR(msg, ...)
+#define LOG_GET_CHAR()
+#define LOG_GET_STR(buf, size)
 #endif
 
 /* 当不满足 cond 时，打印日志并执行特定操作 */

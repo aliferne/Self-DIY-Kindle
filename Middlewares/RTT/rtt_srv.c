@@ -114,7 +114,7 @@ void rtt_clear(void)
 }
 
 /**
- * @brief check if input data is available
+ * @brief check if read buffer has available characters waiting for reading
  *
  * @retval: number of bytes available
  */
