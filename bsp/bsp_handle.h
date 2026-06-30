@@ -83,6 +83,8 @@
 #define LOG_ERROR(msg, ...)    RTT_LOG_ERROR(msg, ##__VA_ARGS__)
 #define LOG_GET_CHAR()         RTT_GET_CHAR()
 #define LOG_GET_STR(buf, size) RTT_GET_STR((buf), (size))
+/* 这个是 RTT 独有的，用其他输出方式的话应该不需要实现 */
+#define LOG_CLEAR_SCREEN() rtt_clear()
 #else
 #define LOG_INFO(msg, ...)
 #define LOG_DEBUG(msg, ...)
@@ -90,6 +92,7 @@
 #define LOG_ERROR(msg, ...)
 #define LOG_GET_CHAR()
 #define LOG_GET_STR(buf, size)
+#define LOG_CLEAR_SCREEN()
 #endif
 
 /* 当不满足 cond 时，打印日志并执行特定操作 */

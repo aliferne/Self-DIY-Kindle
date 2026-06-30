@@ -19,3 +19,5 @@ typedef struct {
 
 // TODO: 可以参考一下
 // https://oshwhub.com/w_jy12_3/li-chuang-development-board-lian
+
+void ebook_srv_test();

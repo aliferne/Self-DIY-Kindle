@@ -1,4 +1,6 @@
+#include "bsp_handle.h"
 #include "mid_config.h"
+#include "ebook_srv.h"
 #include "bsp_sys.h"
 #include <stdio.h>
 
@@ -14,7 +16,10 @@ void vApplicationStackOverflowHook(TaskHandle_t xTask,
 
 void StartProcessTask(void const *argument)
 {
+    // TODO: 先写电子书解析逻辑，触屏暂时不管了
+    // ebook_srv_test();
     for (;;) {
-        os_delay_ms(10);
+        LOG_DEBUG("In Process Task\n");
+        os_delay_ms(1000);
     }
 }
