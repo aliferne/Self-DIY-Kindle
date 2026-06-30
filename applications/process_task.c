@@ -15,7 +15,6 @@ void vApplicationStackOverflowHook(TaskHandle_t xTask,
 void StartProcessTask(void const *argument)
 {
     for (;;) {
-        touch_test(&touch);
         os_delay_ms(10);
     }
 }

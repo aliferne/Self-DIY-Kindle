@@ -54,6 +54,7 @@ void display_deinit(disp_drv_t *drv)
  * ============================================================ */
 void display_rst(disp_drv_t *drv)
 {
+    ASSERT_FAIL(!DISP_IS_INIT(drv), return);
     ASSERT_FAIL(drv == NULL || drv->src == NULL, return);
     disp_src_t *src = drv->src;
     ASSERT_FAIL(src->rst_pin == NULL, return);
@@ -69,15 +70,19 @@ void display_rst(disp_drv_t *drv)
  * ============================================================ */
 void display_backlight_on(disp_drv_t *drv)
 {
+    ASSERT_FAIL(!DISP_IS_INIT(drv), return);
     ASSERT_FAIL(drv == NULL || drv->src == NULL, return);
     ASSERT_FAIL(drv->src->blk_pin == NULL, return);
+
     gpio_write(drv->src->blk_pin, GPIO_Level_High);
 }
 
 void display_backlight_off(disp_drv_t *drv)
 {
+    ASSERT_FAIL(!DISP_IS_INIT(drv), return);
     ASSERT_FAIL(drv == NULL || drv->src == NULL, return);
     ASSERT_FAIL(drv->src->blk_pin == NULL, return);
+
     gpio_write(drv->src->blk_pin, GPIO_Level_Low);
 }
 
@@ -88,7 +93,7 @@ void display_set_region(disp_drv_t *drv,
                         uint32_t x_start, uint32_t y_start,
                         uint32_t x_end, uint32_t y_end)
 {
-    GIVEUP(drv);
+    ASSERT_FAIL(!DISP_IS_INIT(drv), return);
     LCD_Set_Window((uint16_t)x_start, (uint16_t)y_start,
                    (uint16_t)(x_end - x_start + 1),
                    (uint16_t)(y_end - y_start + 1));
@@ -96,6 +101,7 @@ void display_set_region(disp_drv_t *drv,
 
 void display_spin_screen(disp_drv_t *drv, uint8_t dir)
 {
+    ASSERT_FAIL(!DISP_IS_INIT(drv), return);
     drv->spin_dir = dir;
 
     uint8_t dirs[4] = {1, 2, 0, 3};
@@ -110,7 +116,7 @@ void display_spin_screen(disp_drv_t *drv, uint8_t dir)
  * ============================================================ */
 void display_clean_screen(disp_drv_t *drv, uint16_t color)
 {
-    GIVEUP(drv);
+    ASSERT_FAIL(!DISP_IS_INIT(drv), return);
     LCD_Clear(color);
 }
 
@@ -119,7 +125,7 @@ void display_fill_screen(disp_drv_t *drv,
                          uint32_t x_end, uint32_t y_end,
                          uint16_t color)
 {
-    GIVEUP(drv);
+    ASSERT_FAIL(!DISP_IS_INIT(drv), return);
     LCD_Fill((uint16_t)x_start, (uint16_t)y_start,
              (uint16_t)x_end, (uint16_t)y_end,
              color);
@@ -130,7 +136,7 @@ void display_fill_screen(disp_drv_t *drv,
  * ============================================================ */
 void display_set_cursor(disp_drv_t *drv, uint32_t x, uint32_t y)
 {
-    GIVEUP(drv);
+    ASSERT_FAIL(!DISP_IS_INIT(drv), return);
     LCD_SetCursor((uint16_t)x, (uint16_t)y);
 }
 
@@ -139,7 +145,7 @@ void display_write_pixels(disp_drv_t *drv,
                           uint32_t w, uint32_t h,
                           const uint16_t *pixels)
 {
-    GIVEUP(drv);
+    ASSERT_FAIL(!DISP_IS_INIT(drv), return);
     LCD_Color_Fill((uint16_t)x, (uint16_t)y,
                    (uint16_t)(x + w - 1), (uint16_t)(y + h - 1),
                    (uint16_t *)pixels);
@@ -151,7 +157,7 @@ void display_write_pixels(disp_drv_t *drv,
 void display_draw_point(disp_drv_t *drv,
                         uint32_t x, uint32_t y, uint16_t color)
 {
-    GIVEUP(drv);
+    ASSERT_FAIL(!DISP_IS_INIT(drv), return);
     ((lcd_dev_t *)drv->priv)->fc = color;
     LCD_Fast_DrawPoint((uint16_t)x, (uint16_t)y, color);
 }
@@ -160,7 +166,7 @@ void display_draw_line(disp_drv_t *drv,
                        uint32_t x0, uint32_t y0,
                        uint32_t x1, uint32_t y1, uint16_t color)
 {
-    GIVEUP(drv);
+    ASSERT_FAIL(!DISP_IS_INIT(drv), return);
     ((lcd_dev_t *)drv->priv)->fc = color;
     LCD_DrawLine((uint16_t)x0, (uint16_t)y0,
                  (uint16_t)x1, (uint16_t)y1);
@@ -170,7 +176,7 @@ void display_draw_circle(disp_drv_t *drv,
                          uint32_t x, uint32_t y,
                          uint32_t r, uint16_t color)
 {
-    GIVEUP(drv);
+    ASSERT_FAIL(!DISP_IS_INIT(drv), return);
     ((lcd_dev_t *)drv->priv)->fc = color;
     LCD_Draw_Circle((uint16_t)x, (uint16_t)y, (uint8_t)r);
 }
@@ -179,7 +185,7 @@ void display_draw_rect(disp_drv_t *drv,
                        uint32_t x, uint32_t y,
                        uint32_t w, uint32_t h, uint16_t color)
 {
-    GIVEUP(drv);
+    ASSERT_FAIL(!DISP_IS_INIT(drv), return);
     ((lcd_dev_t *)drv->priv)->fc = color;
     LCD_DrawRectangle((uint16_t)x, (uint16_t)y,
                       (uint16_t)(x + w - 1), (uint16_t)(y + h - 1));
@@ -193,7 +199,7 @@ void display_draw_string(disp_drv_t *drv,
                          uint16_t fc, uint16_t bc,
                          const char *str)
 {
-    GIVEUP(drv);
+    ASSERT_FAIL(!DISP_IS_INIT(drv), return);
     ((lcd_dev_t *)drv->priv)->fc = fc;
     ((lcd_dev_t *)drv->priv)->bc = bc;
     LCD_ShowString((uint16_t)x, (uint16_t)y,
@@ -205,7 +211,7 @@ void display_draw_number(disp_drv_t *drv,
                          uint16_t fc, uint16_t bc,
                          int num)
 {
-    GIVEUP(drv);
+    ASSERT_FAIL(!DISP_IS_INIT(drv), return);
     ((lcd_dev_t *)drv->priv)->fc = fc;
     ((lcd_dev_t *)drv->priv)->bc = bc;
     LCD_ShowNum((uint16_t)x, (uint16_t)y, (uint32_t)num, 10, 16);
@@ -216,7 +222,7 @@ void display_draw_number(disp_drv_t *drv,
  * ============================================================ */
 void display_test(disp_drv_t *drv)
 {
-    GIVEUP(drv);
+    ASSERT_FAIL(!DISP_IS_INIT(drv), return);
     LCD_Clear(RED);
     if (drv->delay_cb) drv->delay_cb(500);
     LCD_Clear(GREEN);

@@ -112,7 +112,7 @@ uint8_t FT6336_Scan(uint16_t *x, uint16_t *y, uint8_t *sta)
     uint8_t i   = 0;
     uint8_t res = 0;
     uint8_t temp;
-    uint8_t finger_reg;
+    uint8_t finger_reg = 0;
     static uint8_t t = 0; // 控制查询间隔,从而降低CPU占用率
 
     t++;

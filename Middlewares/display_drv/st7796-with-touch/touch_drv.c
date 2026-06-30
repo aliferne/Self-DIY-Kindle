@@ -1,6 +1,7 @@
 #include "touch_drv.h"
 #include "bsp_handle.h"
 #include "ctp.h"
+#include <stdbool.h>
 #include <string.h>
 #include <stdio.h>
 
@@ -54,12 +55,19 @@ int touch_scan(touch_drv_t *t)
 {
     DRV_NULL_CHECK(t, return 0);
 
-    return FT6336_Scan(t->x, t->y, &t->tp_state);
+    int ret = 0;
+    ASSERT_FAIL(!TOUCH_IS_INIT(t), return 0);
+
+    ret           = FT6336_Scan(t->x, t->y, &t->tp_state);
+    t->is_pressed = ret;
+
+    return ret;
 }
 
 void touch_test(touch_drv_t *t)
 {
     DRV_NULL_CHECK(t, return);
+    ASSERT_FAIL(!TOUCH_IS_INIT(t), return);
 
     touch_scan(t);
 
@@ -76,8 +84,12 @@ void touch_test(touch_drv_t *t)
         temp >>= 1;
     }
 
-    /* FIXME: 目前只能双点触摸，AI 整合过后的驱动有些问题 */
-    LOG_INFO(
+    /**
+     * NOTE:
+     * 目前只能双点触摸，AI 整合过后的驱动有些问题
+     * 不过实际也只会用到一个点位，可以不支持多点触摸
+     */
+    LOG_DEBUG(
         "touch: state=0x%02x, cnt=%u,\r\n"
         "x[0]=%d, y[0]=%d,\r\n"
         "x[1]=%d, y[1]=%d,\r\n"
@@ -90,4 +102,11 @@ void touch_test(touch_drv_t *t)
         t->x[2], t->y[2],
         t->x[3], t->y[3],
         t->x[4], t->y[4]);
+}
+
+bool touch_is_pressed(touch_drv_t *t)
+{
+    DRV_NULL_CHECK(t, return false);
+
+    return t->is_pressed;
 }

@@ -70,15 +70,23 @@
     } while (0)
 
 /*
- *  各种输出日志的方法，
- *  这里统一换成 LOG_XXX 的形式，
- *  后续如果没了 RTT 可以换成其他的
+ * 各种输出日志的方法，
+ * 这里统一换成 LOG_XXX 的形式，
+ * 后续如果没了 RTT 可以换成其他的，
+ * 这里暂时不实现
  */
 
+#ifdef __RTT_SRV_H__
 #define LOG_INFO(msg, ...)  RTT_LOG_INFO(msg, ##__VA_ARGS__)
 #define LOG_DEBUG(msg, ...) RTT_LOG_DEBUG(msg, ##__VA_ARGS__)
 #define LOG_WARN(msg, ...)  RTT_LOG_WARN(msg, ##__VA_ARGS__)
 #define LOG_ERROR(msg, ...) RTT_LOG_ERROR(msg, ##__VA_ARGS__)
+#else
+#define LOG_INFO(msg, ...)
+#define LOG_DEBUG(msg, ...)
+#define LOG_WARN(msg, ...)
+#define LOG_ERROR(msg, ...)
+#endif
 
 /* 当不满足 cond 时，打印日志并执行特定操作 */
 #define LOG_WHEN_FAILED(cond, acts_when_failed, msg, ...) \

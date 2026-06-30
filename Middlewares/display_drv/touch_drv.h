@@ -7,6 +7,7 @@
 #include "bsp_gpio.h"
 #include "bsp_i2c.h"
 #include <stdint.h>
+#include <stdbool.h>
 
 /* 最大同时触摸点数 */
 #define TOUCH_MAX_POINTS 5
@@ -24,8 +25,15 @@ typedef struct _touch_drv {
     uint16_t x[TOUCH_MAX_POINTS];
     /* 触摸点位 y 轴坐标 */
     uint16_t y[TOUCH_MAX_POINTS];
-    /* 触摸状态 (见 TP_STATE_* 定义) */
+    /*
+     * 触摸状态，其定义具体取决于驱动，
+     * 一般来说是置标志位，有些支持多点触摸的芯片
+     * 如 FT6336，可能会将 bit7 作为总的有无触摸的标志位，
+     * b4 ~ b0 指示多点触摸的情况
+     */
     uint8_t tp_state;
+    /* 此处标志位用以指示总体情况是否存在触摸 */
+    bool is_pressed;
 
     /*
      * 屏幕的旋转方向
@@ -44,7 +52,11 @@ typedef struct _touch_drv {
     void (*delay_cb)(uint32_t ms);
 } touch_drv_t;
 
+/* 判断是否初始化，注意用这个宏之前务必对 touch 进行 NULL Check */
+#define TOUCH_IS_INIT(touch) ((touch)->is_initialized == 1)
+
 void touch_init(touch_drv_t *t);
 void touch_deinit(touch_drv_t *t);
 int touch_scan(touch_drv_t *t);
+bool touch_is_pressed(touch_drv_t *t);
 void touch_test(touch_drv_t *t);

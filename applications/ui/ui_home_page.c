@@ -1,3 +1,4 @@
+#include "bsp_handle.h"
 #include "lv_area.h"
 #include "lv_disp.h"
 #include "lv_label.h"
@@ -64,6 +65,18 @@ static void main_func_item_click_cb(lv_event_t *e)
 {
     lv_obj_t *btn = lv_event_get_target(e);
     /* 后续可加上页面切换逻辑 */
+
+    if (btn == bookshelf_btn) {
+        LOG_DEBUG("bookshelf btn clicked.");
+    } else if (btn == music_btn) {
+        LOG_DEBUG("music btn clicked.");
+    } else if (btn == net_btn) {
+        LOG_DEBUG("net btn clicked.");
+    } else if (btn == game_btn) {
+        LOG_DEBUG("game btn clicked.");
+    } else if (btn == settings_btn) {
+        LOG_DEBUG("settings btn clicked.");
+    }
 }
 
 /*
@@ -135,7 +148,8 @@ static void draw_status_bar(void)
 }
 
 /* TODO: 感觉这个创建列表的可以抽象到一个地方去 */
-static lv_obj_t *create_list_item(lv_obj_t *parent, const char *text, int index)
+static lv_obj_t *create_list_item_clickable(
+    lv_obj_t *parent, const char *text, int index)
 {
     lv_obj_t *btn = lv_btn_create(parent);
     lv_obj_remove_style_all(btn); // 重新设置一下样式
@@ -150,7 +164,7 @@ static lv_obj_t *create_list_item(lv_obj_t *parent, const char *text, int index)
     lv_obj_set_style_border_side(btn, LV_BORDER_SIDE_BOTTOM, 0);
     lv_obj_set_style_border_color(btn, UI_UNDERLINE_COLOR, 0);
 
-    /* TODO: 添加事件回调 */
+    /* user_data 看后续需不需要，需要的话就添加上去 */
     lv_obj_add_event_cb(btn, main_func_item_click_cb, LV_EVENT_CLICKED, NULL);
 
     lv_obj_t *label = lv_label_create(btn);
@@ -175,23 +189,23 @@ static void draw_main_func_list(void)
 
     /* bookshelf disp ------------------------- */
     // bookshelf_btn = create_list_item(main_func_list_label, "📚  书架", 0);
-    bookshelf_btn = create_list_item(main_func_list_label, "书架", 0);
+    bookshelf_btn = create_list_item_clickable(main_func_list_label, "书架", 0);
 
     /* music disp ----------------------------- */
     // music_btn = create_list_item(main_func_list_label, "🎵  音乐", 1);
-    music_btn = create_list_item(main_func_list_label, "音乐", 1);
+    music_btn = create_list_item_clickable(main_func_list_label, "音乐", 1);
 
     /* net disp ------------------------------- */
     // net_btn = create_list_item(main_func_list_label, "🌐  网络", 2);
-    net_btn = create_list_item(main_func_list_label, "网络", 2);
+    net_btn = create_list_item_clickable(main_func_list_label, "网络", 2);
 
     /* game disp ------------------------------ */
     // game_btn = create_list_item(main_func_list_label, "🎮  游戏", 3);
-    game_btn = create_list_item(main_func_list_label, "游戏", 3);
+    game_btn = create_list_item_clickable(main_func_list_label, "游戏", 3);
 
     /* setting disp --------------------------- */
     // settings_btn = create_list_item(main_func_list_label, "⚙️  设置", 4);
-    settings_btn = create_list_item(main_func_list_label, "设置", 4);
+    settings_btn = create_list_item_clickable(main_func_list_label, "设置", 4);
 }
 
 static void update_status_bar(void)

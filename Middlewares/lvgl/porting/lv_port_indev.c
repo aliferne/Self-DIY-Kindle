@@ -4,6 +4,7 @@
  */
 
 /*Copy this file as "lv_port_indev.c" and set this value to "1" to enable content*/
+#include "bsp_handle.h"
 #if 1
 
 /*********************
@@ -11,6 +12,8 @@
  *********************/
 #include "lv_port_indev.h"
 #include "../../lvgl.h"
+#include "mid_config.h"
+#include "touch_drv.h"
 
 /*********************
  *      DEFINES
@@ -101,31 +104,31 @@ void lv_port_indev_init(void)
      * -----------------*/
 
     /*Initialize your mouse if you have*/
-    mouse_init();
+    // mouse_init();
 
-    /*Register a mouse input device*/
-    lv_indev_drv_init(&indev_drv);
-    indev_drv.type = LV_INDEV_TYPE_POINTER;
-    indev_drv.read_cb = mouse_read;
-    indev_mouse = lv_indev_drv_register(&indev_drv);
+    // /*Register a mouse input device*/
+    // lv_indev_drv_init(&indev_drv);
+    // indev_drv.type = LV_INDEV_TYPE_POINTER;
+    // indev_drv.read_cb = mouse_read;
+    // indev_mouse = lv_indev_drv_register(&indev_drv);
 
-    /*Set cursor. For simplicity set a HOME symbol now.*/
-    lv_obj_t * mouse_cursor = lv_img_create(lv_scr_act());
-    lv_img_set_src(mouse_cursor, LV_SYMBOL_HOME);
-    lv_indev_set_cursor(indev_mouse, mouse_cursor);
+    // /*Set cursor. For simplicity set a HOME symbol now.*/
+    // lv_obj_t * mouse_cursor = lv_img_create(lv_scr_act());
+    // lv_img_set_src(mouse_cursor, LV_SYMBOL_HOME);
+    // lv_indev_set_cursor(indev_mouse, mouse_cursor);
 
     /*------------------
      * Keypad
      * -----------------*/
 
-    /*Initialize your keypad or keyboard if you have*/
-    keypad_init();
+    // /*Initialize your keypad or keyboard if you have*/
+    // keypad_init();
 
-    /*Register a keypad input device*/
-    lv_indev_drv_init(&indev_drv);
-    indev_drv.type = LV_INDEV_TYPE_KEYPAD;
-    indev_drv.read_cb = keypad_read;
-    indev_keypad = lv_indev_drv_register(&indev_drv);
+    // /*Register a keypad input device*/
+    // lv_indev_drv_init(&indev_drv);
+    // indev_drv.type = LV_INDEV_TYPE_KEYPAD;
+    // indev_drv.read_cb = keypad_read;
+    // indev_keypad = lv_indev_drv_register(&indev_drv);
 
     /*Later you should create group(s) with `lv_group_t * group = lv_group_create()`,
      *add objects to the group with `lv_group_add_obj(group, obj)`
@@ -136,14 +139,14 @@ void lv_port_indev_init(void)
      * Encoder
      * -----------------*/
 
-    /*Initialize your encoder if you have*/
-    encoder_init();
+    // /*Initialize your encoder if you have*/
+    // encoder_init();
 
-    /*Register a encoder input device*/
-    lv_indev_drv_init(&indev_drv);
-    indev_drv.type = LV_INDEV_TYPE_ENCODER;
-    indev_drv.read_cb = encoder_read;
-    indev_encoder = lv_indev_drv_register(&indev_drv);
+    // /*Register a encoder input device*/
+    // lv_indev_drv_init(&indev_drv);
+    // indev_drv.type = LV_INDEV_TYPE_ENCODER;
+    // indev_drv.read_cb = encoder_read;
+    // indev_encoder = lv_indev_drv_register(&indev_drv);
 
     /*Later you should create group(s) with `lv_group_t * group = lv_group_create()`,
      *add objects to the group with `lv_group_add_obj(group, obj)`
@@ -183,6 +186,19 @@ void lv_port_indev_init(void)
 static void touchpad_init(void)
 {
     /*Your code comes here*/
+    /*
+     * 按照分层，我们这里不需要显式初始化
+     * 初始化触摸屏的硬件资源在 bsp 层
+     * 驱动资源则在 middlewares 层
+     * 
+     * FIXME: 目前是初始化了也不能使用触摸事件
+     * 推测原因 1：触摸没有和显示关联
+     * 推测原因 2：上面的初始化，需要将 indev_drv 改一下，不同的输入驱动用不同结构体
+     */
+    if (!TOUCH_IS_INIT(&touch))
+    {
+        LOG_WARN("TOUCH DEV NOT INITIALIZED, this may lead to undefined behaviours.");
+    }
 }
 
 /*Will be called by the library to read the touchpad*/
@@ -190,7 +206,9 @@ static void touchpad_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data)
 {
     static lv_coord_t last_x = 0;
     static lv_coord_t last_y = 0;
-
+    
+    touch_scan(&touch);
+    
     /*Save the pressed coordinates and the state*/
     if(touchpad_is_pressed()) {
         touchpad_get_xy(&last_x, &last_y);
@@ -209,8 +227,7 @@ static void touchpad_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data)
 static bool touchpad_is_pressed(void)
 {
     /*Your code comes here*/
-
-    return false;
+    return touch_is_pressed(&touch);
 }
 
 /*Get the x and y coordinates if the touchpad is pressed*/
@@ -218,8 +235,8 @@ static void touchpad_get_xy(lv_coord_t * x, lv_coord_t * y)
 {
     /*Your code comes here*/
 
-    (*x) = 0;
-    (*y) = 0;
+    (*x) = touch.x[0];
+    (*y) = touch.y[0];
 }
 
 /*------------------

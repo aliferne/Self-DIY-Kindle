@@ -4,6 +4,7 @@
 #include "lv_printf.h"
 #include "lv_timer.h"
 #include "lv_port_disp.h"
+#include "lv_port_indev.h"
 #include <stddef.h>
 #include <stdio.h>
 
@@ -32,6 +33,7 @@ void StartUITask(void const *argument)
     /* Initializations ------------- */
     lv_init();
     lv_port_disp_init();
+    lv_port_indev_init();
 
     // lv_timer_t *timer = lv_timer_create(flusher, 1000, label);
     // 

@@ -87,6 +87,9 @@ typedef struct _disp_drv {
     void (*delay_cb)(uint32_t ms);
 } disp_drv_t;
 
+/* 判断是否初始化，注意用这个宏之前务必对 disp 进行 NULL Check */
+#define DISP_IS_INIT(disp) (disp->is_initialized == 1)
+
 void display_init(disp_drv_t *drv); /**< 和 LVGL 的 disp_init 区分开 */
 void display_deinit(disp_drv_t *drv);
 void display_rst(disp_drv_t *drv);
