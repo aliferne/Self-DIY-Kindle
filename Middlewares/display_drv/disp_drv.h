@@ -87,11 +87,6 @@ typedef struct _disp_drv {
     void (*delay_cb)(uint32_t ms);
 } disp_drv_t;
 
-static inline void display_set_delay_cb(disp_drv_t *drv, void (*cb)(uint32_t ms))
-{
-    drv->delay_cb = cb;
-}
-
 void display_init(disp_drv_t *drv); /**< 和 LVGL 的 disp_init 区分开 */
 void display_deinit(disp_drv_t *drv);
 void display_rst(disp_drv_t *drv);

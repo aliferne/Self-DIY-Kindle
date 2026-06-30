@@ -23,8 +23,7 @@ void display_init(disp_drv_t *drv)
 {
     ASSERT_FAIL(drv == NULL || drv->src == NULL, return);
 
-    display_set_delay_cb(drv, chip_delay_ms);
-
+    drv->delay_cb = chip_delay_ms;
     /* [DI] 将 disp_src_t 注入到 LCD.c */
     lcd_assign_src(drv->src);
     lcd_assign_delay(drv->delay_cb);
