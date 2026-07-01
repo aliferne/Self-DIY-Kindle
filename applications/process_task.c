@@ -19,7 +19,6 @@ void StartProcessTask(void const *argument)
     // TODO: 先写电子书解析逻辑，触屏暂时不管了
     // ebook_srv_test();
     for (;;) {
-        LOG_DEBUG("In Process Task\n");
         os_delay_ms(1000);
     }
 }

@@ -44,6 +44,12 @@ typedef enum {
     rtt_color_bg_bright_white,
 } rtt_color_t;
 
+/* 
+ * NOTE: The `rtt_printf` can print floating-point numbers with 4 decimal places
+ *       you can change the precision by modifying the `p` and `k` variable 
+ *       in the `SEGGER_RTT_vprintf` function in `SEGGER_RTT_printf.c`
+ */
+
 void rtt_init(void);
 int rtt_printf(const char *sFormat, ...);
 int rtt_cprintf(rtt_color_t color, const char *sFormat, ...);
@@ -52,7 +58,6 @@ int rtt_haskey(void);
 int rtt_getkey(void);
 char *rtt_gets(char *buf, int size);
 
-/* FIXME: can't print floating numbers, behavior of `rtt_clear` seems to be a little strange */
 #define RTT_LOG_ERROR(sFormat, ...)  rtt_cprintf(rtt_color_text_bright_red,   "[ERROR] " sFormat, ##__VA_ARGS__)
 #define RTT_LOG_WARN(sFormat, ...)   rtt_cprintf(rtt_color_text_yellow,       "[WARN] "  sFormat, ##__VA_ARGS__)
 #define RTT_LOG_INFO(sFormat, ...)   rtt_cprintf(rtt_color_text_bright_green, "[INFO] "  sFormat, ##__VA_ARGS__)

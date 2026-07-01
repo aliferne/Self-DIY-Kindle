@@ -382,6 +382,25 @@ int SEGGER_RTT_vprintf(unsigned BufferIndex, const char * sFormat, va_list * pPa
         v = va_arg(*pParamList, int);
         _PrintInt(&BufferDesc, v, 10u, Precision, FieldWidth, FormatFlags);
         break;
+#if 1 /* use 4-precision float print */
+        case 'f':
+        case 'F': {
+           const int p = 4, k = 1e4; // 设置小数点后保留的位数, 放大系数(10^p)
+           float fv = (float)va_arg(*pParamList, double);
+           int integer_part = (int)fv;
+           int decimal_part = (int)((fv - integer_part) * k); 
+
+           // 处理负数
+           if (fv < 0 && integer_part == 0) {
+               _StoreChar(&BufferDesc, '-');
+           }
+
+           _PrintInt(&BufferDesc, integer_part, 10u, 0, FieldWidth, FormatFlags); 
+           _StoreChar(&BufferDesc, '.');
+           _PrintInt(&BufferDesc, abs(decimal_part), 10u, p, 0, 0);
+           break;
+        }
+#endif
       case 'u':
         v = va_arg(*pParamList, int);
         _PrintUnsigned(&BufferDesc, (unsigned)v, 10u, Precision, FieldWidth, FormatFlags);
