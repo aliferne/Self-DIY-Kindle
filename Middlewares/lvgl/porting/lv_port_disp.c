@@ -177,9 +177,6 @@ static void disp_init(void)
         disp_buf2 = malloc(sizeof(lv_color_t) * disp_hor_res * 10);
 
     ASSERT_FAIL(disp_buf1 == NULL || disp_buf2 == NULL, for (;;));
-
-    /* 将当前显示设备设置为默认显示设备 */
-    lv_disp_set_default(lv_disp);
 }
 
 volatile bool disp_flush_enabled = true;

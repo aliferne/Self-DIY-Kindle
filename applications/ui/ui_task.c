@@ -1,5 +1,6 @@
 #include "bsp_sys.h"
 #include "bsp_handle.h"
+#include "disp_drv.h"
 #include "lv_obj_pos.h"
 #include "lv_printf.h"
 #include "lv_timer.h"
@@ -28,6 +29,7 @@ extern void ui_disp_reader_page(void);
 extern void ui_disp_player_page(void);
 void flusher(lv_timer_t *timer);
 
+#include "mid_config.h"
 void StartUITask(void const *argument)
 {
     /* Initializations ------------- */
@@ -36,7 +38,7 @@ void StartUITask(void const *argument)
     lv_port_indev_init();
 
     // lv_timer_t *timer = lv_timer_create(flusher, 1000, label);
-    // 
+
     for (;;) {
         /*
          * FIXME: UI 局部更新时的绘制是破碎的，但是全局刷新（旋转屏幕）非常流畅
@@ -46,6 +48,11 @@ void StartUITask(void const *argument)
 
         lv_timer_handler();
         os_delay_ms(10);
+    }
+
+    for (;;) {
+        display_test(&display);
+        os_delay_ms(1000);
     }
 }
 

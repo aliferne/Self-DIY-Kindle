@@ -32,12 +32,14 @@ void display_init(disp_drv_t *drv)
     drv->priv = lcd_get_dev();
 
     LCD_Init();
+    drv->is_initialized = 1;
+    /*
+     * 正常来说初始化了 LCD 之后其实就可以认定驱动已经初始化了
+     * 这里则是为了完成旋转操作（需要 `drv->is_initialized == 1` 才能调用 `display_spin_screen()`）
+     */
     display_spin_screen(drv, DISP_NO_SPIN);
 
-    drv->width  = ((lcd_dev_t *)drv->priv)->width;
-    drv->height = ((lcd_dev_t *)drv->priv)->height;
-
-    drv->is_initialized = 1;
+    LOG_INFO("Display initialized: [is_init: %d] %dx%d\n", drv->is_initialized, drv->width, drv->height);
 }
 
 /* ============================================================
@@ -47,6 +49,7 @@ void display_deinit(disp_drv_t *drv)
 {
     ASSERT_FAIL(drv == NULL, return);
     drv->is_initialized = 0;
+    LOG_INFO("Display deinitialized: [is_init: %d]\n", drv->is_initialized);
 }
 
 /* ============================================================

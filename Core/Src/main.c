@@ -104,6 +104,8 @@ int main(void)
   MX_SPI1_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
+    /* 初始化 RTT 调试支持 */
+    rtt_init();
     sys_chip_init();
     bsp_init_hardware();
     mid_init_modules();

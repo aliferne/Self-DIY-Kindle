@@ -34,9 +34,6 @@ void mid_init_modules(void)
     mid_init_tft();
     mid_init_touch();
     // mid_init_epaper();
-
-    /* 初始化 RTT 调试支持 */
-    rtt_init();
 }
 
 static void mid_init_tft(void)
