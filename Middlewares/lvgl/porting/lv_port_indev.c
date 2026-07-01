@@ -84,7 +84,8 @@ void lv_port_indev_init(void)
      *  You should shape them according to your hardware
      */
 
-    static lv_indev_drv_t indev_drv;
+    static lv_indev_drv_t indev_tp_drv;
+    static lv_indev_drv_t indev_btn_drv;
 
     /*------------------
      * Touchpad
@@ -94,10 +95,10 @@ void lv_port_indev_init(void)
     touchpad_init();
 
     /*Register a touchpad input device*/
-    lv_indev_drv_init(&indev_drv);
-    indev_drv.type = LV_INDEV_TYPE_POINTER;
-    indev_drv.read_cb = touchpad_read;
-    indev_touchpad = lv_indev_drv_register(&indev_drv);
+    lv_indev_drv_init(&indev_tp_drv);
+    indev_tp_drv.type = LV_INDEV_TYPE_POINTER;
+    indev_tp_drv.read_cb = touchpad_read;
+    indev_touchpad = lv_indev_drv_register(&indev_tp_drv);
 
     /*------------------
      * Mouse
@@ -161,10 +162,10 @@ void lv_port_indev_init(void)
     button_init();
 
     /*Register a button input device*/
-    lv_indev_drv_init(&indev_drv);
-    indev_drv.type = LV_INDEV_TYPE_BUTTON;
-    indev_drv.read_cb = button_read;
-    indev_button = lv_indev_drv_register(&indev_drv);
+    lv_indev_drv_init(&indev_btn_drv);
+    indev_btn_drv.type = LV_INDEV_TYPE_BUTTON;
+    indev_btn_drv.read_cb = button_read;
+    indev_button = lv_indev_drv_register(&indev_btn_drv);
 
     /*Assign buttons to points on the screen*/
     static const lv_point_t btn_points[2] = {

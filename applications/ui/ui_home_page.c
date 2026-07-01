@@ -67,15 +67,15 @@ static void main_func_item_click_cb(lv_event_t *e)
     /* 后续可加上页面切换逻辑 */
 
     if (btn == bookshelf_btn) {
-        LOG_DEBUG("bookshelf btn clicked.");
+        LOG_DEBUG("bookshelf btn clicked.\n");
     } else if (btn == music_btn) {
-        LOG_DEBUG("music btn clicked.");
+        LOG_DEBUG("music btn clicked.\n");
     } else if (btn == net_btn) {
-        LOG_DEBUG("net btn clicked.");
+        LOG_DEBUG("net btn clicked.\n");
     } else if (btn == game_btn) {
-        LOG_DEBUG("game btn clicked.");
+        LOG_DEBUG("game btn clicked.\n");
     } else if (btn == settings_btn) {
-        LOG_DEBUG("settings btn clicked.");
+        LOG_DEBUG("settings btn clicked.\n");
     }
 }
 
