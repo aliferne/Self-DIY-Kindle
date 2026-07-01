@@ -1,9 +1,52 @@
 #include "touch_drv.h"
+#include "disp_drv.h"
 #include "bsp_handle.h"
 #include "ctp.h"
 #include <stdbool.h>
 #include <string.h>
 #include <stdio.h>
+
+/*
+ * 根据 spin_dir 将原始触摸坐标变换到显示屏的逻辑坐标空间。
+ *
+ * spin_dir 值与 disp_drv.h 中 DISP_SPIN_* 一致：
+ *   0 = 不旋转, 1 = 90° CCW, 2 = 180°, 3 = 270° CCW
+ *
+ * 变换使用触摸面板的物理宽高（phys_width/phys_height），
+ * 而非显示屏的逻辑分辨率（旋转后可能互换）。
+ */
+static void touch_transform_coords(touch_drv_t *t)
+{
+    uint16_t pw = t->src->phys_width;
+    uint16_t ph = t->src->phys_height;
+    uint8_t dir = t->spin_dir;
+
+    if (dir == DISP_SPIN_180) return; /* 无需变换 */
+
+    for (int i = 0; i < TOUCH_MAX_POINTS; i++) {
+        if (!(t->tp_state & (1 << i))) continue;
+
+        uint16_t rx = t->x[i];
+        uint16_t ry = t->y[i];
+
+        switch (dir) {
+            case DISP_NO_SPIN: /* 180° */
+                t->x[i] = pw - 1 - rx;
+                t->y[i] = ph - 1 - ry;
+                break;
+            case DISP_SPIN_90: /* 270° CCW */
+                t->x[i] = ph - 1 - ry;
+                t->y[i] = rx;
+                break;
+            case DISP_SPIN_270: /* 90° CCW */
+                t->x[i] = ry;
+                t->y[i] = pw - 1 - rx;
+                break;
+            default:
+                break;
+        }
+    }
+}
 
 #define DRV_NULL_CHECK(t, act_when_null) \
     LOG_WHEN_FAILED(                     \
@@ -60,6 +103,9 @@ int touch_scan(touch_drv_t *t)
 
     ret           = FT6336_Scan(t->x, t->y, &t->tp_state);
     t->is_pressed = ret;
+
+    /* 根据旋转方向重映射触摸坐标 */
+    touch_transform_coords(t);
 
     return ret;
 }

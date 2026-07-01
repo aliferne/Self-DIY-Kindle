@@ -191,12 +191,8 @@ static void touchpad_init(void)
      * 按照分层，我们这里不需要显式初始化
      * 初始化触摸屏的硬件资源在 bsp 层
      * 驱动资源则在 middlewares 层
-     * 
-     * FIXME: 目前是初始化了也不能使用触摸事件
-     * 推测原因 1：触摸没有和显示关联
-     * 推测原因 2：上面的初始化，需要将 indev_drv 改一下，不同的输入驱动用不同结构体
      */
-    if (!TOUCH_IS_INIT(&touch))
+    if (!TOUCH_IS_INIT(screen.touch))
     {
         LOG_WARN("TOUCH DEV NOT INITIALIZED, this may lead to undefined behaviours.");
     }
@@ -208,7 +204,7 @@ static void touchpad_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data)
     static lv_coord_t last_x = 0;
     static lv_coord_t last_y = 0;
     
-    touch_scan(&touch);
+    touch_scan(screen.touch);
     
     /*Save the pressed coordinates and the state*/
     if(touchpad_is_pressed()) {
@@ -228,7 +224,7 @@ static void touchpad_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data)
 static bool touchpad_is_pressed(void)
 {
     /*Your code comes here*/
-    return touch_is_pressed(&touch);
+    return touch_is_pressed(screen.touch);
 }
 
 /*Get the x and y coordinates if the touchpad is pressed*/
@@ -236,8 +232,8 @@ static void touchpad_get_xy(lv_coord_t * x, lv_coord_t * y)
 {
     /*Your code comes here*/
 
-    (*x) = touch.x[0];
-    (*y) = touch.y[0];
+    (*x) = screen.touch->x[0];
+    (*y) = screen.touch->y[0];
 }
 
 /*------------------

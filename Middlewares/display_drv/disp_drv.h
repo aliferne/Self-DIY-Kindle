@@ -4,6 +4,7 @@
 #include "bsp_i2c.h"
 #include "bsp_spi.h"
 #include "bsp_gpio.h"
+#include "touch_drv.h"
 
 /*
  * 提供统一的显示屏驱动 API
@@ -50,14 +51,11 @@
 #define DISP_GRAY1   0x8410
 #define DISP_GRAY2   0x4208
 
-/* 旋转方向 */
-#define DISP_NO_SPIN   0
-#define DISP_LSPIN_90  1
-#define DISP_LSPIN_180 2
-#define DISP_LSPIN_270 3
-#define DISP_RSPIN_90  DISP_LSPIN_270
-#define DISP_RSPIN_180 DISP_LSPIN_180
-#define DISP_RSPIN_270 DISP_LSPIN_90
+/* 旋转方向（顺时针） */
+#define DISP_NO_SPIN  0
+#define DISP_SPIN_90  1
+#define DISP_SPIN_180 2
+#define DISP_SPIN_270 3
 
 /* 显示屏硬件资源，假定使用 SPI 作为通信协议 */
 typedef struct {
@@ -67,9 +65,12 @@ typedef struct {
     gpio_t *blk_pin; /**< 背光引脚（无需控制可传 NULL） */
 } disp_src_t;
 
+struct _touch_drv;
+
 /* 显示驱动 */
 typedef struct _disp_drv {
-    disp_src_t *src; /**< 底层驱动资源 */
+    disp_src_t *src;    /**< 底层驱动资源 */
+    touch_drv_t *touch; /**< 触摸屏，NULL 表示没有 */
     /*
      * 私有变量，
      * 有些驱动会自带类似于 disp_drv_t 的结构体，
@@ -82,7 +83,7 @@ typedef struct _disp_drv {
     uint8_t spin_dir; // 当前屏幕朝向
     uint32_t width;
     uint32_t height;
-    
+
     /* 延时函数指针 */
     void (*delay_cb)(uint32_t ms);
 } disp_drv_t;
@@ -134,4 +135,3 @@ void display_draw_number(disp_drv_t *drv,
 
 /* 测试显示效果，可以不实现 */
 void display_test(disp_drv_t *display);
-

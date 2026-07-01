@@ -5,9 +5,7 @@
  */
 
 #include "disp_drv.h"
-#include "touch_drv.h"
 
-extern disp_drv_t display;
-extern touch_drv_t touch;
+extern disp_drv_t screen;
 
 void mid_init_modules(void);

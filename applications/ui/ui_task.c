@@ -1,6 +1,7 @@
 #include "bsp_sys.h"
 #include "bsp_handle.h"
 #include "disp_drv.h"
+#include "lv_hal_disp.h"
 #include "lv_obj_pos.h"
 #include "lv_printf.h"
 #include "lv_timer.h"
@@ -29,6 +30,7 @@ extern void ui_disp_reader_page(void);
 extern void ui_disp_player_page(void);
 void flusher(lv_timer_t *timer);
 
+    int i = 0;
 #include "mid_config.h"
 void StartUITask(void const *argument)
 {
@@ -47,12 +49,10 @@ void StartUITask(void const *argument)
             ui_disp_home_page();
 
         lv_timer_handler();
-        os_delay_ms(10);
-    }
 
-    for (;;) {
-        display_test(&display);
-        os_delay_ms(1000);
+        lv_disp_set_rotation(lv_disp, i);
+        os_delay_ms(10000);
+        i = (i + 1) % 4;
     }
 }
 

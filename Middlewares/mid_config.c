@@ -22,12 +22,15 @@ static disp_src_t tft = {
 };
 
 static touch_src_t touch_src = {
-    .i2c = &tp_i2c,
-    .it  = &tp_int,
-    .rst = &tp_rst};
+    .i2c         = &tp_i2c,
+    .it          = &tp_int,
+    .rst         = &tp_rst,
+    .phys_width  = 320,
+    .phys_height = 480,
+};
 
-disp_drv_t display;
-touch_drv_t touch;
+disp_drv_t screen;
+static touch_drv_t screen_touch;
 
 void mid_init_modules(void)
 {
@@ -38,18 +41,21 @@ void mid_init_modules(void)
 
 static void mid_init_tft(void)
 {
-    display.src = &tft;
+    screen.src   = &tft;
+    screen.touch = &screen_touch;
 
-    display_init(&display);
-    display_backlight_on(&display);
+    display_init(&screen);
+    display_backlight_on(&screen);
+    LOG_DEBUG("TFT Initialized.\n");
 }
 
 static void mid_init_touch(void)
 {
-    touch.src = &touch_src;
-    touch.delay_cb = os_delay_ms;
+    screen_touch.src      = &touch_src;
+    screen_touch.delay_cb = os_delay_ms;
 
-    touch_init(&touch);
+    touch_init(&screen_touch);
+    LOG_DEBUG("Touch Initialized.\n");
 }
 
 __NOT_USED static void mid_init_epaper(void)
@@ -69,4 +75,6 @@ __NOT_USED static void mid_init_epaper(void)
         (GPIO_Port_t)EPAPER_RST_PORT, (GPIO_Pin_t)EPAPER_RST_PIN,
         (GPIO_Port_t)EPAPER_BUSY_PORT, (GPIO_Pin_t)EPAPER_BUSY_PIN);
     GIVEUP(err);
+    
+    LOG_DEBUG("Epaper Initialized.\n");
 }

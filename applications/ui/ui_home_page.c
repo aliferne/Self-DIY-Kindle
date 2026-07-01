@@ -66,6 +66,9 @@ static void main_func_item_click_cb(lv_event_t *e)
     lv_obj_t *btn = lv_event_get_target(e);
     /* 后续可加上页面切换逻辑 */
 
+    /* FIXME: 按键逻辑还是有些诡异，
+        有的时候按到不是 settings btn 也会提示设置被按下，
+        应该是 touch_drv 旋转时的计算问题 */
     if (btn == bookshelf_btn) {
         LOG_DEBUG("bookshelf btn clicked.\n");
     } else if (btn == music_btn) {

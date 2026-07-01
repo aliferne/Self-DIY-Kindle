@@ -13,12 +13,13 @@ void vApplicationStackOverflowHook(TaskHandle_t xTask,
 {
     printf("Stack overflow in task %s\r\n", pcTaskName);
 }
-
+extern int i;
 void StartProcessTask(void const *argument)
 {
-    // TODO: 先写电子书解析逻辑，触屏暂时不管了
     // ebook_srv_test();
     for (;;) {
-        os_delay_ms(1000);
+        touch_test(screen.touch);
+        LOG_INFO("I == %d\n", i);
+        os_delay_ms(1);
     }
 }

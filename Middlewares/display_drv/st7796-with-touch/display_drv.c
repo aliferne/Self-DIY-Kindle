@@ -21,7 +21,13 @@
  * ============================================================ */
 void display_init(disp_drv_t *drv)
 {
-    ASSERT_FAIL(drv == NULL || drv->src == NULL, return);
+    LOG_WHEN_FAILED(drv == NULL,
+                    return,
+                    "Display can not initialize a NULL pointer");
+
+    LOG_WHEN_FAILED(drv->src == NULL,
+                    return,
+                    "Display can not initialize a NULL pointer");
 
     drv->delay_cb = chip_delay_ms;
     /* [DI] 将 disp_src_t 注入到 LCD.c */
@@ -106,6 +112,8 @@ void display_spin_screen(disp_drv_t *drv, uint8_t dir)
 {
     ASSERT_FAIL(!DISP_IS_INIT(drv), return);
     drv->spin_dir = dir;
+    /* 如果有触摸的话，则触摸也需要获取旋转相关信息用于重映射坐标 */
+    if (drv->touch) drv->touch->spin_dir = dir;
 
     uint8_t dirs[4] = {1, 2, 0, 3};
     LCD_Display_Dir(dirs[dir]);

@@ -14,9 +14,11 @@
 
 /* 显示屏触摸硬件资源，假定使用 I2C 作为通信协议 */
 typedef struct {
-    iic_t *i2c;  /**< I2C 总线 */
-    gpio_t *it;  /**< 中断引脚 */
-    gpio_t *rst; /**< 复位引脚 */
+    iic_t *i2c;           /**< I2C 总线 */
+    gpio_t *it;           /**< 中断引脚 */
+    gpio_t *rst;          /**< 复位引脚 */
+    uint16_t phys_width;  /**< 触摸面板物理宽度 */
+    uint16_t phys_height; /**< 触摸面板物理高度 */
 } touch_src_t;
 
 typedef struct _touch_drv {

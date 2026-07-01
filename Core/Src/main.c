@@ -110,6 +110,7 @@ int main(void)
     bsp_init_hardware();
     mid_init_modules();
 
+    /* MX_SDIO_SD_Init 比较烦人的是这里如果没 SD 卡就直接卡死了，后面想个办法重写一下 */
     service_init();
 
     /* start testing signal */

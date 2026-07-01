@@ -167,8 +167,8 @@ static void disp_init(void)
      * 后面只需要使用 LVGL 的 lv_disp_drv 来更新长宽即可
      * 见 disp_drv_update_cb@lv_port_disp.c, lv_disp_drv_update@lv_hal_disp.c
      */
-    disp_hor_res = display.width;
-    disp_ver_res = display.height;
+    disp_hor_res = screen.width;
+    disp_ver_res = screen.height;
 
     if (disp_buf1 == NULL)
         disp_buf1 = malloc(sizeof(lv_color_t) * disp_hor_res * 10);
@@ -211,7 +211,7 @@ static void disp_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_
         int32_t h = area->y2 - area->y1 + 1;
 
         display_write_pixels(
-            &display, area->x1, area->y1, w, h,
+            &screen, area->x1, area->y1, w, h,
             (const uint16_t *)color_p);
     }
     /*IMPORTANT!!!
@@ -241,13 +241,13 @@ static void disp_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_
 static void disp_drv_update_cb(lv_disp_drv_t *drv)
 {
     static const uint8_t lv_to_dir[] = {
-        DISP_NO_SPIN, DISP_LSPIN_90, DISP_LSPIN_180, DISP_LSPIN_270};
+        DISP_NO_SPIN, DISP_SPIN_90, DISP_SPIN_180, DISP_SPIN_270};
 
     /* 由于 LVGL 会自动帮我们更新屏幕渲染的宽高，因此直接这么赋值即可 */
     disp_hor_res = lv_disp_drv.hor_res;
     disp_ver_res = lv_disp_drv.ver_res;
 
-    display_spin_screen(&display, lv_to_dir[drv->rotated]);
+    display_spin_screen(&screen, lv_to_dir[drv->rotated]);
 }
 
 #else /*Enable this file at the top*/
