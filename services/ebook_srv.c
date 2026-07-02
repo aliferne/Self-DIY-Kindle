@@ -6,6 +6,7 @@
 
 #define LOG_HEADER   "[ebook service]"
 #define BOOK_PATH    "/books/"
+#define BOOK_MARK_PATH (BOOK_PATH "marks/")
 #define BOOK_STORAGE (&sdcard)
 
 static DIR book_dir;

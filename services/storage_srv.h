@@ -13,9 +13,13 @@ typedef enum {
 } StorageState_t;
 
 typedef struct {
-    uint8_t is_initialized;
+    uint8_t is_initialized : 1;
     const char *volume;
     FATFS fs;
+    /* 使用字节数(kb) */
+    float usage_kb;
+    /* 剩余字节数(kb) */
+    float free_kb;
 } Storage_t;
 
 #define storage_eof(fp)       f_eof(fp)

@@ -44,7 +44,7 @@ StorageState_t storage_init(Storage_t *s)
     STORAGE_LOG_WHEN_FAILED(
         res != FR_OK,
         return Storage_Failed,
-        "Failed to mount volume");
+        "Failed to mount volume, please check out the FRESULT: %d\n", res);
 
     return Storage_Ok;
 }
@@ -57,6 +57,8 @@ StorageState_t storage_deinit(Storage_t *s)
 
     s->is_initialized = 0;
     f_unmount(s->volume);
+    LOG_DEBUG("Storage deinitialized.\n");
+
     return Storage_Ok;
 }
 
@@ -70,8 +72,10 @@ StorageState_t storage_mkdir(Storage_t *s, const char *path)
     char full[STORAGE_MAX_PATH_LEN];
     make_path(s, path, full, sizeof(full));
 
-    if (f_stat(full, NULL) == FR_OK)
+    if (f_stat(full, NULL) == FR_OK) {
+        LOG_DEBUG("%s already exists, return", full);
         return Storage_Ok;
+    }
 
     FRESULT res = f_mkdir(full);
     STORAGE_LOG_WHEN_FAILED(
@@ -90,7 +94,6 @@ StorageState_t storage_mkdirs(Storage_t *s, const char *paths[], uint32_t len)
         StorageState_t stat = storage_mkdir(s, paths[i]);
 
         if (stat != Storage_Ok) {
-            char msg[STORAGE_MAX_PATH_LEN + 21];
             STORAGE_LOG_WHEN_FAILED(1, return stat, "Failed when making %s", paths[i]);
         }
     }
