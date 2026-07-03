@@ -30,7 +30,49 @@
 | 耳机座    | 3.5mm音频座            | 1    | -              |
 | USB-C座   | 16pin Type-C           | 1    | -              |
 
-## IMU
+### 主控和协处理器
+
+主控选用 [STM32F411RET6][STM32F411 Datasheet]，当前原型验证阶段使用 STM32F407VET6，协处理器使用 [ESP8266][ESP8266 Datasheet]。
+
+协处理器需要实现联网的需求，因此选择 ESP8266，并要求 ESP8266 可以实现网络透穿，实现通过 Web 端/App 端配对以达到给 STM32 上传文件的需求，此外由于 ESP8266 除此以外并不参与整机逻辑，因此要求它还能实现通过网络端给 STM32 实现 ISP 固件升级。
+
+由此基本确定协处理器 GPIO 占用资源，即 TXD、RXD 一对，两个 GPIO 引脚连接 BOOT0 和 NRST，并在默认情况下外接弱上/下拉电路，避免因电平不稳问题被强行复位
+
+根据 ESP8266 的手册，我们需要的接线逻辑为：
+
+| 引脚 | 功能描述                         | 备注                                     |
+| ---- | -------------------------------- | ---------------------------------------- |
+| IO0  | 0 = 下载模式， 1 = 悬空/外部拉高 | 建议使用按键                             |
+| RST  | 复位                             | 建议使用按键                             |
+| EN   | 使能端，高电平有效               | 建议 主控 进行控制，外部电路接弱上拉电阻 |
+| TXD0 | 串口发送                         | 接 主控                                  |
+| RXD0 | 串口接收                         | 接 主控                                  |
+
+需要注意的是 ESP8266 模组有些 IO 口是不可用的
+
+对于主控，我们需要的接线逻辑则为：
+
+| 引脚  | 功能描述                       | 备注                                           |
+| ----- | ------------------------------ | ---------------------------------------------- |
+| BOOT0 | 参与 主控 启动时读取内存的配置 | 在接低电平的基础上与 协处理器 的任意 GPIO 相连 |
+| BOOT1 | 参与 主控 启动时读取内存的配置 | 需要接低电平                                   |
+| TXD0  | 串口发送                       | 接 协处理器                                    |
+| RXD0  | 串口接收                       | 接 协处理器                                    |
+
+这对应 STM32 BOOT0 和 BOOT1 配置的启动逻辑：
+
+| 引脚电平         | 对应功能                            |
+| ---------------- | ----------------------------------- |
+| BOOT0=0, BOOT1=x | 从用户闪存(Flash)启动，正常模式     |
+| BOOT0=1, BOOT1=0 | 从系统存储器启动，通常用于 ISP 模式 |
+| BOOT0=1, BOOT1=1 | 从内置 SRAM 启动，通常用于调试      |
+
+一般而言是这两个引脚都会被拉到低电平，但是我们对于 BOOT0 有些特殊需求（需要 ISP 功能），因此 BOOT0 不能完全接低电平。
+此外注意设计时需要接弱下拉电阻，以避免 GND 的噪声。
+
+对于上面提到的 ISP 方案，可以参考 [STM32RomWebFlasher](https://github.com/DavidSAlexander/STM32RomWebFlasher)
+
+### IMU
 
 ### 音频模块
 
@@ -52,6 +94,9 @@
 在 P34 的 Layout 界面， TI 的数据手册中甚至特地提及 PCM5102A 可以不做数模地分离，这无疑会简化电路设计，此外 TI 给出的专业设计参考也为自行设计电路提供了一定程度上的简化。
 
 不过最重要的原因还是因为我们有现成物料，且该模块购置方便，仅需不到十元即可获得包括 LDO 和各种参数合适的电容电阻在内的一小块模块，比直接购置芯片还便宜（虽然大概率是国内仿制 IC），而且提供了现成的 PCB 设计方案，且基于该模块的 ESP32 的开源较多，可以作为一定的参考。
+
+
+
 
 ## 物料选择及合理性计算
 
@@ -82,5 +127,7 @@ PB3, PB4, PB5 -> I2S3_CK, I2S3ext_SD, I2S3_SD
 
 ## 参考资料
 
+[ESP8266 Datasheet]: https://item.szlcsc.com/datasheet/ESP-12F(ESP8266MOD)/84052.html?spm=sc.gbn.xds.a___sc.gbn.hd.ss&c=&lcsc_vid=FAcMUwUFTlUNAl1eR1APV1IHFVEPXgZVQABXV1YAFVQxVlNeRFFYX1FST1lXUTsOAxUeFF5JWBEPFBcWGBMaSQ4KFE8NCAlJ
+[STM32F411 Datasheet]: https://atta.szlcsc.com/upload/public/pdf/source/20170908/C94355_1504870172026958155.pdf
 [TI PCM5102A Datasheet & PCB Design]: https://www.ti.com.cn/product/cn/PCM5102A#tech-docs
 [I2S 总线讲解]: https://juejin.cn/post/7175107789411811384
