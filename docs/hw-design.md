@@ -95,35 +95,60 @@
 
 不过最重要的原因还是因为我们有现成物料，且该模块购置方便，仅需不到十元即可获得包括 LDO 和各种参数合适的电容电阻在内的一小块模块，比直接购置芯片还便宜（虽然大概率是国内仿制 IC），而且提供了现成的 PCB 设计方案，且基于该模块的 ESP32 的开源较多，可以作为一定的参考。
 
-
-
+因此总的来说我们需要：
+BCK, DIN, LRCK, XSMT
+它们分别对应主控中的：
+I2Sx_CK, I2Sx_SD, I2Sx_WS, 任意 GPIO
+需要注意的是 I2Sx_extSD 仅作为扩展使用，而 I2Sx_MCK 可以不接 SCK
 
 ## 物料选择及合理性计算
 
 ## 芯片引脚分配情况
 
-PA13 -> SWDIO; PA14 -> SWCLK: 定为调试接口
-PB3, PB4, PB5 -> I2S3_CK, I2S3ext_SD, I2S3_SD
-
-下面是 AI 总结的表格，需要审查
-
-| 类别      | 数量 | 具体引脚                              |
-| --------- | ---- | ------------------------------------- |
-| 电源/系统 | 17   | 固定                                  |
-| 调试      | 2    | PA13, PA14                            |
-| 显示      | 6    | PA4, PA5, PA7, PA8, PC0, PC1          |
-| 触摸      | 3    | PB6, PB7, PC2                         |
-| IMU       | 1    | PC3 (共用I2C)                         |
-| 音频I2S   | 3    | PB3, PB4, PB5                         |
-| SD卡      | 7    | PC8, PC9, PC10, PC11, PC12, PD2, PC13 |
-| SPI Flash | 4    | PB10, PB11, PB14, PB15                |
-| ESP8266   | 3    | PA9, PA10, PA12 (CH_PD)               |
-| CH340     | 2    | PA2, PA3                              |
-| 按键      | 4    | PA0, PA1, PA6, PB1                    |
-| ADC       | 1    | PC4                                   |
-| LED       | 2    | PA11, PC5                             |
-| 预留      | 6    | PC13, PB0, PB2, PB8, PB9, PB13        |
-| 总计      | ≈50  | 全部占满                              |
+1. 电源: 12 pins, 其中 VBAT 可以接电池用于给 RTC 供电
+2. 调试: 2 pins:
+   - SWD: PA13
+   - SCK: PA14
+3. 显示(SPI3 + PWM): 6/7 pins
+   - NSS/CS: PA15
+   - SCK: PB3
+   - MISO: PB4 (可选, 我决定舍弃)
+   - MOSI: PB5
+   - DC: PB4
+   - RST: PC13
+   - BLK: (PWM -> TIM1_CH1): PA8
+4. 触摸(I2C1): 4 pins
+   - SCL: PB6
+   - SDA: PB7
+   - INT: PB8
+   - RST: PB9
+   - 备注：放在芯片正上方
+5. IMU(I2C1: 可与触摸共用总线): 3 - 2 = 1 pins
+   - SCL: PB6
+   - SDA: PB7
+   - AD0: 不占用引脚，可接电源或地，但需要注意触摸的 I2C_ADDR, 不能冲突
+   - INT: PA12
+   - 备注：按照这个引脚分配情况大概是放芯片 48 脚的右侧
+6. 音频(I2S1): 4 pins
+   - WS(LRCK): PA4
+   - CK(BCK): PA5
+   - SD(DIN): PA7
+   - XSMT: PA6
+7. 控制协处理器(USART1 + GPIO): 4 pins
+   - TXD: PA9
+   - RXD: PA10
+   - EN(使能引脚): PA11
+   - BOOT0
+8. 按键: 4 pins: TODO
+9. LED: 2 pins TODO:
+   - 充电指示灯(充电中灯亮，充满灯灭)
+   - 用户自定义指示灯（暂未想好做什么）
+10. SD卡(SDIO): 3~6 pins (建议使用 4Bit 模式):
+   - CMD: PD2
+   - CLK: PC12
+   - D0~D3: PC8, PC9, PC10, PC11
+   - 备注：按照 LQFP64 的引脚布局，由于数据线和 CLK 啥的不完全在同侧，看来只能让芯片旋转 45 度来画板子了(之后看下如何布局合理)。
+11. MSE(主晶振) 和 LSE(RTC): 4 pin
 
 ## 参考资料
 
@@ -131,3 +156,7 @@ PB3, PB4, PB5 -> I2S3_CK, I2S3ext_SD, I2S3_SD
 [STM32F411 Datasheet]: https://atta.szlcsc.com/upload/public/pdf/source/20170908/C94355_1504870172026958155.pdf
 [TI PCM5102A Datasheet & PCB Design]: https://www.ti.com.cn/product/cn/PCM5102A#tech-docs
 [I2S 总线讲解]: https://juejin.cn/post/7175107789411811384
+[SDIO 协议从入门到精通]: https://zhuanlan.zhihu.com/p/689459798
+[SD 卡槽布线指导-jlc]: https://wiki.lceda.cn/zh-hans/design-production/pcb-design/moduler-design/sd-card.html
+ [SD 卡槽布线指导-华秋]: https://zhuanlan.zhihu.com/p/718040692
+ 
