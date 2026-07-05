@@ -70,7 +70,12 @@
 一般而言是这两个引脚都会被拉到低电平，但是我们对于 BOOT0 有些特殊需求（需要 ISP 功能），因此 BOOT0 不能完全接低电平。
 此外注意设计时需要接弱下拉电阻，以避免 GND 的噪声。
 
-对于上面提到的 ISP 方案，可以参考 [STM32RomWebFlasher](https://github.com/DavidSAlexander/STM32RomWebFlasher)
+对于上面提到的 ISP 方案，可以参考 [STM32RomWebFlasher][STM32RomWebFlasher]
+
+ESP8266 最好不要在一路 UART 上既做与 STM32 的通信，又做自动下载电路的串口，这样子可能会导致硬件上的 data race（想象一下当 ESP8266 准备烧录时 STM32 突然发送消息，固件就乱套了）。
+
+根据[乐鑫官方的资料][Espressif ESP8266 Datasheet]和[这篇博客][ESP8266 UART1]，我们可以在 Arduino 中使用 `Serial.swap()` 来将通信串口换到 IO13(RX) 和 IO15(TX)，但是需要注意 IO15 在上电瞬间必须为低电平，否则上电不正常。
+因此可以设计一个电路，该电路包含一个使能接口，当主控给该接口高/低电平时让 IO15 可以通信。
 
 ### IMU
 
@@ -123,40 +128,60 @@ I2Sx_CK, I2Sx_SD, I2Sx_WS, 任意 GPIO
    - INT: PB8
    - RST: PB9
    - 备注：放在芯片正上方
-5. IMU(I2C1: 可与触摸共用总线): 3 - 2 = 1 pins
+5. 光照模组(I2C1: 可与触摸共用总线, BH1750) 1 pins:
+   - SCL: PB6
+   - SDA: PB7
+   - ADDR: 地址选择，直接接逻辑电平即可
+6. IMU(I2C1: 可与触摸共用总线, MPU6050): 3 - 2 = 1 pins
    - SCL: PB6
    - SDA: PB7
    - AD0: 不占用引脚，可接电源或地，但需要注意触摸的 I2C_ADDR, 不能冲突
    - INT: PA12
    - 备注：按照这个引脚分配情况大概是放芯片 48 脚的右侧
-6. 音频(I2S1): 4 pins
+7. 音频(I2S1, PCM5102A): 4 pins
    - WS(LRCK): PA4
    - CK(BCK): PA5
    - SD(DIN): PA7
    - XSMT: PA6
-7. 控制协处理器(USART1 + GPIO): 4 pins
+8. 控制协处理器(USART1 + GPIO, ESP8266): 3 pins
    - TXD: PA9
    - RXD: PA10
    - EN(使能引脚): PA11
-   - BOOT0
-8. 按键: 4 pins: TODO
-9. LED: 2 pins TODO:
-   - 充电指示灯(充电中灯亮，充满灯灭)
-   - 用户自定义指示灯（暂未想好做什么）
-10. SD卡(SDIO): 3~6 pins (建议使用 4Bit 模式):
-   - CMD: PD2
-   - CLK: PC12
-   - D0~D3: PC8, PC9, PC10, PC11
-   - 备注：按照 LQFP64 的引脚布局，由于数据线和 CLK 啥的不完全在同侧，看来只能让芯片旋转 45 度来画板子了(之后看下如何布局合理)。
-11. MSE(主晶振) 和 LSE(RTC): 4 pin
+   - BOOT0: 不计入消耗
+   - nRST: 不计入消耗
+9. 按键: 4 pins:
+   - HOME(WKUP): PA0
+   - PG_UP: PA1
+   - PG_DOWN: PA2
+   - CONFIRM: PA3
+10. LED: 2 pins:
+   - 充电指示灯(充电中灯亮，充满灯灭): 接 TP4056 的 CHRG, 不占用主控
+   - 用户自定义指示灯（暂未想好做什么）: PC1
+11. SD卡(SDIO): 3~6 pins (建议使用 4Bit 模式):
+    - CMD: PD2
+    - CLK: PC12
+    - D0~D3: PC8, PC9, PC10, PC11
+    - 备注：按照 LQFP64 的引脚布局，由于数据线和 CLK 啥的不完全在同侧，看来只能让芯片旋转 45 度来画板子了(之后看下如何布局合理)。
+12. MSE(主晶振) 和 LSE(RTC): 4 pin
+13. SPI Flash(SPI2, 存放字库等):
+    - SCK: PB10
+    - MISO: PB14
+    - MOSI: PB15
+    - NSS: PB12
 
 ## 参考资料
 
-[ESP8266 Datasheet]: https://item.szlcsc.com/datasheet/ESP-12F(ESP8266MOD)/84052.html?spm=sc.gbn.xds.a___sc.gbn.hd.ss&c=&lcsc_vid=FAcMUwUFTlUNAl1eR1APV1IHFVEPXgZVQABXV1YAFVQxVlNeRFFYX1FST1lXUTsOAxUeFF5JWBEPFBcWGBMaSQ4KFE8NCAlJ
+[AiThinker ESP8266 Datasheet]: https://item.szlcsc.com/datasheet/ESP-12E/90477.html?spm=sc.gbn.xds.a___sc.gbn.hd.ss&c=&lcsc_vid=FAcMUwUFTlUNAl1eR1APV1IHFVEPXgZVQABXV1YAFVQxVlNeRFBaX1dRT1dZUjtW
+[Espressif ESP8266 Datasheet]: https://documentation.espressif.com/esp8266-technical_reference_cn.pdf
+[STM32RomWebFlasher]: https://github.com/DavidSAlexander/STM32RomWebFlasher
+[ESP8266 UART1]: https://www.cnblogs.com/corehouse/p/13770833.html
 [STM32F411 Datasheet]: https://atta.szlcsc.com/upload/public/pdf/source/20170908/C94355_1504870172026958155.pdf
 [TI PCM5102A Datasheet & PCB Design]: https://www.ti.com.cn/product/cn/PCM5102A#tech-docs
 [I2S 总线讲解]: https://juejin.cn/post/7175107789411811384
 [SDIO 协议从入门到精通]: https://zhuanlan.zhihu.com/p/689459798
 [SD 卡槽布线指导-jlc]: https://wiki.lceda.cn/zh-hans/design-production/pcb-design/moduler-design/sd-card.html
- [SD 卡槽布线指导-华秋]: https://zhuanlan.zhihu.com/p/718040692
- 
+[SD 卡槽布线指导-华秋]: https://zhuanlan.zhihu.com/p/718040692
+[单片机复位电路]: https://www.cnblogs.com/bujidao1128/p/18455356
+[WCH CH340 自动下载电路方案1]: https://www.wch.cn/products/CH340.html
+[WCH CH340 自动下载电路方案1]: https://www.wch.cn/application/575.html
+[TP4056 Datasheet]: https://item.szlcsc.com/datasheet/TP4056-MS/8533532.html?spm=sc.gbn.xds.a___sc.gbn.hd.ss&lcsc_vid=FAcMUwUFTlUNAl1eR1APV1IHFVEPXgZVQABXV1YAFVQxVlNeRFFWV1VUT1hdVTsOAxUeFF5JWAIASQYPGQZABAsLWA%3D%3D
