@@ -143,12 +143,13 @@ I2Sx_CK, I2Sx_SD, I2Sx_WS, 任意 GPIO
    - CK(BCK): PA5
    - SD(DIN): PA7
    - XSMT: PA6
-8. 控制协处理器(USART1 + GPIO, ESP8266): 3 pins
+8. 控制协处理器(USART1 + GPIO, ESP8266): 4 pins
    - TXD: PA9
    - RXD: PA10
    - EN(使能引脚): PA11
+   - ESP_nRST: PC7
    - BOOT0: 不计入消耗
-   - nRST: 不计入消耗
+   - ST_nRST: 不计入消耗
 9. 按键: 4 pins:
    - HOME(WKUP): PA0
    - PG_UP: PA1
