@@ -138,11 +138,14 @@ I2Sx_CK, I2Sx_SD, I2Sx_WS, 任意 GPIO
    - AD0: 不占用引脚，可接电源或地，但需要注意触摸的 I2C_ADDR, 不能冲突
    - INT: PA12
    - 备注：按照这个引脚分配情况大概是放芯片 48 脚的右侧
-7. 音频(I2S1, PCM5102A): 4 pins
+7. 音频(I2S1, PCM5102A): 7 pins
    - WS(LRCK): PA4
    - CK(BCK): PA5
    - SD(DIN): PA7
    - XSMT: PA6
+   - DEMP: PC4
+   - FLT: PC5
+   - AUDIO_DETECT: PC6
 8. 控制协处理器(USART1 + GPIO, ESP8266): 4 pins
    - TXD: PA9
    - RXD: PA10
@@ -157,7 +160,7 @@ I2Sx_CK, I2Sx_SD, I2Sx_WS, 任意 GPIO
    - CONFIRM: PA3
 10. LED: 2 pins:
    - 充电指示灯(充电中灯亮，充满灯灭): 接 TP4056 的 CHRG, 不占用主控
-   - 用户自定义指示灯（暂未想好做什么）: PC1
+   - 用户自定义指示灯（暂未想好做什么）: PC2
 11. SD卡(SDIO): 3~6 pins (建议使用 4Bit 模式):
     - CMD: PD2
     - CLK: PC12
@@ -169,6 +172,12 @@ I2Sx_CK, I2Sx_SD, I2Sx_WS, 任意 GPIO
     - MISO: PB14
     - MOSI: PB15
     - NSS: PB12
+14. 电源检测（ADC1 + GPIO） 3 pins:
+    - ADC1_10: PC0
+    - BAT_DETECT_EN: PC1
+    - STDBY: PB0 (检测是否充满电)
+    - PB1, PC3: ESP8266 和音频模拟供电 LDO 的使能
+
 
 ## 参考资料
 
