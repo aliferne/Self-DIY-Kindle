@@ -165,7 +165,7 @@ char *rtt_gets(char *buf, int size)
             if (i > 0)
             {
                 i--;
-                SEGGER_RTT_Write(DEFAULT_BUFFER_IDX, "\b \b", 3);
+                SEGGER_RTT_Write(DEFAULT_BUFFER_IDX, " \b", 2);
             }
             continue;
         }
