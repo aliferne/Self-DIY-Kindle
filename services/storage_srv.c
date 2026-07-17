@@ -1,6 +1,7 @@
 #include "storage_srv.h"
 #include "bsp_handle.h"
 #include "ff.h"
+#include "rtt_srv.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -72,8 +73,9 @@ StorageState_t storage_mkdir(Storage_t *s, const char *path)
     char full[STORAGE_MAX_PATH_LEN];
     make_path(s, path, full, sizeof(full));
 
-    if (f_stat(full, NULL) == FR_OK) {
-        LOG_DEBUG("%s already exists, return", full);
+    if (f_stat(full, NULL) == FR_OK)
+    {
+        LOG_DEBUG("%s already exists, return\n", full);
         return Storage_Ok;
     }
 
@@ -90,10 +92,12 @@ StorageState_t storage_mkdirs(Storage_t *s, const char *paths[], uint32_t len)
 {
     ASSERT_FAIL(s->is_initialized != 1, return Storage_NotInitialized);
 
-    for (uint32_t i = 0; i < len; i++) {
+    for (uint32_t i = 0; i < len; i++)
+    {
         StorageState_t stat = storage_mkdir(s, paths[i]);
 
-        if (stat != Storage_Ok) {
+        if (stat != Storage_Ok)
+        {
             STORAGE_LOG_WHEN_FAILED(1, return stat, "Failed when making %s", paths[i]);
         }
     }
@@ -152,4 +156,42 @@ FRESULT storage_opendir(Storage_t *s, DIR *dp, const char *path)
     char full[STORAGE_MAX_PATH_LEN];
     make_path(s, path, full, sizeof(full));
     return f_opendir(dp, full);
+}
+
+/**
+ * \brief 列出目录内所有文件/子目录
+ *
+ * \param s: 存储句柄
+ * \param path: 待读取路径
+ * \param cb: 回调函数，每列出一项则调用一次回调，传入相关文件属性
+ */
+FRESULT storage_listdir(Storage_t *s, const char *path, storage_listdir_cb cb)
+{
+    FRESULT res;
+    DIR dir;
+    FILINFO fno;
+
+    ASSERT_FAIL(s->is_initialized != 1, return FR_NOT_READY);
+
+    res = storage_opendir(s, &dir, path);
+    ASSERT_FAIL(res != FR_OK,
+                RTT_LOG_ERROR("Failed to open dir: %s (errcode: %d)\r\n", path, res);
+                return res);
+
+    while (
+        // 检查错误或是否到达目录末尾
+        (res = storage_readdir(&dir, &fno)) == FR_OK &&
+        fno.fname[0] != '\0')
+    {
+        // 忽略 "." 和 ".." 目录
+        if (fno.fname[0] == '.')
+            continue;
+
+        if (cb != NULL)
+            cb(fno.fname, fno.fsize, fno.fattrib & AM_DIR);
+    }
+
+    res = storage_closedir(&dir);
+
+    return res;
 }

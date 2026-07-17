@@ -1,7 +1,6 @@
 #include "bsp_handle.h"
 #include "input_srv.h"
 #include "bsp_sys.h"
-#include "bsp_config.h"
 
 static void input_dispatcher(input_event_t *e)
 {

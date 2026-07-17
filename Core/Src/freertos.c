@@ -140,7 +140,7 @@ void MX_FREERTOS_Init(void) {
   NetTaskHandle = osThreadCreate(osThread(NetTask), NULL);
 
   /* definition and creation of ProcessTask */
-  osThreadDef(ProcessTask, StartProcessTask, osPriorityBelowNormal, 0, 128);
+  osThreadDef(ProcessTask, StartProcessTask, osPriorityBelowNormal, 0, 512);
   ProcessTaskHandle = osThreadCreate(osThread(ProcessTask), NULL);
 
   /* definition and creation of UITask */

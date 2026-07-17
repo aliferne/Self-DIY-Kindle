@@ -1,7 +1,7 @@
 #pragma once
 
-#include "bsp_sdio.h"
 #include "ff.h"
+#include <stdbool.h>
 #include <stdint.h>
 
 typedef enum {
@@ -22,6 +22,13 @@ typedef struct {
     float free_kb;
 } Storage_t;
 
+/*
+ * 在列出目录内部内容时调用方需要传入的回调函数，
+ * 此处会传入文件名称和大小，同时告知调用方是否为目录
+ * 若是目录，则 `fsize` 为无用变量
+ */
+typedef void (*storage_listdir_cb)(char *fname, uint64_t fsize, bool is_dir);
+
 #define storage_eof(fp)       f_eof(fp)
 #define storage_err(fp)       f_error(fp)
 #define storage_tell(fp)      f_tell(fp)
@@ -40,6 +47,7 @@ FRESULT storage_stat(Storage_t *s, const char *path, FILINFO *fno);
 FRESULT storage_unlink(Storage_t *s, const char *path);
 FRESULT storage_rename(Storage_t *s, const char *old, const char *newp);
 FRESULT storage_opendir(Storage_t *s, DIR *dp, const char *path);
+FRESULT storage_listdir(Storage_t *s, const char *path, storage_listdir_cb cb);
 
 static inline FRESULT storage_sync(FIL *fp)
 {

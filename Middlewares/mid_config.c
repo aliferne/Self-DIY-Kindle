@@ -7,7 +7,6 @@
 #include "pin_src.h"
 #include "bsp_config.h"
 #include "epaper.h"
-#include "rtt_srv.h"
 
 static void mid_init_epaper(void);
 static void mid_init_tft(void);

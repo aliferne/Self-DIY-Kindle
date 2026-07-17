@@ -360,13 +360,17 @@ virtualFolder:
         - path: applications/music_task.c
         - path: applications/net_task.c
         - path: applications/process_task.c
-        - path: applications/ui/ui_home_page.c
-        - path: applications/ui/ui_net_page.c
-        - path: applications/ui/ui_player_page.c
-        - path: applications/ui/ui_reader_page.c
-        - path: applications/ui/ui_settings_page.c
-        - path: applications/ui/ui_task.c
-      folders: []
+        - path: applications/stkovf_hook.c
+      folders:
+        - name: ui
+          files:
+            - path: applications/ui/ui_home_page.c
+            - path: applications/ui/ui_net_page.c
+            - path: applications/ui/ui_reader_page.c
+            - path: applications/ui/ui_player_page.c
+            - path: applications/ui/ui_settings_page.c
+            - path: applications/ui/ui_task.c
+          folders: []
     - name: Chip
       files: []
       folders:
