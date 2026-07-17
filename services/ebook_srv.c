@@ -1,4 +1,5 @@
 #include "bsp_handle.h"
+#include "ff.h"
 #include "srv_config.h"
 #include "storage_srv.h"
 #include <stdbool.h>
@@ -10,6 +11,8 @@
 
 static DIR book_dir;
 static FIL book;
+static bool is_dir_init = false;
+static bool is_book_opened = false;
 
 void ebook_srv_init(void)
 {
@@ -17,7 +20,14 @@ void ebook_srv_init(void)
              "please ensure all books are in %s\n",
              LOG_HEADER,
              BOOK_PATH);
-    storage_opendir(BOOK_STORAGE, &book_dir, BOOK_PATH);
+    FRESULT res;
+    res = storage_opendir(BOOK_STORAGE, &book_dir, BOOK_PATH);
+    if (res != FR_OK)
+    {
+        LOG_ERROR("%s failed to open dir (errcode: %d)\n", res);
+        return;
+    }
+    is_dir_init = true;
 
     LOG_INFO("%s initialized.", LOG_HEADER);
 }
@@ -25,32 +35,40 @@ void ebook_srv_init(void)
 void ebook_srv_deinit(void)
 {
     LOG_INFO("%s deinitializing.\n", LOG_HEADER);
-    storage_close(&book);
-    storage_closedir(&book_dir);
+
+    if (is_book_opened)
+        storage_close(&book);
+    if (is_dir_init)
+        storage_closedir(&book_dir);
+
+    is_dir_init = false;
     LOG_INFO("%s deinitialized.\n", LOG_HEADER);
 }
 
-void ebook_srv_list_books(const char *path)
+void ebook_srv_list_books(storage_listdir_cb cb)
 {
-    BOOK_PATH
+    if (is_dir_init)
+        storage_listdir(BOOK_STORAGE, BOOK_PATH, cb);
+    else
+        LOG_WARN("%s Book dir has not been intialized\n", LOG_HEADER);
 }
 
 #define PRINT_HELP_MSG() LOG_INFO( \
     "%s\n\toption menu:\n"         \
-    "\tl. list dir\n"              \
-    "\t2. do something\n"          \
-    "\t3. do something\n"          \
-    "\t4. do something\n"          \
+    "\tl. list specific dir\n"     \
     "\th. print help info\n"       \
     "\tc. clear screen\n"          \
-    "\tq. exit testing.\n",        \
+    "\tq. exit test\n",            \
     LOG_HEADER);
 
 /* 用于测试 listdir 的辅助测试函数 */
-static void print_dir_files(char *fname, uint64_t fsize, bool is_dir)
+static bool print_dir_files(char *fname, uint64_t fsize, bool is_dir)
 {
-    LOG_DEBUG("File Type: %d, File Name: %s, File Size: %d(is_valid: %d)\n",
-              is_dir, fname, fsize, !is_dir);
+    LOG_DEBUG(
+        "File Type: %s, File Name: %s, File Size: %d\n",
+        is_dir == 1 ? "directory" : "file", fname, fsize);
+
+    return true;
 }
 
 void ebook_srv_test()
@@ -73,10 +91,10 @@ void ebook_srv_test()
         else if (ch == 'l')
         {
             static char path[128];
-            LOG_INFO("Please input a path: ");
+            LOG_INFO("Please input a path(press enter to see files in root dir): ");
             LOG_GET_STR(path, 128);
             LOG_INFO("\nFiles in path: %s\n", path);
-            storage_listdir(&sdcard, path, print_dir_files);
+            storage_listdir(BOOK_STORAGE, path, print_dir_files);
         }
     }
 

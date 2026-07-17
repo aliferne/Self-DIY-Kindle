@@ -120,7 +120,7 @@ FRESULT storage_open(Storage_t *s, FIL *fp, const char *path, BYTE mode)
     return res;
 }
 
-FRESULT storage_stat(Storage_t *s, const char *path, FILINFO *fno)
+FRESULT storage_stat(Storage_t *s, FILINFO *fno, const char *path)
 {
     ASSERT_FAIL(s->is_initialized != 1, return FR_NOT_READY);
 
@@ -138,14 +138,14 @@ FRESULT storage_unlink(Storage_t *s, const char *path)
     return f_unlink(full);
 }
 
-FRESULT storage_rename(Storage_t *s, const char *old, const char *newp)
+FRESULT storage_rename(Storage_t *s, const char *old, const char *new)
 {
     ASSERT_FAIL(s->is_initialized != 1, return FR_NOT_READY);
 
     char old_full[STORAGE_MAX_PATH_LEN];
     char new_full[STORAGE_MAX_PATH_LEN];
     make_path(s, old, old_full, sizeof(old_full));
-    make_path(s, newp, new_full, sizeof(new_full));
+    make_path(s, new, new_full, sizeof(new_full));
     return f_rename(old_full, new_full);
 }
 
@@ -178,17 +178,19 @@ FRESULT storage_listdir(Storage_t *s, const char *path, storage_listdir_cb cb)
                 RTT_LOG_ERROR("Failed to open dir: %s (errcode: %d)\r\n", path, res);
                 return res);
 
-    while (
-        // 检查错误或是否到达目录末尾
-        (res = storage_readdir(&dir, &fno)) == FR_OK &&
-        fno.fname[0] != '\0')
+    res = storage_readdir(&dir, &fno);
+    // 检查错误或是否到达目录末尾
+    while (res == FR_OK && fno.fname[0] != '\0')
     {
         // 忽略 "." 和 ".." 目录
         if (fno.fname[0] == '.')
             continue;
 
-        if (cb != NULL)
-            cb(fno.fname, fno.fsize, fno.fattrib & AM_DIR);
+        if (cb != NULL &&
+            cb(fno.fname, fno.fsize, fno.fattrib & AM_DIR) != true)
+            break;
+
+        res = storage_readdir(&dir, &fno);
     }
 
     res = storage_closedir(&dir);

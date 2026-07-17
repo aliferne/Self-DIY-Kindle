@@ -26,8 +26,9 @@ typedef struct {
  * 在列出目录内部内容时调用方需要传入的回调函数，
  * 此处会传入文件名称和大小，同时告知调用方是否为目录
  * 若是目录，则 `fsize` 为无用变量
+ * 若回调返回 true，继续遍历，否则终止遍历
  */
-typedef void (*storage_listdir_cb)(char *fname, uint64_t fsize, bool is_dir);
+typedef bool (*storage_listdir_cb)(char *fname, uint64_t fsize, bool is_dir);
 
 #define storage_eof(fp)       f_eof(fp)
 #define storage_err(fp)       f_error(fp)
@@ -43,9 +44,9 @@ StorageState_t storage_mkdir(Storage_t *s, const char *path);
 StorageState_t storage_mkdirs(Storage_t *s, const char *paths[], uint32_t len);
 
 FRESULT storage_open(Storage_t *s, FIL *fp, const char *path, BYTE mode);
-FRESULT storage_stat(Storage_t *s, const char *path, FILINFO *fno);
+FRESULT storage_stat(Storage_t *s, FILINFO *fno, const char *path);
 FRESULT storage_unlink(Storage_t *s, const char *path);
-FRESULT storage_rename(Storage_t *s, const char *old, const char *newp);
+FRESULT storage_rename(Storage_t *s, const char *old, const char *new);
 FRESULT storage_opendir(Storage_t *s, DIR *dp, const char *path);
 FRESULT storage_listdir(Storage_t *s, const char *path, storage_listdir_cb cb);
 

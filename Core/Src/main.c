@@ -31,12 +31,8 @@
 /* USER CODE BEGIN Includes */
 #include "bsp_config.h"
 #include "bsp_sys.h"
-#include "ff.h"
 #include "mid_config.h"
-#include "pin_src.h"
 #include "srv_config.h"
-#include "stm32f4xx_hal.h"
-#include <stdio.h>
 
 /* USER CODE END Includes */
 
