@@ -73,8 +73,7 @@ StorageState_t storage_mkdir(Storage_t *s, const char *path)
     char full[STORAGE_MAX_PATH_LEN];
     make_path(s, path, full, sizeof(full));
 
-    if (f_stat(full, NULL) == FR_OK)
-    {
+    if (f_stat(full, NULL) == FR_OK) {
         LOG_DEBUG("%s already exists, return\n", full);
         return Storage_Ok;
     }
@@ -92,12 +91,10 @@ StorageState_t storage_mkdirs(Storage_t *s, const char *paths[], uint32_t len)
 {
     ASSERT_FAIL(s->is_initialized != 1, return Storage_NotInitialized);
 
-    for (uint32_t i = 0; i < len; i++)
-    {
+    for (uint32_t i = 0; i < len; i++) {
         StorageState_t stat = storage_mkdir(s, paths[i]);
 
-        if (stat != Storage_Ok)
-        {
+        if (stat != Storage_Ok) {
             STORAGE_LOG_WHEN_FAILED(1, return stat, "Failed when making %s", paths[i]);
         }
     }
@@ -116,7 +113,7 @@ FRESULT storage_open(Storage_t *s, FIL *fp, const char *path, BYTE mode)
      * 减少临界段，尽量避免突然断电导致的 FAT 结构破坏
      * \ref https://elm-chan.org/fsw/ff/doc/appnote.html#critical
      */
-    storage_sync(fp);
+    f_sync(fp);
     return res;
 }
 
@@ -178,10 +175,9 @@ FRESULT storage_listdir(Storage_t *s, const char *path, storage_listdir_cb cb)
                 RTT_LOG_ERROR("Failed to open dir: %s (errcode: %d)\r\n", path, res);
                 return res);
 
-    res = storage_readdir(&dir, &fno);
+    res = f_readdir(&dir, &fno);
     // 检查错误或是否到达目录末尾
-    while (res == FR_OK && fno.fname[0] != '\0')
-    {
+    while (res == FR_OK && fno.fname[0] != '\0') {
         // 忽略 "." 和 ".." 目录
         if (fno.fname[0] == '.')
             continue;
@@ -190,10 +186,10 @@ FRESULT storage_listdir(Storage_t *s, const char *path, storage_listdir_cb cb)
             cb(fno.fname, fno.fsize, fno.fattrib & AM_DIR) != true)
             break;
 
-        res = storage_readdir(&dir, &fno);
+        res = f_readdir(&dir, &fno);
     }
 
-    res = storage_closedir(&dir);
+    res = f_closedir(&dir);
 
     return res;
 }

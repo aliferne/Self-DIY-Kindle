@@ -50,21 +50,6 @@ FRESULT storage_rename(Storage_t *s, const char *old, const char *new);
 FRESULT storage_opendir(Storage_t *s, DIR *dp, const char *path);
 FRESULT storage_listdir(Storage_t *s, const char *path, storage_listdir_cb cb);
 
-static inline FRESULT storage_sync(FIL *fp)
-{
-    return f_sync(fp);
-}
-
-static inline FRESULT storage_close(FIL *fp)
-{
-    return f_close(fp);
-}
-
-static inline FRESULT storage_read(FIL *fp, void *buf, UINT btr, UINT *br)
-{
-    return f_read(fp, buf, btr, br);
-}
-
 static inline FRESULT storage_write(FIL *fp, const void *buf, UINT btw, UINT *bw)
 {
     FRESULT res = f_write(fp, buf, btw, bw);
@@ -72,21 +57,6 @@ static inline FRESULT storage_write(FIL *fp, const void *buf, UINT btw, UINT *bw
      * 减少临界段，尽量避免突然断电导致的 FAT 结构破坏
      * \ref https://elm-chan.org/fsw/ff/doc/appnote.html#critical
      */
-    storage_sync(fp);
+    f_sync(fp);
     return res;
-}
-
-static inline FRESULT storage_lseek(FIL *fp, FSIZE_t ofs)
-{
-    return f_lseek(fp, ofs);
-}
-
-static inline FRESULT storage_readdir(DIR *dp, FILINFO *fno)
-{
-    return f_readdir(dp, fno);
-}
-
-static inline FRESULT storage_closedir(DIR *dp)
-{
-    return f_closedir(dp);
 }

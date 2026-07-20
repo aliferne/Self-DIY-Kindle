@@ -4,6 +4,7 @@
 #include "srv_config.h"
 #include "storage_srv.h"
 #include <stdbool.h>
+#include <stdint.h>
 #include <string.h>
 
 #define LOG_HEADER          "[ebook service]"
@@ -13,10 +14,13 @@
 #define BOOK_CLOSE(br)      ((br)->priv.is_open = false)
 #define IS_BOOK_OPEN(br)    ((br)->priv.is_open == true)
 
-#define IS_PATH_VALID(path) (strncmp(path, BOOK_PATH, strlen(BOOK_PATH)) == 0)
-#define LOG_PATH_ERROR(cur_path)                         \
-    LOG_ERROR(                                           \
-        "%s The path should contains %s, but now: %s\n", \
+#define IS_PATH_VALID(path) (                             \
+    (strncmp(path, BOOK_PATH, strlen(BOOK_PATH)) == 0) && \
+    get_book_type(path) != BOOK_TYPE_UNKNOWN)
+/* BUG: 这个 LOG 是硬编码的格式，这不好 */
+#define LOG_PATH_ERROR(cur_path)                                                 \
+    LOG_ERROR(                                                                   \
+        "%s The path should contains %s or ends with .txt/.epub, but now: %s\n", \
         BOOK_PATH, cur_path);
 
 /* 根据文件后缀返回书本类型 */
@@ -31,7 +35,7 @@ static BookType_t get_book_type(const char *path)
         {".epub", BOOK_TYPE_EPUB},
     };
 
-    for (int i = 0; i < LEN(suffix_type_map); i++) {
+    for (uint32_t i = 0; i < LEN(suffix_type_map); i++) {
         size_t pl = strlen(path);
         size_t sl = strlen(suffix_type_map[i].suffix);
         if ((pl >= sl) &&
@@ -44,6 +48,12 @@ static BookType_t get_book_type(const char *path)
         }
     }
     return BOOK_TYPE_UNKNOWN;
+}
+
+/* 书本初始化，后续再做，用于支持 txt 和 epub 等的多态 */
+void ebook_init(BookReader_t *br)
+{
+    GIVEUP(br);
 }
 
 /* 打开书本 */
@@ -65,11 +75,11 @@ void ebook_open_book(BookReader_t *br, const char *path)
     }
 
     LOG_INFO("%s Opened book: %s\n", LOG_HEADER, path);
-    memcpy(meta->book_name, book_name, LEN(meta->book_name));
+    memcpy(meta->book_name, book_name, BOOK_NAME_SIZE);
     meta->type = get_book_type(path);
 
     br->priv.fsize     = (fp->obj.sclust != 0) ? f_size(fp) : 0;
-    br->ctn.total_page = br->priv.fsize / LEN(br->ctn.buffer);
+    br->ctn.total_page = br->priv.fsize / PAGE_BUF_SIZE;
 
     BOOK_OPEN(br);
 }
@@ -77,7 +87,7 @@ void ebook_open_book(BookReader_t *br, const char *path)
 /* 关闭书本 */
 void ebook_close_book(BookReader_t *br)
 {
-    if (storage_close(&br->priv.fp) != FR_OK) {
+    if (f_close(&br->priv.fp) != FR_OK) {
         LOG_ERROR("%s Failed to close book\n", LOG_HEADER);
         return;
     }
@@ -93,8 +103,8 @@ void ebook_prev_page(BookReader_t *br)
         LOG_WARN("%s [line: %d] Book is not opened!\n", LOG_HEADER, __LINE__);
         return;
     }
-    /* 阅读，然后填入缓冲区 */
-    __NOT_USED char *buf = br->ctn.buffer;
+
+    ebook_goto_page(br, br->ctn.cur_page - 1);
 }
 
 /* 下一页 */
@@ -104,8 +114,8 @@ void ebook_next_page(BookReader_t *br)
         LOG_WARN("%s [line: %d] Book is not opened!\n", LOG_HEADER, __LINE__);
         return;
     }
-    /* 阅读，然后填入缓冲区 */
-    __NOT_USED char *buf = br->ctn.buffer;
+
+    ebook_goto_page(br, br->ctn.cur_page + 1);
 }
 
 /* 前往指定页面 */
@@ -115,8 +125,52 @@ void ebook_goto_page(BookReader_t *br, uint16_t page)
         LOG_WARN("%s [line: %d] Book is not opened!\n", LOG_HEADER, __LINE__);
         return;
     }
-    /* 阅读，然后填入缓冲区 */
-    __NOT_USED char *buf = br->ctn.buffer;
+
+    /*
+     * 由于 uint16_t 不可表示负数，
+     * 因此这种情况要么是 0 - 1 回环到 0xFFFF 了，要么是 page + 1 > total_page 了
+     * WARN: 这里 page 是从 1 开始的
+     */
+    ASSERT_FAIL(
+        page > br->ctn.total_page,
+        LOG_WARN("%s Invalid page (%lu / %lu) to go, return",
+                 LOG_HEADER, page, br->ctn.total_page);
+        return);
+
+    /* 基本思路也就是获取偏移量然后定位到那里，接下来阅读一定的字节数 */
+    FIL *fp     = &br->priv.fp;
+    DWORD fsize = br->priv.fsize;
+    char *buf   = br->ctn.buffer;
+
+    DWORD offset = (DWORD)page * PAGE_BUF_SIZE;
+    ASSERT_FAIL(
+        offset > fsize,
+        LOG_WARN("%s Offset 0x%lx exceeds file size 0x%lx\n", LOG_HEADER, offset, fsize);
+        return);
+
+    FRESULT res = f_lseek(fp, offset);
+    ASSERT_FAIL(
+        res != FR_OK,
+        LOG_ERROR("%s f_lseek failed, err: %d\n", LOG_HEADER, res);
+        return);
+
+    DWORD bytes_to_read = PAGE_BUF_SIZE;
+    if (offset + bytes_to_read > fsize) {
+        bytes_to_read = fsize - offset;
+    }
+
+    UINT bytes_read = 0;
+    res             = f_read(fp, buf, bytes_to_read, &bytes_read);
+    if (res != FR_OK) {
+        LOG_ERROR("%s f_read failed, err: %d\n", LOG_HEADER, res);
+        return;
+    }
+
+    buf[bytes_read] = '\0';
+
+    br->ctn.cur_page = page;
+
+    LOG_DEBUG("%s Goto page %u, read %u bytes\n", LOG_HEADER, page, bytes_read);
 }
 
 /* 保存当前进度，当退出阅读界面时调用 */
@@ -159,50 +213,6 @@ void ebook_list_books(const char *book_dir, storage_listdir_cb cb)
         : LOG_PATH_ERROR(book_dir);
 }
 
-/**
- * \brief 阅读电子书
- *
- * \param book_path: 书籍路径
- * \param buf: 存储缓冲区
- * \param len: 待读取长度
- */
-__DEPRECATED("waiting for another implementation")
-void ebook_srv_read_book(const char *book_path, void *buf, size_t len)
-{
-    FRESULT res;
-    static FIL book_file;
-    static char *last_book_path;
-    static bool is_opened = false;
-
-    if (!is_opened || book_path != last_book_path) {
-        res = storage_open(BOOK_STORAGE, &book_file, book_path, FA_READ);
-        if (res != FR_OK)
-            goto err_open;
-
-        is_opened      = true;
-        last_book_path = (char *)book_path;
-    }
-
-    UINT byte_read = 0;
-    res            = storage_read(&book_file, buf, len, &byte_read);
-    if (res != FR_OK)
-        goto err_read;
-
-err_read:
-    LOG_INFO(
-        "%s read %s failed(errcode: %d)\n",
-        LOG_HEADER, book_path, res);
-    storage_close(&book_file);
-    is_opened = false;
-    return;
-
-err_open:
-    LOG_INFO(
-        "%s open %s failed(errcode: %d)\n",
-        LOG_HEADER, book_path, res);
-    return;
-}
-
 /* test contents ----------------------------------- */
 
 #define PRINT_HELP_MSG() LOG_INFO(               \
@@ -232,6 +242,7 @@ void ebook_test()
 
     char ch = 0;
     static char path[128];
+    static BookReader_t reader;
 
     while ((ch = LOG_GET_CHAR()) != 'q') {
         if (ch == 'c') {
@@ -246,7 +257,21 @@ void ebook_test()
         } else if (ch == 'o') {
             LOG_INFO("Please input a path: ");
             LOG_GET_STR(path, 128);
-            LOG_INFO("Content in %s:\n\t", path);
+            // FIXME: 这些操作最好得返回错误码
+            ebook_open_book(&reader, path);
+            /* 先这样简单测一下，毕竟加载功能还没写 */
+
+            char c = 0;
+            while ((c = LOG_GET_CHAR()) != 'q') {
+                if (c == 'n') {
+                    ebook_next_page(&reader);
+                } else if (c == 'p') {
+                    ebook_prev_page(&reader);
+                }
+            }
+
+            ebook_close_book(&reader);
+            LOG_INFO("Book closed\n");
         } else if (ch == 'x') {
             LOG_INFO("Please input a path: ");
             LOG_GET_STR(path, 128);

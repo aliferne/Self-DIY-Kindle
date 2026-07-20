@@ -27,6 +27,8 @@
 #define BOOK_PATH          "/books/"
 #define BOOK_MARK_PATH     (BOOK_PATH "mark/")
 #define BOOK_PROGRESS_PATH (BOOK_PATH "progress/")
+#define PAGE_BUF_SIZE      (2047U)
+#define BOOK_NAME_SIZE     (64U)
 
 typedef enum {
     BOOK_TYPE_UNKNOWN = 0,
@@ -36,13 +38,14 @@ typedef enum {
 
 typedef struct {
     BookType_t type;
-    char book_name[64];
+    char book_name[BOOK_NAME_SIZE];
     /* author 是一个比较次要的信息 */
 } MetaData_t;
 
 typedef struct {
-    /* 需要保留页面和缓冲区大小来计算翻页时需要读取的偏移量 */
-    char buffer[2048];
+    /* 最后一个字节用于 '\0' */
+    char buffer[PAGE_BUF_SIZE + 1];
+    /* TODO: 有没有书的页面会大于 uint16_t 可表示范围？ */
     uint16_t cur_page;
     uint16_t total_page;
 } PageContent_t;
@@ -68,7 +71,8 @@ typedef struct {
      *   - save/load bookmarks when asked to
      *   - underline and add notes?
      *   - change rendering(like text style)
-     * 
+     *
+     * but now we decided to only support text, then epub
      */
 } BookReader_t;
 

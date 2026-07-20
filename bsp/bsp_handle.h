@@ -36,6 +36,10 @@
 #define __NOT_USED __attribute__((unused))
 /* 声明某个函数已过时，并提供提示信息 */
 #define __DEPRECATED(msg) __attribute__((deprecated(msg)))
+/* 在调用某个函数时产生警告信息（给出提示） */
+#define __WARNING(msg) __attribute__((warning(msg)))
+/* 在调用某个函数时强制报错（给出提示） */
+#define __ERROR(msg) __attribute__((error(msg)))
 /* 强制按照 x 字节对齐 */
 #define __ALIGNED(x) __attribute__((aligned(x)))
 /* 强制内联 */
@@ -49,6 +53,8 @@
 #define __SECTION(sec_name)
 #define __NOT_USED
 #define __DEPRECATED(msg)
+#define __WARNING(msg)
+#define __ERROR(msg)
 #define __ALIGNED(x)
 #define __ALWAYS_INLINE
 #define __NO_RETURN
