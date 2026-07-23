@@ -7,7 +7,6 @@
 #include <stdint.h>
 #include <string.h>
 
-#define LOG_HEADER          "[ebook service]"
 #define BOOK_STORAGE        (&sdcard)
 
 #define BOOK_OPEN(br)       ((br)->priv.is_open = true)
@@ -18,9 +17,9 @@
     (strncmp(path, BOOK_PATH, strlen(BOOK_PATH)) == 0) && \
     get_book_type(path) != BOOK_TYPE_UNKNOWN)
 /* BUG: 这个 LOG 是硬编码的格式，这不好 */
-#define LOG_PATH_ERROR(cur_path)                                                 \
-    LOG_ERROR(                                                                   \
-        "%s The path should contains %s or ends with .txt/.epub, but now: %s\n", \
+#define LOG_PATH_ERROR(cur_path)                                              \
+    LOG_ERROR(                                                                \
+        "The path should contains %s or ends with .txt/.epub, but now: %s\n", \
         BOOK_PATH, cur_path);
 
 /* 根据文件后缀返回书本类型 */
@@ -67,18 +66,27 @@ void ebook_open_book(BookReader_t *br, const char *path)
     FIL *fp          = &br->priv.fp;
     MetaData_t *meta = &br->meta;
     char *book_name  = strrchr(path, '/');
-    FRESULT res      = storage_open(BOOK_STORAGE, fp, path, FA_READ);
+    ASSERT_FAIL(
+        /* NULL or only contains '/' */
+        book_name == NULL || strlen(book_name) == 1,
+        LOG_ERROR("Empty book name detected, can not open, return\n");
+        return);
+    /* cross the '/' */
+    book_name += 1;
 
-    if (res != FR_OK) {
-        LOG_ERROR("%s Failed to open book: %s\n", LOG_HEADER, path);
-        return;
-    }
+    FRESULT res = storage_open(BOOK_STORAGE, fp, path, FA_READ);
 
-    LOG_INFO("%s Opened book: %s\n", LOG_HEADER, path);
+    ASSERT_FAIL(
+        res != FR_OK,
+        LOG_ERROR("Failed to open book: %s\n", path);
+        return);
+
+    LOG_INFO("Opened book: %s\n", path);
     memcpy(meta->book_name, book_name, BOOK_NAME_SIZE);
     meta->type = get_book_type(path);
 
-    br->priv.fsize     = (fp->obj.sclust != 0) ? f_size(fp) : 0;
+    br->priv.fsize = (fp->obj.sclust != 0) ? f_size(fp) : 0;
+    /* FIXME: count way right? */
     br->ctn.total_page = br->priv.fsize / PAGE_BUF_SIZE;
 
     BOOK_OPEN(br);
@@ -88,11 +96,11 @@ void ebook_open_book(BookReader_t *br, const char *path)
 void ebook_close_book(BookReader_t *br)
 {
     if (f_close(&br->priv.fp) != FR_OK) {
-        LOG_ERROR("%s Failed to close book\n", LOG_HEADER);
+        LOG_ERROR("Failed to close book\n");
         return;
     }
 
-    LOG_INFO("%s Closed book\n", LOG_HEADER);
+    LOG_INFO("Closed book\n");
     BOOK_CLOSE(br);
 }
 
@@ -100,7 +108,7 @@ void ebook_close_book(BookReader_t *br)
 void ebook_prev_page(BookReader_t *br)
 {
     if (!IS_BOOK_OPEN(br)) {
-        LOG_WARN("%s [line: %d] Book is not opened!\n", LOG_HEADER, __LINE__);
+        LOG_WARN("[line: %d] Book is not opened!\n", __LINE__);
         return;
     }
 
@@ -111,7 +119,7 @@ void ebook_prev_page(BookReader_t *br)
 void ebook_next_page(BookReader_t *br)
 {
     if (!IS_BOOK_OPEN(br)) {
-        LOG_WARN("%s [line: %d] Book is not opened!\n", LOG_HEADER, __LINE__);
+        LOG_WARN("[line: %d] Book is not opened!\n", __LINE__);
         return;
     }
 
@@ -122,7 +130,7 @@ void ebook_next_page(BookReader_t *br)
 void ebook_goto_page(BookReader_t *br, uint16_t page)
 {
     if (!IS_BOOK_OPEN(br)) {
-        LOG_WARN("%s [line: %d] Book is not opened!\n", LOG_HEADER, __LINE__);
+        LOG_WARN("[line: %d] Book is not opened!\n", __LINE__);
         return;
     }
 
@@ -133,8 +141,8 @@ void ebook_goto_page(BookReader_t *br, uint16_t page)
      */
     ASSERT_FAIL(
         page > br->ctn.total_page,
-        LOG_WARN("%s Invalid page (%lu / %lu) to go, return",
-                 LOG_HEADER, page, br->ctn.total_page);
+        LOG_WARN("Invalid page (%lu / %lu) to go, return",
+                 page, br->ctn.total_page);
         return);
 
     /* 基本思路也就是获取偏移量然后定位到那里，接下来阅读一定的字节数 */
@@ -145,13 +153,13 @@ void ebook_goto_page(BookReader_t *br, uint16_t page)
     DWORD offset = (DWORD)page * PAGE_BUF_SIZE;
     ASSERT_FAIL(
         offset > fsize,
-        LOG_WARN("%s Offset 0x%lx exceeds file size 0x%lx\n", LOG_HEADER, offset, fsize);
+        LOG_WARN("Offset 0x%lx exceeds file size 0x%lx\n", offset, fsize);
         return);
 
     FRESULT res = f_lseek(fp, offset);
     ASSERT_FAIL(
         res != FR_OK,
-        LOG_ERROR("%s f_lseek failed, err: %d\n", LOG_HEADER, res);
+        LOG_ERROR("f_lseek failed, err: %d\n", res);
         return);
 
     DWORD bytes_to_read = PAGE_BUF_SIZE;
@@ -161,23 +169,23 @@ void ebook_goto_page(BookReader_t *br, uint16_t page)
 
     UINT bytes_read = 0;
     res             = f_read(fp, buf, bytes_to_read, &bytes_read);
-    if (res != FR_OK) {
-        LOG_ERROR("%s f_read failed, err: %d\n", LOG_HEADER, res);
-        return;
-    }
+    ASSERT_FAIL(
+        res != FR_OK,
+        LOG_ERROR("f_lseek failed, err: %d\n", res);
+        return);
 
     buf[bytes_read] = '\0';
 
     br->ctn.cur_page = page;
 
-    LOG_DEBUG("%s Goto page %u, read %u bytes\n", LOG_HEADER, page, bytes_read);
+    LOG_DEBUG("%s Goto page %u, read %u bytes\n", page, bytes_read);
 }
 
 /* 保存当前进度，当退出阅读界面时调用 */
 void ebook_save_progress(BookReader_t *br)
 {
     if (!IS_BOOK_OPEN(br)) {
-        LOG_WARN("%s [line: %d] Book is not opened!\n", LOG_HEADER, __LINE__);
+        LOG_WARN("[line: %d] Book is not opened!\n", __LINE__);
         return;
     }
     GIVEUP(br);
@@ -193,7 +201,7 @@ void ebook_load_progress(BookReader_t *br)
 void ebook_save_bookmark(BookReader_t *br)
 {
     if (!IS_BOOK_OPEN(br)) {
-        LOG_WARN("%s [line: %d] Book is not opened!\n", LOG_HEADER, __LINE__);
+        LOG_WARN("[line: %d] Book is not opened!\n", __LINE__);
         return;
     }
     GIVEUP(br);
@@ -216,14 +224,13 @@ void ebook_list_books(const char *book_dir, storage_listdir_cb cb)
 /* test contents ----------------------------------- */
 
 #define PRINT_HELP_MSG() LOG_INFO(               \
-    "%s\n\toption menu:\n"                       \
+    "\n\toption menu:\n"                         \
     "\tl. list specific dir\n"                   \
     "\to. open and read the content of a file\n" \
     "\tx. extract an epub book\n"                \
     "\th. print help info\n"                     \
     "\tc. clear screen\n"                        \
-    "\tq. exit test\n",                          \
-    LOG_HEADER);
+    "\tq. exit test\n");
 
 /* 用于测试 listdir 的辅助测试函数 */
 static bool print_dir_files(char *fname, uint64_t fsize, bool is_dir)
@@ -237,7 +244,7 @@ static bool print_dir_files(char *fname, uint64_t fsize, bool is_dir)
 
 void ebook_test()
 {
-    LOG_DEBUG("%s in test mode.\n", LOG_HEADER);
+    LOG_DEBUG("in ebook test mode.\n");
     PRINT_HELP_MSG();
 
     char ch = 0;
@@ -279,5 +286,5 @@ void ebook_test()
         }
     }
 
-    LOG_DEBUG("%s exit test mode.\n", LOG_HEADER);
+    LOG_DEBUG("exit ebook test mode.\n");
 }
