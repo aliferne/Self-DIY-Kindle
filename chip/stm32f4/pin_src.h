@@ -51,6 +51,10 @@
 #define USER_LED_PORT     GPIOB
 #define USER_LED_PIN      GPIO_PIN_2
 
+/* SD 卡检测 */
+#define SDCARD_DET_PORT   GPIOD
+#define SDCARD_DET_PIN    GPIO_PIN_3
+
 /*
  * TFT 屏驱动
  * SCK: PA5

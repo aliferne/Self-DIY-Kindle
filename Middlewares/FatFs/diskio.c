@@ -42,7 +42,7 @@ DSTATUS disk_initialize(
 {
     switch (pdrv) {
         case DEV_SD:
-            if (bsp_init_storage() != SDIO_Err_Ok) {
+            if (bsp_init_sdcard() != SDIO_Err_Ok) {
                 return STA_NOINIT;
             }
     }
@@ -64,7 +64,7 @@ DRESULT disk_read(
 
     switch (pdrv) {
         case DEV_SD:
-            res = (int)sdio_read_blocks(&storage, buff, sector, count);
+            res = (int)sdio_read_blocks(&sdcard, buff, sector, count);
             if (res == (int)(SDIO_Err_Ok))
                 return RES_OK;
     }
@@ -89,7 +89,7 @@ DRESULT disk_write(
 
     switch (pdrv) {
         case DEV_SD:
-            res = (int)sdio_write_blocks(&storage, (uint8_t *)buff, (uint32_t)sector, (uint32_t)count);
+            res = (int)sdio_write_blocks(&sdcard, (uint8_t *)buff, (uint32_t)sector, (uint32_t)count);
             if (res == (int)(SDIO_Err_Ok))
                 return RES_OK;
     }
@@ -114,7 +114,7 @@ DRESULT disk_ioctl(
     uint32_t block_size  = 0;
     uint32_t block_count = 0;
 
-    sdio_get_info(&storage, &block_size, &block_count);
+    sdio_get_info(&sdcard, &block_size, &block_count);
 
     switch (pdrv) {
         case DEV_SD:

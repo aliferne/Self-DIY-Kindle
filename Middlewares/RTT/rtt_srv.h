@@ -58,10 +58,10 @@ int rtt_haskey(void);
 int rtt_getkey(void);
 char *rtt_gets(char *buf, int size);
 
-#define RTT_LOG_ERROR(sFormat, ...)  rtt_cprintf(rtt_color_text_bright_red,   "[ERROR] " sFormat, ##__VA_ARGS__)
-#define RTT_LOG_WARN(sFormat, ...)   rtt_cprintf(rtt_color_text_yellow,       "[WARN] "  sFormat, ##__VA_ARGS__)
-#define RTT_LOG_INFO(sFormat, ...)   rtt_cprintf(rtt_color_text_bright_green, "[INFO] "  sFormat, ##__VA_ARGS__)
-#define RTT_LOG_DEBUG(sFormat, ...)  rtt_cprintf(rtt_color_text_bright_cyan,  "[DEBUG] " sFormat, ##__VA_ARGS__)
+#define RTT_LOG_ERROR(sFormat, ...)  rtt_cprintf(rtt_color_text_bright_red,   "[ERROR] [file: %s | line: %d] " sFormat , __FILE__, __LINE__, ##__VA_ARGS__)
+#define RTT_LOG_WARN(sFormat, ...)   rtt_cprintf(rtt_color_text_yellow,       "[WARN]  [file: %s | line: %d] " sFormat,  __FILE__, __LINE__, ##__VA_ARGS__ )
+#define RTT_LOG_INFO(sFormat, ...)   rtt_cprintf(rtt_color_text_bright_green, "[INFO]  [file: %s | line: %d] " sFormat,  __FILE__, __LINE__, ##__VA_ARGS__ )
+#define RTT_LOG_DEBUG(sFormat, ...)  rtt_cprintf(rtt_color_text_bright_cyan,  "[DEBUG] [file: %s | line: %d] " sFormat , __FILE__, __LINE__, ##__VA_ARGS__)
 #define RTT_HAS_CHARS()              rtt_haskey()
 #define RTT_GET_CHAR()               (char)(rtt_getkey())
 #define RTT_GET_STR(buf, size)       rtt_gets((buf), (size))

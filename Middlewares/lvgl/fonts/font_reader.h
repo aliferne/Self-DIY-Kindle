@@ -13,11 +13,11 @@
  * @param fp 文件指针
  * @param filename 文件名
  */
-#define open_font_file(fp, filename)                                \
-    do {                                                            \
-        FRESULT res =                                               \
-            storage_open(&sdcard, fp, "/fonts/" filename, FA_READ); \
-        ASSERT_FAIL(res != FR_OK, for (;;));                        \
+#define open_font_file(fp, filename)                                        \
+    do {                                                                    \
+        FRESULT res =                                                       \
+            storage_open(&sdcard_storage, fp, "/fonts/" filename, FA_READ); \
+        ASSERT_FAIL(res != FR_OK, for (;;));                                \
     } while (0)
 
 /**

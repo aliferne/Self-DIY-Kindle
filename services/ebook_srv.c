@@ -7,7 +7,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#define BOOK_STORAGE        (&sdcard)
+#define BOOK_STORAGE        (&sdcard_storage)
 
 #define BOOK_OPEN(br)       ((br)->priv.is_open = true)
 #define BOOK_CLOSE(br)      ((br)->priv.is_open = false)
@@ -56,11 +56,11 @@ void ebook_init(BookReader_t *br)
 }
 
 /* 打开书本 */
-void ebook_open_book(BookReader_t *br, const char *path)
+bool ebook_open_book(BookReader_t *br, const char *path)
 {
     if (!IS_PATH_VALID(path)) {
         LOG_PATH_ERROR(path);
-        return;
+        return false;
     }
 
     FIL *fp          = &br->priv.fp;
@@ -70,7 +70,7 @@ void ebook_open_book(BookReader_t *br, const char *path)
         /* NULL or only contains '/' */
         book_name == NULL || strlen(book_name) == 1,
         LOG_ERROR("Empty book name detected, can not open, return\n");
-        return);
+        return false);
     /* cross the '/' */
     book_name += 1;
 
@@ -79,17 +79,18 @@ void ebook_open_book(BookReader_t *br, const char *path)
     ASSERT_FAIL(
         res != FR_OK,
         LOG_ERROR("Failed to open book: %s\n", path);
-        return);
+        return false);
 
     LOG_INFO("Opened book: %s\n", path);
     memcpy(meta->book_name, book_name, BOOK_NAME_SIZE);
     meta->type = get_book_type(path);
 
-    br->priv.fsize = (fp->obj.sclust != 0) ? f_size(fp) : 0;
-    /* FIXME: count way right? */
+    br->priv.fsize     = f_size(fp);
     br->ctn.total_page = br->priv.fsize / PAGE_BUF_SIZE;
 
     BOOK_OPEN(br);
+
+    return true;
 }
 
 /* 关闭书本 */
@@ -108,18 +109,29 @@ void ebook_close_book(BookReader_t *br)
 void ebook_prev_page(BookReader_t *br)
 {
     if (!IS_BOOK_OPEN(br)) {
-        LOG_WARN("[line: %d] Book is not opened!\n", __LINE__);
+        LOG_WARN("Book is not opened!\n");
         return;
     }
 
     ebook_goto_page(br, br->ctn.cur_page - 1);
 }
 
+/* 当前页 */
+void ebook_cur_page(BookReader_t *br)
+{
+    if (!IS_BOOK_OPEN(br)) {
+        LOG_WARN("Book is not opened!\n");
+        return;
+    }
+
+    ebook_goto_page(br, br->ctn.cur_page);
+}
+
 /* 下一页 */
 void ebook_next_page(BookReader_t *br)
 {
     if (!IS_BOOK_OPEN(br)) {
-        LOG_WARN("[line: %d] Book is not opened!\n", __LINE__);
+        LOG_WARN("Book is not opened!\n");
         return;
     }
 
@@ -137,11 +149,11 @@ void ebook_goto_page(BookReader_t *br, uint16_t page)
     /*
      * 由于 uint16_t 不可表示负数，
      * 因此这种情况要么是 0 - 1 回环到 0xFFFF 了，要么是 page + 1 > total_page 了
-     * WARN: 这里 page 是从 1 开始的
+     * WARN: 这里 page 是从 0 开始的
      */
     ASSERT_FAIL(
         page > br->ctn.total_page,
-        LOG_WARN("Invalid page (%lu / %lu) to go, return",
+        LOG_WARN("Invalid page (%lu / %lu) to go, return\n",
                  page, br->ctn.total_page);
         return);
 
@@ -178,14 +190,14 @@ void ebook_goto_page(BookReader_t *br, uint16_t page)
 
     br->ctn.cur_page = page;
 
-    LOG_DEBUG("%s Goto page %u, read %u bytes\n", page, bytes_read);
+    LOG_DEBUG("Goto page %u, read %u bytes\n", page, bytes_read);
 }
 
 /* 保存当前进度，当退出阅读界面时调用 */
 void ebook_save_progress(BookReader_t *br)
 {
     if (!IS_BOOK_OPEN(br)) {
-        LOG_WARN("[line: %d] Book is not opened!\n", __LINE__);
+        LOG_WARN("Book is not opened!\n");
         return;
     }
     GIVEUP(br);
@@ -232,6 +244,32 @@ void ebook_list_books(const char *book_dir, storage_listdir_cb cb)
     "\tc. clear screen\n"                        \
     "\tq. exit test\n");
 
+#define PRINT_BOOK_READER_HELP_MSG()                      \
+    LOG_INFO("Book opened, "                              \
+             "now you can read it:\n"                     \
+             "\tpress 'n' to next page,\n"                \
+             "\t'p' to prev page,\n"                      \
+             "\t'q' to quit reading,\n"                   \
+             "\t'h' to get help message,\n"               \
+             "\t'c' to clear screen and print content,\n" \
+             "\t'i' to display book info\n");
+
+#define PRINT_BOOK_READER_INFO(br) LOG_INFO( \
+    "Book Name: %s\n"                        \
+    "Book Type: %d\n"                        \
+    "File Size: %lu\n"                       \
+    "Total Page: %u\n"                       \
+    "Current Page: %u\n",                    \
+    (br)->meta.book_name,                    \
+    (br)->meta.type,                         \
+    (br)->priv.fsize,                        \
+    (br)->ctn.total_page,                    \
+    (br)->ctn.cur_page);
+
+#define PRINT_BOOK_READER_CONTENT(br) LOG_INFO( \
+    "Book Content:\n\t%s\n",                    \
+    (br)->ctn.buffer);
+
 /* 用于测试 listdir 的辅助测试函数 */
 static bool print_dir_files(char *fname, uint64_t fsize, bool is_dir)
 {
@@ -264,19 +302,29 @@ void ebook_test()
         } else if (ch == 'o') {
             LOG_INFO("Please input a path: ");
             LOG_GET_STR(path, 128);
-            // FIXME: 这些操作最好得返回错误码
-            ebook_open_book(&reader, path);
-            /* 先这样简单测一下，毕竟加载功能还没写 */
 
+            if (!ebook_open_book(&reader, path))
+                continue;
+
+            ebook_cur_page(&reader);
+            PRINT_BOOK_READER_HELP_MSG();
+
+            /* 先这样简单测一下，毕竟加载功能还没写 */
             char c = 0;
             while ((c = LOG_GET_CHAR()) != 'q') {
                 if (c == 'n') {
                     ebook_next_page(&reader);
                 } else if (c == 'p') {
                     ebook_prev_page(&reader);
+                } else if (c == 'h') {
+                    PRINT_BOOK_READER_HELP_MSG();
+                } else if (c == 'i') {
+                    PRINT_BOOK_READER_INFO(&reader);
+                } else if (c == 'c') {
+                    LOG_CLEAR_SCREEN();
+                    PRINT_BOOK_READER_CONTENT(&reader);
                 }
             }
-
             ebook_close_book(&reader);
             LOG_INFO("Book closed\n");
         } else if (ch == 'x') {

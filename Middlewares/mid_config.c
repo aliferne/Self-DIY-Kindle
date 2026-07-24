@@ -51,7 +51,7 @@ static void mid_init_tft(void)
 static void mid_init_touch(void)
 {
     screen_touch.src      = &touch_src;
-    screen_touch.delay_cb = os_delay_ms;
+    screen_touch.delay_cb = chip_delay_ms;
 
     touch_init(&screen_touch);
     LOG_DEBUG("Touch Initialized.\n");
@@ -74,6 +74,6 @@ __NOT_USED static void mid_init_epaper(void)
         (GPIO_Port_t)EPAPER_RST_PORT, (GPIO_Pin_t)EPAPER_RST_PIN,
         (GPIO_Port_t)EPAPER_BUSY_PORT, (GPIO_Pin_t)EPAPER_BUSY_PIN);
     GIVEUP(err);
-    
+
     LOG_DEBUG("Epaper Initialized.\n");
 }

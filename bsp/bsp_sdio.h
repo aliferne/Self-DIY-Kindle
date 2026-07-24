@@ -1,12 +1,6 @@
 #pragma once
 
 /*
- * ============================================================
- * bsp_sdio.h  —  SDIO 硬件抽象层（纯接口）
- * ============================================================
- *
- * 本头文件不 include 任何芯片厂商的头文件。
- *
  * 设计说明：
  *   SDIO 的物理引脚是固定的（STM32F4 上为 PC8-12 + PD2），
  *   因此本抽象不处理引脚映射 —— 这由 CubeMX 的 HAL_SD_MspInit()
@@ -43,10 +37,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
-
-/* ============================================================
- * 枚举与类型定义
- * ============================================================ */
+#include <stdbool.h>
 
 typedef enum {
     SDIO_Err_Ok           = 0,
@@ -56,6 +47,7 @@ typedef enum {
     SDIO_Err_DMA          = 4, /**< DMA 传输错误 */
     SDIO_Err_Generic      = 5, /**< HAL 返回 HAL_ERROR */
     SDIO_Err_NoCriticalCB = 6, /**< 没有提供进/出临界回调 */
+    SDIO_Err_CardOut      = 7, /**< 卡片未插入 */
 } sdio_err_t;
 
 typedef enum {
@@ -64,12 +56,7 @@ typedef enum {
     SDIO_Mode_DMA     = 2, /**< DMA，chip 层内部等 busy 清零 */
 } sdio_mode_t;
 
-/** HAL 句柄的透明包装（chip 层内部转型为 SD_HandleTypeDef*） */
 typedef void *sdio_handle_t;
-
-/* ============================================================
- * 配置结构体
- * ============================================================ */
 
 typedef struct {
     sdio_mode_t mode;     /**< 传输模式 */
@@ -97,13 +84,16 @@ typedef struct {
      */
     void (*enter_critical_cb)(void);
     void (*exit_critical_cb)(void);
+
+    /* 卡片检测回调，返回卡片插入状态 */
+    bool (*sdcard_det_cb)(void);
 } sdio_t;
 
 /**
  * 初始化 SDIO 模型。
  *
  * @param m           SDIO 模型指针
- * @param hal_handle  SD_HandleTypeDef*，必须已由 MX_SDIO_SD_Init() 初始化
+ * @param hal_handle  SD_HandleTypeDef*
  * @param cfg         配置（传输模式、时钟分频、总线宽度）
  */
 sdio_err_t sdio_init(sdio_t *m, sdio_handle_t hal_handle,
@@ -148,3 +138,12 @@ sdio_err_t sdio_erase_blocks(sdio_t *m, uint32_t sector, uint32_t count);
  * 获取卡片信息。
  */
 void sdio_get_info(sdio_t *m, uint32_t *block_size, uint32_t *block_count);
+
+/**
+ * 检查 SD 卡是否插入。
+ */
+static inline bool sdio_is_card_inserted(sdio_t *m)
+{
+    if (m == NULL || m->sdcard_det_cb == NULL) return false;
+    return m->sdcard_det_cb();
+}

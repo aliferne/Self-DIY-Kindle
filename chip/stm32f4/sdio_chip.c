@@ -45,9 +45,35 @@ sdio_err_t sdio_init(sdio_t *m, sdio_handle_t handle,
         return SDIO_Err_NoCriticalCB;
 
     SD_HandleTypeDef *h = (SD_HandleTypeDef *)handle;
+    m->handle           = handle;
+    m->config           = *cfg;
 
-    m->handle = handle;
-    m->config = *cfg;
+    if (m->sdcard_det_cb && !m->sdcard_det_cb()) {
+        LOG_ERROR("SD card not inserted\n");
+        return SDIO_Err_CardOut;
+    }
+
+    // h->State            = HAL_SD_STATE_RESET;
+    h->Instance                 = SDIO;
+    h->Init.ClockEdge           = SDIO_CLOCK_EDGE_RISING;
+    h->Init.ClockBypass         = SDIO_CLOCK_BYPASS_DISABLE;
+    h->Init.ClockPowerSave      = SDIO_CLOCK_POWER_SAVE_DISABLE;
+    h->Init.BusWide             = SDIO_BUS_WIDE_4B;
+    h->Init.HardwareFlowControl = SDIO_HARDWARE_FLOW_CONTROL_DISABLE;
+    h->Init.ClockDiv            = 0;
+
+    // FIXME: 当改为这里初始化时， HAL_Delay 卡死，推测和中断优先级有关系
+    if (HAL_SD_Init(h) != HAL_OK) {
+        LOG_ERROR("SD card initialization failed\n");
+        return SDIO_Err_Generic;
+    }
+
+    /* 配置总线宽度 */
+    HAL_StatusTypeDef ret = HAL_SD_ConfigWideBusOperation(h, cfg->wide_bus ? SDIO_BUS_WIDE_4B : SDIO_BUS_WIDE_1B);
+    if (ret != HAL_OK) {
+        LOG_ERROR("SD card set bus width failed\n");
+        return SDIO_Err_Generic;
+    }
 
     /* 获取卡片信息 */
     HAL_SD_CardInfoTypeDef info;
@@ -60,12 +86,6 @@ sdio_err_t sdio_init(sdio_t *m, sdio_handle_t handle,
         /* 这个则视存储卡内存大小而定 */
         m->block_count = info.BlockNbr;
     }
-
-    /* 配置总线宽度 */
-    if (cfg->wide_bus)
-        HAL_SD_ConfigWideBusOperation(h, SDIO_BUS_WIDE_4B);
-    else
-        HAL_SD_ConfigWideBusOperation(h, SDIO_BUS_WIDE_1B);
 
     s_active = m;
 

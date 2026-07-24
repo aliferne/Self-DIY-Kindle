@@ -13,6 +13,7 @@ typedef enum {
 } StorageState_t;
 
 typedef struct {
+    void *dev; /**< 设备指针 */
     uint8_t is_initialized : 1;
     const char *volume;
     FATFS fs;
@@ -38,7 +39,7 @@ typedef bool (*storage_listdir_cb)(char *fname, uint64_t fsize, bool is_dir);
 #define storage_rewinddir(dp) f_rewinddir(dp)
 #define storage_rmdir(path)   f_rmdir(path)
 
-StorageState_t storage_init(Storage_t *s);
+StorageState_t storage_init(Storage_t *s, void *dev);
 StorageState_t storage_deinit(Storage_t *s);
 StorageState_t storage_mkdir(Storage_t *s, const char *path);
 StorageState_t storage_mkdirs(Storage_t *s, const char *paths[], uint32_t len);

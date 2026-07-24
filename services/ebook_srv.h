@@ -77,9 +77,10 @@ typedef struct {
 } BookReader_t;
 
 void ebook_init(BookReader_t *br);
-void ebook_open_book(BookReader_t *br, const char *path);
+bool ebook_open_book(BookReader_t *br, const char *path);
 void ebook_close_book(BookReader_t *br);
 void ebook_prev_page(BookReader_t *br);
+void ebook_cur_page(BookReader_t *br);
 void ebook_next_page(BookReader_t *br);
 void ebook_goto_page(BookReader_t *br, uint16_t page);
 void ebook_save_progress(BookReader_t *br);

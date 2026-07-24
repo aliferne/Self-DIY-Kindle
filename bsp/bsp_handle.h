@@ -1,6 +1,5 @@
 #pragma once
 
-#include <stdint.h>
 #include <stdbool.h>
 #include "rtt_srv.h"
 
@@ -24,10 +23,9 @@
 
 /* 以下为 GCC 特有的 `__attribute__` 语法 */
 #ifdef __GNUC__
+#include "cmsis_gcc.h"
 /* 声明为弱函数 */
 #define __WEAK __attribute__((weak))
-/* 取消自动内存对齐 */
-#define __PACKED __attribute__((packed))
 /* 强制声明某个可能未使用函数/变量为已使用，避免编译器优化 */
 #define __USED __attribute__((used))
 /* 指定数据存储段为 sec_name */
@@ -44,8 +42,6 @@
 #define __ALIGNED(x) __attribute__((aligned(x)))
 /* 强制内联 */
 #define __ALWAYS_INLINE __attribute__((always_inline))
-/* 声明函数不会返回 */
-#define __NO_RETURN __attribute__((noreturn))
 #else
 #define __WEAK
 #define __PACKED

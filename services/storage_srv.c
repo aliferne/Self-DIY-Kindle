@@ -33,19 +33,26 @@ static void make_path(Storage_t *s, const char *path, char *out, size_t sz)
     snprintf(out, sz, "%s%s", s->volume, path);
 }
 
-StorageState_t storage_init(Storage_t *s)
+StorageState_t storage_init(Storage_t *s, void *dev)
 {
     ASSERT_FAIL(s == NULL, return Storage_InvalidParam);
     /* 避免重复初始化 */
     ASSERT_FAIL(s->is_initialized == 1, return Storage_Ok);
 
-    s->is_initialized = 1;
+    if (dev == NULL) {
+        LOG_ERROR("Storage device is NULL\n");
+        return Storage_InvalidParam;
+    }
+
+    s->dev = dev;
 
     FRESULT res = f_mount(&s->fs, s->volume, 1);
     STORAGE_LOG_WHEN_FAILED(
         res != FR_OK,
         return Storage_Failed,
         "Failed to mount volume, please check out the FRESULT: %d\n", res);
+
+    s->is_initialized = 1;
 
     return Storage_Ok;
 }
@@ -82,7 +89,7 @@ StorageState_t storage_mkdir(Storage_t *s, const char *path)
     STORAGE_LOG_WHEN_FAILED(
         res != FR_OK,
         return Storage_Failed,
-        "Failed to create directory");
+        "Failed to create directory\n");
 
     return Storage_Ok;
 }

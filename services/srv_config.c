@@ -1,15 +1,15 @@
 #include "srv_config.h"
 #include "storage_srv.h"
 #include "bsp_handle.h"
-#include "ff.h"
+#include "bsp_config.h"
 
-/* sdcard 实例 */
-Storage_t sdcard = {.volume = "0:", .fs = {0}};
+/* sdcard_storage 实例 */
+Storage_t sdcard_storage = {.volume = "0:", .fs = {0}};
 
 void service_init(void)
 {
     /* 对存储的初始化 */
-    storage_init(&sdcard);
+    storage_init(&sdcard_storage, &sdcard);
     /*
      * 目录分配：
      * - logs: 用于存放日志文件
@@ -19,6 +19,6 @@ void service_init(void)
      * - fonts: 用于存放字体文件
      */
     const char *paths[] = {"/logs", "/cache", "/books", "/music", "/fonts"};
-    
-    storage_mkdirs(&sdcard, paths, LEN(paths));
+
+    storage_mkdirs(&sdcard_storage, paths, LEN(paths));
 }

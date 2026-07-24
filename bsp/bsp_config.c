@@ -14,7 +14,8 @@ gpio_t back_btn;
 gpio_t home_btn;
 gpio_t confirm_btn;
 
-sdio_t storage;
+sdio_t sdcard;
+gpio_t sdcard_det;
 
 spi_t tft_spi;
 gpio_t tft_dc;
@@ -34,6 +35,7 @@ static void bsp_init_buttons(void);
 static void bsp_init_leds(void);
 static void bsp_init_tft(void);
 static void bsp_init_touchpad(void);
+static bool bsp_is_sdcard_inserted(void);
 
 void bsp_init_hardware(void)
 {
@@ -41,7 +43,7 @@ void bsp_init_hardware(void)
     bsp_init_leds();
     bsp_init_buttons();
     /* 由于引入了 FatFs，这里直接在 disk_initialize 中调用此初始化函数 */
-    // bsp_init_storage();
+    // bsp_init_sdcard();
     bsp_init_tft();
     bsp_init_touchpad();
 }
@@ -84,7 +86,7 @@ static void bsp_init_leds(void)
               &init_conf);
 }
 
-sdio_err_t bsp_init_storage(void)
+sdio_err_t bsp_init_sdcard(void)
 {
     sdio_cfg_t sdio_cfg = {
         .mode     = SDIO_Mode_Polling,
@@ -92,10 +94,29 @@ sdio_err_t bsp_init_storage(void)
     };
 
     /* 必须提供进出临界区的回调 */
-    storage.enter_critical_cb = os_enter_critical;
-    storage.exit_critical_cb  = os_exit_critical;
+    sdcard.enter_critical_cb = os_enter_critical;
+    sdcard.exit_critical_cb  = os_exit_critical;
+    sdcard.sdcard_det_cb     = bsp_is_sdcard_inserted;
 
-    return sdio_init(&storage, (sdio_handle_t *)&hsd, &sdio_cfg);
+    /* 需要先初始化检测口，sdio 的初始化依赖于卡是否插入 */
+    gpio_init(
+        &sdcard_det,
+        (GPIO_Port_t)SDCARD_DET_PORT, (GPIO_Pin_t)SDCARD_DET_PIN,
+        &(GPIO_Config_t){
+            .mode  = GPIO_Mode_Input,
+            .pull  = GPIO_Pull_Up,
+            .speed = GPIO_Speed_Low,
+        });
+
+    sdio_err_t ret = sdio_init(&sdcard, (sdio_handle_t *)&hsd, &sdio_cfg);
+    if (ret != SDIO_Err_Ok) {
+        LOG_ERROR(
+            "Failed to init sdio %s, into infinite loop\n",
+            (ret == SDIO_Err_CardOut) ? "(card not inserted)" : "(other error)");
+        for (;;);
+    }
+
+    return SDIO_Err_Ok;
 }
 
 static void bsp_init_tft(void)
@@ -159,4 +180,10 @@ static void bsp_init_touchpad(void)
              (GPIO_Port_t)TOUCH_SDA_PORT, (GPIO_Pin_t)TOUCH_SDA_PIN,
              (GPIO_Port_t)TOUCH_SCL_PORT, (GPIO_Pin_t)TOUCH_SCL_PIN,
              &i2c_cfg);
+}
+
+static bool bsp_is_sdcard_inserted(void)
+{
+    GPIO_Level_t level = gpio_read(&sdcard_det);
+    return (level == GPIO_Level_Low) ? true : false;
 }

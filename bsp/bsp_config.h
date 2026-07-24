@@ -21,7 +21,7 @@ extern gpio_t back_btn;
 extern gpio_t home_btn;
 extern gpio_t confirm_btn;
 
-extern sdio_t storage;
+extern sdio_t sdcard;
 
 extern spi_t tft_spi;
 extern gpio_t tft_dc;
@@ -38,4 +38,4 @@ void bsp_init_hardware(void);
  * FatFs 初始化设备的接口
  */
 
-sdio_err_t bsp_init_storage(void);
+sdio_err_t bsp_init_sdcard(void);
