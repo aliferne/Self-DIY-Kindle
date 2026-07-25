@@ -6,7 +6,7 @@
     ],
     "settings": {
         "Codegeex.RepoIndex": true,
-        "cortex-debug.variableUseNaturalFormat": true
+        "cortex-debug.variableUseNaturalFormat": false
     },
     "extensions": {}
 }

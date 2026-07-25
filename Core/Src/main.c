@@ -107,9 +107,6 @@ int main(void)
     bsp_init_hardware();
     mid_init_modules();
 
-    HAL_Delay(10);
-    LOG_INFO("System initialized, now starting services...\n");
-
     service_init();
 
     /* start testing signal */

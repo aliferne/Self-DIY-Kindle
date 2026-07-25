@@ -144,6 +144,7 @@ void sdio_get_info(sdio_t *m, uint32_t *block_size, uint32_t *block_count);
  */
 static inline bool sdio_is_card_inserted(sdio_t *m)
 {
-    if (m == NULL || m->sdcard_det_cb == NULL) return false;
+    if (m == NULL || m->sdcard_det_cb == NULL)
+        return false;
     return m->sdcard_det_cb();
 }
