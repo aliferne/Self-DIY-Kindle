@@ -27,7 +27,7 @@
 #define BOOK_PATH          "/books/"
 #define BOOK_MARK_PATH     (BOOK_PATH "mark/")
 #define BOOK_PROGRESS_PATH (BOOK_PATH "progress/")
-#define PAGE_BUF_SIZE      (2047U)
+#define PAGE_BUF_SIZE      (2048U)
 #define BOOK_NAME_SIZE     (64U)
 
 typedef enum {
@@ -43,8 +43,7 @@ typedef struct {
 } MetaData_t;
 
 typedef struct {
-    /* 最后一个字节用于 '\0' */
-    char buffer[PAGE_BUF_SIZE + 1];
+    char buffer[PAGE_BUF_SIZE];
     /* TODO: 有没有书的页面会大于 uint16_t 可表示范围？ */
     uint16_t cur_page;
     uint16_t total_page;

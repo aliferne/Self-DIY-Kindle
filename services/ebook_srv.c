@@ -63,6 +63,11 @@ bool ebook_open_book(BookReader_t *br, const char *path)
         return false;
     }
 
+    if (IS_BOOK_OPEN(br)) {
+        LOG_INFO("Book is already opened\n");
+        return true;
+    }
+
     FIL *fp          = &br->priv.fp;
     MetaData_t *meta = &br->meta;
     char *book_name  = strrchr(path, '/');
@@ -96,6 +101,11 @@ bool ebook_open_book(BookReader_t *br, const char *path)
 /* 关闭书本 */
 void ebook_close_book(BookReader_t *br)
 {
+    if (!IS_BOOK_OPEN(br)) {
+        LOG_INFO("Book is already closed\n");
+        return;
+    }
+
     if (f_close(&br->priv.fp) != FR_OK) {
         LOG_ERROR("Failed to close book\n");
         return;
@@ -180,17 +190,19 @@ void ebook_goto_page(BookReader_t *br, uint16_t page)
     }
 
     UINT bytes_read = 0;
-    res             = f_read(fp, buf, bytes_to_read, &bytes_read);
+
+    res = f_read(fp, buf, bytes_to_read, &bytes_read);
     ASSERT_FAIL(
         res != FR_OK,
         LOG_ERROR("f_lseek failed, err: %d\n", res);
         return);
 
+    /* ends with '\0' */
     buf[bytes_read] = '\0';
 
     br->ctn.cur_page = page;
 
-    LOG_DEBUG("Goto page %u, read %u bytes\n", page, bytes_read);
+    LOG_DEBUG("Goto page %u, tend to read %u bytes, actually read %u bytes\n", page, bytes_to_read, bytes_read);
 }
 
 /* 保存当前进度，当退出阅读界面时调用 */
@@ -266,9 +278,11 @@ void ebook_list_books(const char *book_dir, storage_listdir_cb cb)
     (br)->ctn.total_page,                    \
     (br)->ctn.cur_page);
 
-#define PRINT_BOOK_READER_CONTENT(br) LOG_INFO( \
-    "Book Content:\n\t%s\n",                    \
-    (br)->ctn.buffer);
+#define PRINT_BOOK_READER_CONTENT(br)       \
+    do {                                    \
+        LOG_INFO("Book Content:\n");        \
+        LOG_NORMAL("%s", (br)->ctn.buffer); \
+    } while (0);
 
 /* 用于测试 listdir 的辅助测试函数 */
 static bool print_dir_files(char *fname, uint64_t fsize, bool is_dir)

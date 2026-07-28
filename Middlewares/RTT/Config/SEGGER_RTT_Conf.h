@@ -32,8 +32,8 @@ Purpose : User configuration file for RTT.
  * @ref https://www.cnblogs.com/time-light/p/19972319
  */
 
-#define BUFFER_SIZE_UP                        1024  // MCU -> PC
-#define BUFFER_SIZE_DOWN                      16    // PC -> MCU
+#define BUFFER_SIZE_UP                        (1024 * 10)  // MCU -> PC
+#define BUFFER_SIZE_DOWN                      (16 * 2)    // PC -> MCU
 #define SEGGER_RTT_PRINTF_BUFFER_SIZE         64    // 格式化临时缓冲区
 
 #endif
