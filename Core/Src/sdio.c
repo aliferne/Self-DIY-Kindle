@@ -37,6 +37,7 @@ void MX_SDIO_SD_Init(void)
 
     /* USER CODE END SDIO_Init 0 */
 
+    /* USER CODE BEGIN SDIO_Init 1 */
     hsd.Instance                 = SDIO;
     hsd.Init.ClockEdge           = SDIO_CLOCK_EDGE_RISING;
     hsd.Init.ClockBypass         = SDIO_CLOCK_BYPASS_DISABLE;
@@ -53,8 +54,6 @@ void MX_SDIO_SD_Init(void)
     if (HAL_SD_ConfigWideBusOperation(&hsd, SDIO_BUS_WIDE_4B) != HAL_OK) {
         Error_Handler();
     }
-
-    /* USER CODE BEGIN SDIO_Init 1 */
 
 #if 0 /* 我们禁用 CubeMX 生成的代码(它不会检测卡是否插入，只要初始化失败直接死循环) */
   /* USER CODE END SDIO_Init 1 */
