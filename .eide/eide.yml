@@ -430,6 +430,11 @@ virtualFolder:
                   files:
                     - path: FATFS/Target/user_diskio.c
                   folders: []
+    - name: tests
+      files:
+        - path: tests/ebook_srv_test.c
+        - path: tests/test_main.c
+      folders: []
 dependenceList: []
 outDir: build
 miscInfo:
@@ -487,6 +492,7 @@ targets:
         - Middlewares/RTT/Config
         - Middlewares/RTT/RTT
         - Middlewares/RTT
+        - tests
       libList: []
     excludeList:
       - <virtual_root>/Application/MDK-ARM/startup_stm32f407xx.s

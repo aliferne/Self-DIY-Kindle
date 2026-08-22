@@ -5,7 +5,6 @@
 
 void StartProcessTask(void const *argument)
 {
-    ebook_test();
     for (;;)
     {
         gpio_toggle(&usr_led);

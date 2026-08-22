@@ -53,6 +53,7 @@ osThreadId MusicTaskHandle;
 osThreadId NetTaskHandle;
 osThreadId ProcessTaskHandle;
 osThreadId UITaskHandle;
+osThreadId TestTaskHandle;
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -65,6 +66,7 @@ extern void StartMusicTask(void const * argument);
 extern void StartNetTask(void const * argument);
 extern void StartProcessTask(void const * argument);
 extern void StartUITask(void const * argument);
+extern void StartTestTask(void const * argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -146,6 +148,10 @@ void MX_FREERTOS_Init(void) {
   /* definition and creation of UITask */
   osThreadDef(UITask, StartUITask, osPriorityNormal, 0, 1024);
   UITaskHandle = osThreadCreate(osThread(UITask), NULL);
+
+  /* definition and creation of TestTask */
+  osThreadDef(TestTask, StartTestTask, osPriorityIdle, 0, 512);
+  TestTaskHandle = osThreadCreate(osThread(TestTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */

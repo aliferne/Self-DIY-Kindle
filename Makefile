@@ -344,6 +344,13 @@ C_SOURCES += \
   chip/stm32f4/irq/irq_uart.c
 
 ######################################
+# C 源文件 — Tests
+######################################
+C_SOURCES += \
+    tests/ebook_srv_test.c \
+    tests/test_main.c \
+
+######################################
 # 预定义宏
 ######################################
 C_DEFS = \
@@ -370,6 +377,7 @@ C_INCLUDES = \
 -I  services \
 -I  applications \
 -I  applications/ui \
+-I  tests \
 -I  . \
 -I  chip/stm32f4 \
 -I  Middlewares \
@@ -425,7 +433,7 @@ OPT = -Og
 CFLAGS = $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) \
   -Wall \
   -Wextra \
-  -Wpedantic \
+  -Wno-pedantic \
   -std=c11 \
   -ffunction-sections \
   -fdata-sections \

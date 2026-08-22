@@ -28,9 +28,9 @@
  *
  * 注意，这取决于你怎么思考，你可以将文件层级结构解读成 0:/path/to/file, 也可以解读成 0:path/to/file
  */
-static void make_path(Storage_t *s, const char *path, char *out, size_t sz)
+static inline int make_path(Storage_t *s, const char *path, char *out, size_t sz)
 {
-    snprintf(out, sz, "%s%s", s->volume, path);
+    return snprintf(out, sz, "%s%s", s->volume, path);
 }
 
 StorageState_t storage_init(Storage_t *s, void *dev)

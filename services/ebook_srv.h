@@ -2,6 +2,7 @@
 
 #include "ff.h"
 #include "storage_srv.h"
+#include "srv_config.h"
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -18,6 +19,7 @@
  *
  */
 
+#define BOOK_STORAGE        (&sdcard_storage)
 /*
  * 书本文件的路径，
  * 对于某些需要传入 path 的函数，
@@ -31,22 +33,34 @@
 #define BOOK_NAME_SIZE     (64U)
 
 typedef enum {
-    BOOK_TYPE_UNKNOWN = 0,
+    /* 这个编号是故意用的 -1, 不要修改 */
+    BOOK_TYPE_UNKNOWN = -1,
     BOOK_TYPE_TXT,
     BOOK_TYPE_EPUB,
 } BookType_t;
 
 typedef struct {
+    // TODO: 在打开书本时自动填充此部分逻辑
     BookType_t type;
-    char book_name[BOOK_NAME_SIZE];
+    char *pSuffix;                  // 后缀名，定位后缀起始点用
+    char book_name[BOOK_NAME_SIZE]; // 书本名（不带后缀）
     /* author 是一个比较次要的信息 */
 } MetaData_t;
 
+/*
+ * 目前看来保存进度应该只需要当前页面，
+ * 总页面作为附属信息加入即可，
+ * 保存书签也差不多
+ */
 typedef struct {
-    char buffer[PAGE_BUF_SIZE];
     /* TODO: 有没有书的页面会大于 uint16_t 可表示范围？ */
     uint16_t cur_page;
     uint16_t total_page;
+} Progress_Dump_t;
+
+typedef struct {
+    char buffer[PAGE_BUF_SIZE];
+    Progress_Dump_t prog;
 } PageContent_t;
 
 typedef struct {
@@ -88,4 +102,5 @@ void ebook_save_bookmark(BookReader_t *br);
 void ebook_load_bookmark(BookReader_t *br);
 void ebook_list_books(const char *book_dir, storage_listdir_cb cb);
 
-void ebook_test();
+/* this should be only called in ebook_srv.c and ebook_srv_test.c */
+BookType_t get_book_type_and_suffix(const char *path, char **suffix_idx);

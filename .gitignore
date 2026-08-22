@@ -17,6 +17,12 @@
 .clangd
 .cache
 
+# ctags
+tags
+ctags
+.ctags
+.tags
+
 # llm related
 .deepseek
 

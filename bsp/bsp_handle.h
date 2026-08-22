@@ -7,14 +7,15 @@
  * 用于错误处理，断言语句等比较常用的操作
  */
 
-/* 设置 bit 宏 */
-#define BIT_ON(reg, bit) ((reg) |= (bit))
-/* 清除 bit 宏 */
-#define BIT_OFF(reg, bit) ((reg) &= ~(bit))
-/* 此 bit 是否被设置 */
-#define IS_BIT_ON(reg, bit) ((reg) & (bit))
-
-#define LEN(arr)            (sizeof(arr) / sizeof((arr)[0]))
+#define ABS(x)               (((x) > 0) ? (x) : (-(x)))
+#define LEN(arr)             (sizeof(arr) / sizeof((arr)[0]))
+#define MAX(a, b)            (((a) > (b)) ? (a) : (b))
+#define MIN(a, b)            (((a) < (b)) ? (a) : (b))
+#define CLAMP(a, min, max)   (MIN((max), MAX((a), (min))))
+#define BIT_ON(var, bit)     ((var) |= (1 << (bit)))
+#define BIT_OFF(var, bit)    ((var) &= ~(1 << (bit)))
+#define IS_BIT_ON(var, bit)  ((var) & (1 << (bit)))
+#define IS_BIT_OFF(var, bit) (!IS_BIT_ON(var, bit))
 
 /* 错误处理相关 ------------------------------------- */
 
