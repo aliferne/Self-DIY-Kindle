@@ -475,7 +475,7 @@ OBJECTS = $(C_OBJECTS) $(ASM_OBJECTS)
 ######################################
 # 构建规则
 ######################################
-.PHONY: all clean
+.PHONY: all syntax clean
 
 all: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET).bin
 	@echo "====== Build complete: $^ ======"
@@ -500,6 +500,10 @@ $(BUILD_DIR)/%.bin: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
 
 $(BUILD_DIR):
 	mkdir -p $@
+
+# NOTICE THAT SHOULD `make syntax FILE=xxx.c` to check
+syntax:
+	$(CC) -fsyntax-only $(MCU) $(C_INCLUDES) $(FILE)
 
 clean:
 	rm -rf $(BUILD_DIR)
