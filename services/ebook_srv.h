@@ -40,10 +40,9 @@ typedef enum {
 } BookType_t;
 
 typedef struct {
-    // TODO: 在打开书本时自动填充此部分逻辑
     BookType_t type;
     char *pSuffix;                  // 后缀名，定位后缀起始点用
-    char book_name[BOOK_NAME_SIZE]; // 书本名（不带后缀）
+    char book_name[BOOK_NAME_SIZE]; // 书本名
     /* author 是一个比较次要的信息 */
 } MetaData_t;
 

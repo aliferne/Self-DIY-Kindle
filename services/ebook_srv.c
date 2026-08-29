@@ -1,7 +1,6 @@
 #include "ebook_srv.h"
 #include "bsp_handle.h"
 #include "ff.h"
-#include "srv_config.h"
 #include "storage_srv.h"
 #include <stdbool.h>
 #include <stdint.h>
@@ -75,10 +74,9 @@ bool ebook_open_book(BookReader_t *br, const char *path)
         return true;
     }
 
-    FIL *fp          = &br->priv.fp;
-    MetaData_t *meta = &br->meta;
-    char *book_name  = strrchr(path, '/');
-    int book_name_len = strlen(book_name);
+    FIL *fp           = &br->priv.fp;
+    MetaData_t *meta  = &br->meta;
+    char *book_name   = strrchr(path, '/');
     ASSERT_FAIL(
         /* NULL or only contains '/' */
         book_name == NULL || strlen(book_name) == 1,
@@ -96,13 +94,14 @@ bool ebook_open_book(BookReader_t *br, const char *path)
 
     LOG_INFO("Opened book: %s\n", path);
     meta->type = get_book_type_and_suffix(path, &meta->pSuffix);
-    memcpy(meta->book_name, book_name,
-           MIN(book_name_len - strlen(meta->pSuffix), BOOK_NAME_SIZE));
+    snprintf(meta->book_name, BOOK_NAME_SIZE, "%s", book_name);
 
     br->priv.fsize          = f_size(fp);
     br->ctn.prog.total_page = br->priv.fsize / PAGE_BUF_SIZE;
 
     BOOK_OPEN(br);
+
+    LOG_INFO("Book opened\n");
 
     return true;
 }
@@ -120,7 +119,8 @@ void ebook_close_book(BookReader_t *br)
         return;
     }
 
-    LOG_INFO("Closed book\n");
+    LOG_INFO("Book closed\n");
+
     BOOK_CLOSE(br);
 }
 
@@ -207,7 +207,7 @@ void ebook_goto_page(BookReader_t *br, uint16_t page)
 
     br->ctn.prog.cur_page = page;
 
-    LOG_DEBUG("Goto page %u, tend to read %u bytes, actually read %u bytes\n", page, bytes_to_read, bytes_read);
+    LOG_DEBUG("Goto page %u, intend to read %u bytes, actually read %u bytes\n", page, bytes_to_read, bytes_read);
 }
 
 /* 保存当前进度，当退出阅读界面时调用 */
@@ -218,30 +218,111 @@ void ebook_save_progress(BookReader_t *br)
         return;
     }
 
+    FIL fp;
     FRESULT res;
-    /*
-     * TODO: to get a bookname prefix
-     * should remove the suffix (.txt/.epub)
-     * then check if length up to the MAX_PREFIX_LEN
-     * finally memcpy into an array and make it ends with '\0'
-     */
-    char path[128];
+
+    const int MAX_PATH_LEN = 128;
+    char path[MAX_PATH_LEN];
+    int pres = snprintf(
+        path,
+        MAX_PATH_LEN,
+        "%s%s",
+        BOOK_PROGRESS_PATH,
+        br->meta.book_name);
+
+    if (pres >= MAX_PATH_LEN) {
+        LOG_WARN("Output was truncated, required size: %d\n", pres);
+    }
+
+    storage_mkdir(BOOK_STORAGE, BOOK_PROGRESS_PATH);
 
     res = storage_open(
-        BOOK_STORAGE, &br->priv.fp,
-        BOOK_PROGRESS_PATH, FA_WRITE | FA_CREATE_ALWAYS);
+        BOOK_STORAGE, &fp,
+        path, FA_WRITE | FA_CREATE_ALWAYS);
 
     ASSERT_FAIL(
         res != FR_OK,
-        LOG_ERROR("Failed to open progress file: %s\n", BOOK_PROGRESS_PATH);
+        LOG_ERROR("Failed to open progress file: %s\n", path);
         return);
+
+    UINT bw                    = 0;
+    const int PROGRESS_BUF_LEN = 16;
+    char progress[PROGRESS_BUF_LEN];
+    /* basic formation: `prog: br->ctn.prog.cur_page` */
+    snprintf(progress, PROGRESS_BUF_LEN, "prog: %u\n", br->ctn.prog.cur_page);
+    res = storage_write(&fp, progress, PROGRESS_BUF_LEN, &bw);
+
+    ASSERT_FAIL(
+        res != FR_OK,
+        LOG_ERROR("Failed to write progress file: %s\n", path));
+
+    ASSERT_FAIL(
+        bw != PROGRESS_BUF_LEN,
+        LOG_ERROR("Full of storage, can not save progress for %s\n", path));
+
+    storage_close(&fp);
 }
 
 /* 读取当前进度，当进入阅读界面时调用 */
 void ebook_load_progress(BookReader_t *br)
 {
-    GIVEUP(br);
+    if (!IS_BOOK_OPEN(br)) {
+        LOG_WARN("Book is not opened!\n");
+        return;
+    }
+
+    FIL fp;
+    FRESULT res = FR_OK;
+
+    const int MAX_PATH_LEN = 128;
+    char path[MAX_PATH_LEN];
+    int pres = snprintf(
+        path,
+        MAX_PATH_LEN,
+        "%s%s",
+        BOOK_PROGRESS_PATH,
+        br->meta.book_name);
+
+    if (pres >= MAX_PATH_LEN) {
+        LOG_WARN("Output was truncated, required size: %d\n", pres);
+    }
+
+    res = storage_open(
+        BOOK_STORAGE, &fp,
+        path, FA_READ);
+
+    if (res == FR_NO_FILE || res == FR_NO_PATH) {
+        LOG_DEBUG("No progress file for %s, start from page 0\n",
+                  br->meta.book_name);
+        br->ctn.prog.cur_page = 0;
+        return;
+    }
+
+    ASSERT_FAIL(
+        res != FR_OK,
+        LOG_ERROR("Failed to open progress file: %s (err: %d)\n", path, res);
+        return);
+
+    char line[16];
+    if (f_gets(line, sizeof(line), &fp) == NULL) {
+        LOG_WARN("Progress file %s is empty, start from page 0\n", path);
+        storage_close(&fp);
+        br->ctn.prog.cur_page = 0;
+        return;
+    }
+    storage_close(&fp);
+
+    uint16_t page = 0;
+    if (sscanf(line, "prog: %hu", &page) != 1) {
+        LOG_WARN("Malformed progress file %s: \"%s\", start from page 0\n", path, line);
+        br->ctn.prog.cur_page = 0;
+        return;
+    }
+
+    ebook_goto_page(br, page);
 }
+
+/* Mark will be a later function */
 
 /* 保存书签 */
 void ebook_save_bookmark(BookReader_t *br)

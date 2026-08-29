@@ -31,6 +31,7 @@ typedef struct {
  */
 typedef bool (*storage_listdir_cb)(char *fname, uint64_t fsize, bool is_dir);
 
+#define storage_close(fp)     f_close(fp)
 #define storage_eof(fp)       f_eof(fp)
 #define storage_err(fp)       f_error(fp)
 #define storage_tell(fp)      f_tell(fp)
