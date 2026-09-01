@@ -52,6 +52,8 @@
 - [STM32 I2S 代码示例](https://doc.embedfire.com/mcu/stm32/f429tiaozhanzhe/std/zh/latest/book/I2S.html)
 - [ESP32-with-arduino 驱动 PCM5102 模块代码示例](https://jishuzhan.net/article/1863030601469136897)
 - [TI PCM5102 数据手册](https://www.ti.com/product/PCM5102)
+- [I2S BUS](https://www.nxp.com/docs/en/user-manual/UM11732.pdf)
+- [PCM Basics](https://zhuanlan.zhihu.com/p/212318683)
 
 --- 
 
