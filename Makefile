@@ -61,49 +61,52 @@ C_SOURCES = \
   Core/Src/stm32f4xx_hal_timebase_tim.c \
   Core/Src/usart.c \
   Core/Src/system_stm32f4xx.c \
-Core/Src/main.c \
-Core/Src/gpio.c \
-Core/Src/freertos.c \
-Core/Src/dma.c \
-Core/Src/sdio.c \
-Core/Src/spi.c \
-Core/Src/usart.c \
-Core/Src/stm32f4xx_it.c \
-Core/Src/stm32f4xx_hal_msp.c \
-Core/Src/stm32f4xx_hal_timebase_tim.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc_ex.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash_ex.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash_ramfunc.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma_ex.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr_ex.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_sdmmc.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_sd.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_mmc.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_spi.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c \
-Core/Src/system_stm32f4xx.c \
-Middlewares/Third_Party/FreeRTOS/Source/croutine.c \
-Middlewares/Third_Party/FreeRTOS/Source/event_groups.c \
-Middlewares/Third_Party/FreeRTOS/Source/list.c \
-Middlewares/Third_Party/FreeRTOS/Source/queue.c \
-Middlewares/Third_Party/FreeRTOS/Source/stream_buffer.c \
-Middlewares/Third_Party/FreeRTOS/Source/tasks.c \
-Middlewares/Third_Party/FreeRTOS/Source/timers.c \
-Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS/cmsis_os.c \
-Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.c \
-Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c \
-Core/Src/sysmem.c \
-Core/Src/syscalls.c
+  Core/Src/main.c \
+  Core/Src/gpio.c \
+  Core/Src/freertos.c \
+  Core/Src/dma.c \
+  Core/Src/sdio.c \
+  Core/Src/spi.c \
+  Core/Src/usart.c \
+  Core/Src/stm32f4xx_it.c \
+  Core/Src/stm32f4xx_hal_msp.c \
+  Core/Src/stm32f4xx_hal_timebase_tim.c \
+  Core/Src/sysmem.c \
+  Core/Src/syscalls.c \
+  Core/Src/i2s.c \
+  Core/Src/system_stm32f4xx.c \
+  Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_i2s.c \
+  Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_i2s_ex.c \
+  Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.c \
+  Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.c \
+  Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.c \
+  Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc_ex.c \
+  Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash.c \
+  Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash_ex.c \
+  Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash_ramfunc.c \
+  Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.c \
+  Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma_ex.c \
+  Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c \
+  Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr.c \
+  Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr_ex.c \
+  Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.c \
+  Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.c \
+  Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c \
+  Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_sdmmc.c \
+  Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_sd.c \
+  Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_mmc.c \
+  Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_spi.c \
+  Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c \
+  Middlewares/Third_Party/FreeRTOS/Source/croutine.c \
+  Middlewares/Third_Party/FreeRTOS/Source/event_groups.c \
+  Middlewares/Third_Party/FreeRTOS/Source/list.c \
+  Middlewares/Third_Party/FreeRTOS/Source/queue.c \
+  Middlewares/Third_Party/FreeRTOS/Source/stream_buffer.c \
+  Middlewares/Third_Party/FreeRTOS/Source/tasks.c \
+  Middlewares/Third_Party/FreeRTOS/Source/timers.c \
+  Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS/cmsis_os.c \
+  Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.c \
+  Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c
 
 ######################################
 # C 源文件 — HAL 驱动
@@ -171,6 +174,27 @@ C_SOURCES += \
 ######################################
 C_SOURCES += \
   Middlewares/miniz/miniz.c
+
+
+######################################
+# C 源文件 — mp3 decoder
+######################################
+C_SOURCES += \
+  Middlewares/mp3-decoder/mp3dec.c \
+  Middlewares/mp3-decoder/mp3tabs.c \
+  Middlewares/mp3-decoder/real/bitstream.c \
+  Middlewares/mp3-decoder/real/buffers.c \
+  Middlewares/mp3-decoder/real/dct32.c \
+  Middlewares/mp3-decoder/real/dequant.c \
+  Middlewares/mp3-decoder/real/dqchan.c \
+  Middlewares/mp3-decoder/real/huffman.c \
+  Middlewares/mp3-decoder/real/hufftabs.c \
+  Middlewares/mp3-decoder/real/imdct.c \
+  Middlewares/mp3-decoder/real/polyphase.c \
+  Middlewares/mp3-decoder/real/scalfact.c \
+  Middlewares/mp3-decoder/real/stproc.c \
+  Middlewares/mp3-decoder/real/subband.c \
+  Middlewares/mp3-decoder/real/trigtabs.c
 
 ######################################
 # C 源文件 — middleware config
@@ -354,77 +378,78 @@ C_SOURCES += \
 # 预定义宏
 ######################################
 C_DEFS = \
--D  USE_HAL_DRIVER \
--D  STM32F407xx \
--DUSE_HAL_DRIVER \
--DSTM32F407xx
+  -DUSE_HAL_DRIVER \
+  -DSTM32F407xx \
+  -DARM # defined for libhelix-mp3
 
 ######################################
 # 头文件搜索路径
 ######################################
 C_INCLUDES = \
--I  Core/Inc \
--I  Drivers/STM32F4xx_HAL_Driver/Inc \
--I  Drivers/STM32F4xx_HAL_Driver/Inc/Legacy \
--I  Drivers/CMSIS/Device/ST/STM32F4xx/Include \
--I  Drivers/CMSIS/Include \
--I  Middlewares/Third_Party/FreeRTOS/Source/include \
--I  Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS \
--I  Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F \
--I  Middlewares/FatFs \
--I  Middlewares/miniz \
--I  bsp \
--I  services \
--I  applications \
--I  applications/ui \
--I  tests \
--I  . \
--I  chip/stm32f4 \
--I  Middlewares \
--I  Middlewares/lvgl \
--I  Middlewares/ebtn \
--I  Middlewares/lvgl/demos \
--I  Middlewares/lvgl/porting \
--I  Middlewares/lvgl/src/core \
--I  Middlewares/lvgl/src/font \
--I  Middlewares/lvgl/src \
--I  Middlewares/lvgl/src/hal \
--I  Middlewares/lvgl/src/widgets \
--I  Middlewares/lvgl/src/misc \
--I  Middlewares/lvgl/src/draw \
--I  Middlewares/lvgl/src/draw/stm32_dma2d \
--I  Middlewares/lvgl/src/draw/sw \
--I  Middlewares/display_drv \
--I  Middlewares/display_drv/st7796-with-touch \
--I  Middlewares/display_drv/st7796-with-touch/LCD \
--I  Middlewares/display_drv/st7796-with-touch/TOUCH \
--I  Middlewares/display_drv/epaper \
--I  Middlewares/display_drv/epaper/config \
--I  Middlewares/display_drv/epaper/drv \
--I  Middlewares/display_drv/epaper/fonts \
--I  Middlewares/display_drv/epaper/gui \
--I  Middlewares/display_drv/epaper/test \
--I  Middlewares/display_drv/st7735s \
--I  Middlewares/algorithm \
--I  Middlewares/RTT \
--I  Middlewares/RTT/RTT \
--I  Middlewares/RTT/Config \
--I  Core/Inc \
--I  Drivers/STM32F4xx_HAL_Driver/Inc \
--I  Drivers/STM32F4xx_HAL_Driver/Inc/Legacy \
--I  Middlewares/Third_Party/FreeRTOS/Source/include \
--I  Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS \
--I  Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F \
--I  Drivers/CMSIS/Device/ST/STM32F4xx/Include \
--I  Drivers/CMSIS/Include \
--ICore/Inc \
--IDrivers/STM32F4xx_HAL_Driver/Inc \
--IDrivers/STM32F4xx_HAL_Driver/Inc/Legacy \
--IMiddlewares/Third_Party/FreeRTOS/Source/include \
--IMiddlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS \
--IMiddlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F \
--IDrivers/CMSIS/Device/ST/STM32F4xx/Include \
--IDrivers/CMSIS/Include
+  -ICore/Inc \
+  -IDrivers/STM32F4xx_HAL_Driver/Inc \
+  -IDrivers/STM32F4xx_HAL_Driver/Inc/Legacy \
+  -IDrivers/CMSIS/Device/ST/STM32F4xx/Include \
+  -IDrivers/CMSIS/Include \
+  -IMiddlewares/Third_Party/FreeRTOS/Source/include \
+  -IMiddlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS \
+  -IMiddlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F \
+  -IMiddlewares/FatFs \
+  -IMiddlewares/miniz \
+  -Ibsp \
+  -Iservices \
+  -Iapplications \
+  -Iapplications/ui \
+  -Itests \
+  -I. \
+  -Ichip/stm32f4 \
+  -IMiddlewares \
+  -IMiddlewares/lvgl \
+  -IMiddlewares/ebtn \
+  -IMiddlewares/lvgl/demos \
+  -IMiddlewares/lvgl/porting \
+  -IMiddlewares/lvgl/src/core \
+  -IMiddlewares/lvgl/src/font \
+  -IMiddlewares/lvgl/src \
+  -IMiddlewares/lvgl/src/hal \
+  -IMiddlewares/lvgl/src/widgets \
+  -IMiddlewares/lvgl/src/misc \
+  -IMiddlewares/lvgl/src/draw \
+  -IMiddlewares/lvgl/src/draw/stm32_dma2d \
+  -IMiddlewares/lvgl/src/draw/sw \
+  -IMiddlewares/display_drv \
+  -IMiddlewares/display_drv/st7796-with-touch \
+  -IMiddlewares/display_drv/st7796-with-touch/LCD \
+  -IMiddlewares/display_drv/st7796-with-touch/TOUCH \
+  -IMiddlewares/display_drv/epaper \
+  -IMiddlewares/display_drv/epaper/config \
+  -IMiddlewares/display_drv/epaper/drv \
+  -IMiddlewares/display_drv/epaper/fonts \
+  -IMiddlewares/display_drv/epaper/gui \
+  -IMiddlewares/display_drv/epaper/test \
+  -IMiddlewares/display_drv/st7735s \
+  -IMiddlewares/algorithm \
+  -IMiddlewares/RTT \
+  -IMiddlewares/RTT/RTT \
+  -IMiddlewares/RTT/Config \
+  -ICore/Inc \
+  -IDrivers/STM32F4xx_HAL_Driver/Inc \
+  -IDrivers/STM32F4xx_HAL_Driver/Inc/Legacy \
+  -IMiddlewares/Third_Party/FreeRTOS/Source/include \
+  -IMiddlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS \
+  -IMiddlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F \
+  -IDrivers/CMSIS/Device/ST/STM32F4xx/Include \
+  -IDrivers/CMSIS/Include \
+  -Ire/Inc \
+  -IDrivers/STM32F4xx_HAL_Driver/Inc \
+  -IDrivers/STM32F4xx_HAL_Driver/Inc/Legacy \
+  -IMiddlewares/Third_Party/FreeRTOS/Source/include \
+  -IMiddlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS \
+  -IMiddlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F \
+  -IDrivers/CMSIS/Device/ST/STM32F4xx/Include \
+  -IDrivers/CMSIS/Include \
+  -IMiddlewares/mp3-decoder/pub \
+  -IMiddlewares/mp3-decoder/real
 
 ######################################
 # 编译选项
