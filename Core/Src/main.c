@@ -20,6 +20,7 @@
 #include "main.h"
 #include "cmsis_os.h"
 #include "dma.h"
+#include "i2s.h"
 #include "sdio.h"
 #include "spi.h"
 #include "usart.h"
@@ -100,6 +101,7 @@ int main(void)
   MX_SDIO_SD_Init();
   MX_SPI1_Init();
   MX_USART1_UART_Init();
+  MX_I2S2_Init();
   /* USER CODE BEGIN 2 */
     /* 初始化 RTT 调试支持 */
     rtt_init();

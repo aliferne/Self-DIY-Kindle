@@ -27,10 +27,6 @@
  *
  * LED：
  *   - User LED             PB2
- *
- * ESCREEN:
- *
- *
  */
 
 #define PAGEUP_BTN_PORT   GPIOE
@@ -52,8 +48,8 @@
 #define USER_LED_PIN      GPIO_PIN_2
 
 /* SD 卡检测 */
-#define SDCARD_DET_PORT   GPIOD
-#define SDCARD_DET_PIN    GPIO_PIN_3
+#define SDCARD_DET_PORT GPIOD
+#define SDCARD_DET_PIN  GPIO_PIN_3
 
 /*
  * TFT 屏驱动
@@ -78,6 +74,24 @@
 
 #define TFT_BLK_PORT GPIOA
 #define TFT_BLK_PIN  GPIO_PIN_3
+
+/*
+ * I2S 接口，用于 PCM5102A
+ * PCM5102A 本身会借助 PLL 产生主时钟，因此此处不需要 MCK
+ * 目前使用 I2S2 接口
+ */
+
+/* I2S SD */
+#define PCM_DIN_PORT GPIOC
+#define PCM_DIN_PIN  GPIO_PIN_3
+
+/* I2S CK */
+#define PCM_BCK_PORT GPIOB
+#define PCM_BCK_PIN  GPIO_PIN_10
+
+/* I2S WS */
+#define PCM_LRCK_PORT GPIOB
+#define PCM_LRCK_PIN  GPIO_PIN_12
 
 /*
  * 触摸芯片
